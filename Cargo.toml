@@ -1,22 +1,9 @@
-[package]
-name = "wormhole-circuit"
-version = "0.1.0"
-edition = "2024"
+[workspace]
+members = ["circuit", "prover", "verifier"]
+resolver = "3"
 
-[dependencies]
-anyhow = "1.0.95"
-hex = "0.4.3"
-plonky2 = "1.0.2"
-poseidon-resonance = { git = "https://github.com/zeapoz/poseidon-resonance" }
-
-[dev-dependencies]
-criterion = "0.5.1"
-rand = "0.9.1"
-
-[features]
-default = []
-testing = []
-
-[[bench]]
-name = "bench"
-harness = false
+[workspace.dependencies]
+plonky2 = { git="https://github.com/Quantus-Network/plonky2", default-features = false, features = ["no_random"] }
+anyhow = { version = "1.0.98", default-features = false }
+hex = { version = "0.4.3", default-features = false }
+criterion = { version = "0.5", features = ["html_reports"] }

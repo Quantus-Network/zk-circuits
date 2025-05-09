@@ -1,0 +1,15 @@
+[package]
+name = "wormhole-circuit"
+version = "0.1.0"
+edition = "2024"
+
+[features]
+test-helpers = []
+
+[dependencies]
+plonky2 = { workspace = true }
+anyhow = { workspace = true }
+hex = { workspace = true, features = ["alloc"] }
+
+[dev-dependencies]
+rand = { version = "0.9.1" }

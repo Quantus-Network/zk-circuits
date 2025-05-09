@@ -1,0 +1,18 @@
+[package]
+name = "wormhole-prover"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+plonky2 = { workspace = true }
+anyhow = { workspace = true }
+wormhole-circuit = { path = "../circuit", default-features = false }
+hex = { workspace = true }
+
+[dev-dependencies]
+wormhole-circuit = { path = "../circuit", features = ["test-helpers"] }
+criterion = "0.5"
+
+[[bench]]
+name = "prover_benchmarks"
+harness = false

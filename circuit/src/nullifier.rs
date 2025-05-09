@@ -6,9 +6,7 @@ use plonky2::{
     },
     plonk::{circuit_builder::CircuitBuilder, config::Hasher},
 };
-
-use crate::prover::CircuitInputs;
-
+use crate::inputs::CircuitInputs;
 use super::{CircuitFragment, D, Digest, F, slice_to_field_elements};
 
 // FIXME: Adjust as needed.
@@ -87,7 +85,7 @@ impl CircuitFragment for Nullifier {
     }
 }
 
-#[cfg(any(test, feature = "testing"))]
+#[cfg(any(test, feature = "test-helpers"))]
 pub mod test_helpers {
     use super::{Nullifier, NullifierInputs};
 
@@ -113,7 +111,7 @@ pub mod test_helpers {
 pub mod tests {
     use plonky2::{field::types::Field, plonk::proof::ProofWithPublicInputs};
 
-    use crate::circuit::{
+    use crate::{
         C,
         nullifier::test_helpers::PREIMAGE,
         tests::{build_and_prove_test, setup_test_builder_and_witness},

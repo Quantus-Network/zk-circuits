@@ -22,6 +22,7 @@ mod gadgets;
 pub mod nullifier;
 pub mod storage_proof;
 pub mod unspendable_account;
+pub mod inputs;
 
 // Plonky2 setup parameters.
 pub const D: usize = 2; // D=2 provides 100-bits of security
@@ -124,7 +125,7 @@ pub mod tests {
 
     use super::*;
 
-    /// Convenince function for initializing a test circuit environment.
+    /// Convenience function for initializing a test circuit environment.
     pub fn setup_test_builder_and_witness() -> (CircuitBuilder<F, D>, PartialWitness<F>) {
         let config = CircuitConfig::standard_recursion_config();
         let builder = CircuitBuilder::<F, D>::new(config);
@@ -133,7 +134,7 @@ pub mod tests {
         (builder, pw)
     }
 
-    /// Convenince function for building and verifying a test function. The circuit is assumed to
+    /// Convenience function for building and verifying a test function. The circuit is assumed to
     /// have been setup prior to calling this function.
     pub fn build_and_prove_test(
         builder: CircuitBuilder<F, D>,

@@ -3,9 +3,7 @@ use plonky2::{
     iop::witness::{PartialWitness, WitnessWrite},
     plonk::circuit_builder::CircuitBuilder,
 };
-
-use crate::prover::CircuitInputs;
-
+use crate::inputs::CircuitInputs;
 use super::{CircuitFragment, D, F, slice_to_field_elements};
 
 #[derive(Debug, Default)]
@@ -51,7 +49,7 @@ impl CircuitFragment for ExitAccount {
 
 #[cfg(test)]
 mod tests {
-    use crate::circuit::{
+    use crate::{
         C,
         tests::{build_and_prove_test, setup_test_builder_and_witness},
     };

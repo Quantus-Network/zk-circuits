@@ -1,5 +1,6 @@
-/target
+/**/target
 
+.idea
 .direnv
 .envrc
 

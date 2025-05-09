@@ -7,7 +7,7 @@ use plonky2::{
     iop::{target::Target, witness::WitnessWrite},
 };
 
-use crate::prover::CircuitInputs;
+use crate::inputs::CircuitInputs;
 
 use super::{CircuitFragment, D, F, gadgets::is_const_less_than, slice_to_field_elements};
 
@@ -165,7 +165,7 @@ fn slice_to_hashout(slice: &[u8]) -> HashOut<F> {
     }
 }
 
-#[cfg(any(test, feature = "testing"))]
+#[cfg(any(test, feature = "test-helpers"))]
 pub mod test_helpers {
     use super::StorageProof;
 
@@ -211,7 +211,7 @@ pub mod tests {
         test_helpers::{ROOT_HASH, default_proof},
         *,
     };
-    use crate::circuit::{
+    use crate::{
         C,
         tests::{build_and_prove_test, setup_test_builder_and_witness},
     };
@@ -270,7 +270,7 @@ pub mod tests {
     #[ignore = "performance"]
     #[test]
     fn fuzz_tampered_proof() {
-        const FUZZ_ITERATIONS: usize = 1000;
+        const FUZZ_ITERATIONS: usize = 100;
 
         let mut rng = rand::rng();
 

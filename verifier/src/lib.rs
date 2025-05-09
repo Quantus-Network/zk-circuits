@@ -1,16 +1,17 @@
 //! Verifier logic for the Wormhole circuit.
 //!
 //! This module contains the [`WormholeVerifier`] type, which can verify proofs generated
-//! by the [`crate::prover::WormholeProver`].
+//! by the [`wormhole_prover::WormholeProver`].
 //!
 //! # Example
 //!
 //! ```
-//! # use wormhole_circuit::prover::{WormholeProver, CircuitInputs};
-//! use wormhole_circuit::verifier::WormholeVerifier;
-//! #
+//! use wormhole_circuit::inputs::CircuitInputs;
+//! use wormhole_prover::WormholeProver;
+//! use wormhole_verifier::WormholeVerifier;
+//!
 //! # fn main() -> anyhow::Result<()> {
-//! # let inputs = CircuitInputs::default();
+//! # let inputs = CircuitInputs::test_default();
 //! # let prover = WormholeProver::new();
 //! # let proof = prover.commit(&inputs)?.prove()?;
 //!
@@ -20,8 +21,7 @@
 //! # }
 //! ```
 use plonky2::plonk::{circuit_data::VerifierCircuitData, proof::ProofWithPublicInputs};
-
-use crate::circuit::{C, D, F, WormholeCircuit};
+use wormhole_circuit::{C, D, F, WormholeCircuit};
 
 /// A verifier for the wormhole circuit.
 ///
@@ -29,12 +29,13 @@ use crate::circuit::{C, D, F, WormholeCircuit};
 ///
 /// Create a verifier and verify a proof:
 ///
-/// ```
-/// # use wormhole_circuit::prover::{WormholeProver, CircuitInputs};
-/// use wormhole_circuit::verifier::WormholeVerifier;
+///```
+/// use wormhole_circuit::inputs::CircuitInputs;
+/// use wormhole_prover::WormholeProver;
+/// use wormhole_verifier::WormholeVerifier;
 /// #
 /// # fn main() -> anyhow::Result<()> {
-/// # let inputs = CircuitInputs::default();
+/// # let inputs = CircuitInputs::test_default();
 /// # let prover = WormholeProver::new();
 /// # let proof = prover.commit(&inputs)?.prove()?;
 ///
@@ -62,7 +63,7 @@ impl WormholeVerifier {
         Self::default()
     }
 
-    /// Verify a [`ProofWithPublicInputs`] generated from a [`crate::prover::WormholeProver`].
+    /// Verify a [`ProofWithPublicInputs`] generated from a [`wormhole_prover::WormholeProver`].
     ///
     /// # Errors
     ///
@@ -74,14 +75,14 @@ impl WormholeVerifier {
 
 #[cfg(test)]
 mod tests {
-    use crate::prover::{CircuitInputs, WormholeProver};
-
+    use wormhole_circuit::inputs::CircuitInputs;
+    use wormhole_prover::WormholeProver;
     use super::WormholeVerifier;
 
     #[test]
     fn verify_simple_proof() {
         let prover = WormholeProver::new();
-        let inputs = CircuitInputs::default();
+        let inputs = CircuitInputs::test_default();
         let proof = prover.commit(&inputs).unwrap().prove().unwrap();
 
         let verifier = WormholeVerifier::new();
