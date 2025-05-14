@@ -24,10 +24,7 @@ pub struct CircuitInputs {
 
 #[cfg(any(test, feature = "testing"))]
 pub mod test_helpers {
-    use crate::circuit::{
-        C,
-        tests::{build_and_prove_test, setup_test_builder_and_witness},
-    };
+    
     use crate::nullifier;
     use crate::storage_proof::test_helpers::{ROOT_HASH, default_proof};
     use crate::unspendable_account;

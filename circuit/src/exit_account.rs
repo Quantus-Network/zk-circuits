@@ -1,8 +1,6 @@
 use plonky2::{
     hash::hash_types::{HashOut, HashOutTarget},
-    iop::{
-        witness::{PartialWitness, WitnessWrite},
-    },
+    iop::witness::{PartialWitness, WitnessWrite},
     plonk::circuit_builder::CircuitBuilder,
 };
 
