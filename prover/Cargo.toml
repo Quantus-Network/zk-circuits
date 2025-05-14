@@ -21,4 +21,4 @@ harness = false
 required-features = ["testing"]
 
 [dev-dependencies]
-criterion = { workspace = true, features = ["html_reports"] }
+criterion = { workspace = true }

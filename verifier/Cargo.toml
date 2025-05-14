@@ -14,7 +14,7 @@ wormhole-circuit = { path = "../circuit" }
 
 [dev-dependencies]
 wormhole-prover = { path = "../prover" }
-criterion = { workspace = true, features = ["html_reports"] }
+criterion = { workspace = true }
 
 [features]
 testing = ["wormhole-circuit/testing", "wormhole-prover/testing"]
