@@ -20,8 +20,12 @@
 //! # Ok(())
 //! # }
 //! ```
-use plonky2::plonk::{circuit_data::VerifierCircuitData, proof::ProofWithPublicInputs};
+use plonky2::plonk::{
+    circuit_data::VerifierCircuitData
+};
+pub use plonky2::plonk::proof::ProofWithPublicInputs;
 use wormhole_circuit::{C, D, F, WormholeCircuit};
+pub use wormhole_circuit::inputs::CircuitInputs;
 
 /// A verifier for the wormhole circuit.
 ///
