@@ -15,4 +15,5 @@ name = "bench"
 harness = false 
 
 [features]
+default = ["testing"]
 testing = ["wormhole-circuit/testing", "wormhole-prover/testing", "wormhole-verifier/testing"]
