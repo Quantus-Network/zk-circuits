@@ -13,3 +13,10 @@ poseidon-resonance.workspace = true
 wormhole-circuit = { path = "../circuit" }
 wormhole-prover = { path = "../prover" }
 wormhole-verifier = { path = "../verifier" }
+
+[features]
+testing = [
+  "wormhole-circuit/testing",
+  "wormhole-verifier/testing",
+  "wormhole-prover/testing",
+]
