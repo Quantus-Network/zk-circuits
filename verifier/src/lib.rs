@@ -24,7 +24,7 @@ use plonky2::plonk::{circuit_data::VerifierCircuitData, proof::ProofWithPublicIn
 use wormhole_circuit::circuit::{WormholeCircuit, C, D, F};
 
 pub struct WormholeVerifier {
-    circuit_data: VerifierCircuitData<F, C, D>,
+    pub circuit_data: VerifierCircuitData<F, C, D>,
 }
 
 impl Default for WormholeVerifier {
