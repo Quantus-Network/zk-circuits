@@ -14,3 +14,11 @@ wormhole-circuit = { path = "../circuit" }
 
 [features]
 testing = ["wormhole-circuit/testing"]
+
+[[bench]]
+name = "prover_bench"
+harness = false
+required-features = ["testing"]
+
+[dev-dependencies]
+criterion = { workspace = true, features = ["html_reports"] }
