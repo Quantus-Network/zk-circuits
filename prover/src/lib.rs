@@ -13,7 +13,7 @@
 //!
 //! ```
 //! use wormhole_circuit::inputs::CircuitInputs;
-//! use wormhole_prover::prover::WormholeProver;
+//! use wormhole_prover::WormholeProver;
 //!
 //! # fn main() -> anyhow::Result<()> {
 //! # let inputs = CircuitInputs::default();
@@ -23,4 +23,117 @@
 //! # }
 //! ```
 
-pub mod prover;
+use anyhow::bail;
+use plonky2::{
+    iop::witness::PartialWitness,
+    plonk::{circuit_data::ProverCircuitData, proof::ProofWithPublicInputs},
+};
+
+use wormhole_circuit::circuit::{C, D, F, WormholeCircuit};
+use wormhole_circuit::{
+    circuit::{CircuitFragment, CircuitTargets},
+    amounts::Amounts,
+    exit_account::ExitAccount,
+    nullifier::{Nullifier, NullifierInputs},
+    storage_proof::{StorageProof, StorageProofInputs},
+    unspendable_account::{UnspendableAccount, UnspendableAccountInputs},
+    inputs::CircuitInputs,
+};
+
+#[derive(Debug)]
+pub struct WormholeProver {
+    circuit_data: ProverCircuitData<F, C, D>,
+    partial_witness: PartialWitness<F>,
+    targets: Option<CircuitTargets>,
+}
+
+impl Default for WormholeProver {
+    fn default() -> Self {
+        let wormhole_circuit = WormholeCircuit::new();
+        let partial_witness = PartialWitness::new();
+
+        let targets = Some(wormhole_circuit.targets());
+        let circuit_data = wormhole_circuit.build_prover();
+
+        Self {
+            circuit_data,
+            partial_witness,
+            targets,
+        }
+    }
+}
+
+impl WormholeProver {
+    /// Creates a new [`WormholeProver`].
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    /// Commits the provided [`CircuitInputs`] to the circuit by filling relevant targets.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the prover has already commited to inputs previously.
+    pub fn commit(mut self, circuit_inputs: &CircuitInputs) -> anyhow::Result<Self> {
+        let Some(targets) = self.targets.take() else {
+            bail!("prover has already commited to inputs");
+        };
+
+        let amounts = Amounts::from(circuit_inputs);
+        let nullifier = Nullifier::from(circuit_inputs);
+        let unspendable_account = UnspendableAccount::from(circuit_inputs);
+        let storage_proof = StorageProof::from(circuit_inputs);
+        let exit_account = ExitAccount::from(circuit_inputs);
+
+        let nullifier_inputs = NullifierInputs::new(&circuit_inputs.nullifier_preimage);
+        let unspendable_account_inputs =
+            UnspendableAccountInputs::new(&circuit_inputs.unspendable_account_preimage);
+
+        amounts.fill_targets(&mut self.partial_witness, targets.amounts, ())?;
+        nullifier.fill_targets(
+            &mut self.partial_witness,
+            targets.nullifier,
+            nullifier_inputs,
+        )?;
+        unspendable_account.fill_targets(
+            &mut self.partial_witness,
+            targets.unspendable_account,
+            unspendable_account_inputs,
+        )?;
+        storage_proof.fill_targets(
+            &mut self.partial_witness,
+            targets.storage_proof,
+            StorageProofInputs::new(circuit_inputs.root_hash),
+        )?;
+        exit_account.fill_targets(&mut self.partial_witness, targets.exit_account, ())?;
+
+        Ok(self)
+    }
+
+    /// Prove the circuit with commited values. It's necessary to call [`WormholeProver::commit`]
+    /// before running this function.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the prover has not commited to any inputs.
+    pub fn prove(self) -> anyhow::Result<ProofWithPublicInputs<F, C, D>> {
+        if self.targets.is_some() {
+            bail!("prover has not commited to any inputs")
+        }
+        self.circuit_data.prove(self.partial_witness)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use wormhole_circuit::inputs::CircuitInputs;
+    use super::WormholeProver;
+    
+    #[test]
+    #[cfg(feature = "testing")]
+    fn commit_and_prove() {
+        let prover = WormholeProver::new();
+        let inputs = CircuitInputs::default();
+        prover.commit(&inputs).unwrap().prove().unwrap();
+    }
+}
