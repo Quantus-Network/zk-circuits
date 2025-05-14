@@ -19,7 +19,6 @@
 /// # Ok(())
 /// # }
 /// ```
-
 use plonky2::plonk::{circuit_data::VerifierCircuitData, proof::ProofWithPublicInputs};
 
 use wormhole_circuit::circuit::{C, D, F, WormholeCircuit};

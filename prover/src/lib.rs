@@ -22,7 +22,6 @@
 //! # Ok(())
 //! # }
 //! ```
-
 use anyhow::bail;
 use plonky2::{
     iop::witness::PartialWitness,
