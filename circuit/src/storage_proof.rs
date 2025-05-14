@@ -4,15 +4,12 @@ use plonky2::{
         hash_types::{HashOut, HashOutTarget},
         poseidon::PoseidonHash,
     },
-    iop::{
-        target::Target,
-        witness::WitnessWrite,
-    },
+    iop::{target::Target, witness::WitnessWrite},
 };
 
-use crate::circuit::{CircuitFragment, D, F, slice_to_field_elements};
-use crate::inputs::CircuitInputs;
+use crate::circuit::{slice_to_field_elements, CircuitFragment, D, F};
 use crate::gadgets::is_const_less_than;
+use crate::inputs::CircuitInputs;
 
 pub const MAX_PROOF_LEN: usize = 64;
 pub const PROOF_NODE_MAX_SIZE_F: usize = 73;
@@ -211,12 +208,12 @@ pub mod tests {
     use std::panic;
 
     use super::{
-        test_helpers::{ROOT_HASH, default_proof},
+        test_helpers::{default_proof, ROOT_HASH},
         *,
     };
     use crate::circuit::{
-        C,
         tests::{build_and_prove_test, setup_test_builder_and_witness},
+        C,
     };
     use rand::Rng;
 

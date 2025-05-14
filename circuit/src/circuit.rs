@@ -4,6 +4,8 @@
 use crate::amounts::{Amounts, AmountsTargets};
 use crate::exit_account::{ExitAccount, ExitAccountTargets};
 use crate::nullifier::{Nullifier, NullifierTargets};
+use crate::storage_proof::{StorageProof, StorageProofTargets};
+use crate::unspendable_account::{UnspendableAccount, UnspendableAccountTargets};
 use plonky2::{
     field::{goldilocks_field::GoldilocksField, types::Field},
     iop::witness::PartialWitness,
@@ -13,8 +15,6 @@ use plonky2::{
         config::PoseidonGoldilocksConfig,
     },
 };
-use crate::storage_proof::{StorageProof, StorageProofTargets};
-use crate::unspendable_account::{UnspendableAccount, UnspendableAccountTargets};
 
 // Plonky2 setup parameters.
 pub const D: usize = 2; // D=2 provides 100-bits of security

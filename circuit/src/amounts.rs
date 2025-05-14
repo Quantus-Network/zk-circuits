@@ -82,8 +82,8 @@ impl CircuitFragment for Amounts {
 #[cfg(test)]
 mod tests {
     use crate::circuit::{
-        C,
         tests::{build_and_prove_test, setup_test_builder_and_witness},
+        C,
     };
 
     use super::*;

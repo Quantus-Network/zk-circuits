@@ -1,19 +1,13 @@
 use plonky2::{
-    hash::{
-        hash_types::HashOutTarget,
-        poseidon::PoseidonHash,
-    },
+    hash::{hash_types::HashOutTarget, poseidon::PoseidonHash},
     iop::{
         target::Target,
         witness::{PartialWitness, WitnessWrite},
     },
-    plonk::{
-        circuit_builder::CircuitBuilder,
-        config::Hasher,
-    },
+    plonk::{circuit_builder::CircuitBuilder, config::Hasher},
 };
 
-use crate::circuit::{CircuitFragment, D, Digest, F, slice_to_field_elements};
+use crate::circuit::{slice_to_field_elements, CircuitFragment, Digest, D, F};
 use crate::inputs::CircuitInputs;
 
 // FIXME: Adjust as needed.
@@ -145,8 +139,8 @@ pub mod tests {
     use plonky2::{field::types::Field, plonk::proof::ProofWithPublicInputs};
 
     use crate::circuit::{
-        C,
         tests::{build_and_prove_test, setup_test_builder_and_witness},
+        C,
     };
 
     use super::{

@@ -29,4 +29,4 @@ criterion_group!(
     config = Criterion::default().measurement_time(Duration::from_secs(MEASUREMENT_TIME_S));
     targets = verify_proof_benchmark
 );
-criterion_main!(benches); 
+criterion_main!(benches);

@@ -21,7 +21,7 @@
 /// ```
 use plonky2::plonk::{circuit_data::VerifierCircuitData, proof::ProofWithPublicInputs};
 
-use wormhole_circuit::circuit::{C, D, F, WormholeCircuit};
+use wormhole_circuit::circuit::{WormholeCircuit, C, D, F};
 
 pub struct WormholeVerifier {
     circuit_data: VerifierCircuitData<F, C, D>,
@@ -54,9 +54,9 @@ impl WormholeVerifier {
 
 #[cfg(test)]
 mod tests {
+    use super::WormholeVerifier;
     use wormhole_circuit::inputs::CircuitInputs;
     use wormhole_prover::WormholeProver;
-    use super::WormholeVerifier;
 
     #[test]
     fn verify_simple_proof() {

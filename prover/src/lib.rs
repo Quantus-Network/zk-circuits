@@ -28,15 +28,15 @@ use plonky2::{
     plonk::{circuit_data::ProverCircuitData, proof::ProofWithPublicInputs},
 };
 
-use wormhole_circuit::circuit::{C, D, F, WormholeCircuit};
+use wormhole_circuit::circuit::{WormholeCircuit, C, D, F};
 use wormhole_circuit::{
-    circuit::{CircuitFragment, CircuitTargets},
     amounts::Amounts,
+    circuit::{CircuitFragment, CircuitTargets},
     exit_account::ExitAccount,
+    inputs::CircuitInputs,
     nullifier::{Nullifier, NullifierInputs},
     storage_proof::{StorageProof, StorageProofInputs},
     unspendable_account::{UnspendableAccount, UnspendableAccountInputs},
-    inputs::CircuitInputs,
 };
 
 #[derive(Debug)]
@@ -125,9 +125,9 @@ impl WormholeProver {
 
 #[cfg(test)]
 mod tests {
-    use wormhole_circuit::inputs::CircuitInputs;
     use super::WormholeProver;
-    
+    use wormhole_circuit::inputs::CircuitInputs;
+
     #[test]
     #[cfg(feature = "testing")]
     fn commit_and_prove() {
