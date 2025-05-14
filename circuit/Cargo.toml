@@ -1,0 +1,21 @@
+[package]
+name = "wormhole-circuit"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+description.workspace = true
+license.workspace = true
+
+[dependencies]
+anyhow.workspace = true
+plonky2.workspace = true
+poseidon-resonance.workspace = true
+hex.workspace = true
+
+[dev-dependencies]
+criterion.workspace = true
+rand.workspace = true
+
+[features]
+default = []
+testing = []

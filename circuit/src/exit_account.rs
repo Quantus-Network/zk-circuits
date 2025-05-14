@@ -1,12 +1,13 @@
 use plonky2::{
     hash::hash_types::{HashOut, HashOutTarget},
-    iop::witness::{PartialWitness, WitnessWrite},
+    iop::{
+        witness::{PartialWitness, WitnessWrite},
+    },
     plonk::circuit_builder::CircuitBuilder,
 };
 
-use crate::prover::CircuitInputs;
-
-use super::{CircuitFragment, D, F, slice_to_field_elements};
+use crate::circuit::{CircuitFragment, D, F, slice_to_field_elements};
+use crate::inputs::CircuitInputs;
 
 #[derive(Debug, Default)]
 pub struct ExitAccount([u8; 32]);

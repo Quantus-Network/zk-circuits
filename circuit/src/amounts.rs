@@ -7,9 +7,8 @@ use plonky2::{
     plonk::circuit_builder::CircuitBuilder,
 };
 
-use crate::prover::CircuitInputs;
-
-use super::{CircuitFragment, D, F};
+use crate::circuit::{CircuitFragment, D, F};
+use crate::inputs::CircuitInputs;
 
 #[derive(Debug, Default)]
 pub struct Amounts {

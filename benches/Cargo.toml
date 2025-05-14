@@ -1,0 +1,18 @@
+[package]
+name = "wormhole-circuit-bench"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+criterion = "0.5.1"
+rand = "0.9.1"
+wormhole-circuit = { path = "../circuit" }
+wormhole-prover = { path = "../prover" }
+wormhole-verifier = { path = "../verifier" }
+
+[[bench]]
+name = "bench"
+harness = false 
+
+[features]
+testing = ["wormhole-circuit/testing", "wormhole-prover/testing", "wormhole-verifier/testing"]

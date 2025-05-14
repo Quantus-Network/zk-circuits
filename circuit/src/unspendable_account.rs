@@ -1,15 +1,20 @@
 use plonky2::{
-    hash::{hash_types::HashOutTarget, poseidon::PoseidonHash},
+    hash::{
+        hash_types::HashOutTarget,
+        poseidon::PoseidonHash,
+    },
     iop::{
         target::Target,
         witness::{PartialWitness, WitnessWrite},
     },
-    plonk::{circuit_builder::CircuitBuilder, config::Hasher},
+    plonk::{
+        circuit_builder::CircuitBuilder,
+        config::Hasher,
+    },
 };
 
-use crate::prover::CircuitInputs;
-
-use super::{CircuitFragment, D, Digest, F, slice_to_field_elements};
+use crate::circuit::{CircuitFragment, D, Digest, F, slice_to_field_elements};
+use crate::inputs::CircuitInputs;
 
 // FIXME: Adjust as needed.
 pub const PREIMAGE_NUM_TARGETS: usize = 5;

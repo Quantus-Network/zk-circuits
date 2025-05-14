@@ -1,0 +1,16 @@
+[package]
+name = "wormhole-prover"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+description.workspace = true
+license.workspace = true
+
+[dependencies]
+anyhow.workspace = true
+plonky2.workspace = true
+poseidon-resonance.workspace = true
+wormhole-circuit = { path = "../circuit" }
+
+[features]
+testing = ["wormhole-circuit/testing"]

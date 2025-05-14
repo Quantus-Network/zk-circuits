@@ -4,12 +4,15 @@ use plonky2::{
         hash_types::{HashOut, HashOutTarget},
         poseidon::PoseidonHash,
     },
-    iop::{target::Target, witness::WitnessWrite},
+    iop::{
+        target::Target,
+        witness::WitnessWrite,
+    },
 };
 
-use crate::prover::CircuitInputs;
-
-use super::{CircuitFragment, D, F, gadgets::is_const_less_than, slice_to_field_elements};
+use crate::circuit::{CircuitFragment, D, F, slice_to_field_elements};
+use crate::inputs::CircuitInputs;
+use crate::gadgets::is_const_less_than;
 
 pub const MAX_PROOF_LEN: usize = 64;
 pub const PROOF_NODE_MAX_SIZE_F: usize = 73;

@@ -3,10 +3,9 @@
 use std::time::Duration;
 
 use criterion::{Criterion, criterion_main};
-use wormhole_circuit::{
-    prover::{CircuitInputs, WormholeProver},
-    verifier::WormholeVerifier,
-};
+use wormhole_circuit::inputs::CircuitInputs;
+use wormhole_prover::prover::WormholeProver;
+use wormhole_verifier::verifier::WormholeVerifier;
 
 const MEASUREMENT_TIME_S: u64 = 20;
 
