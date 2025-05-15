@@ -6,6 +6,7 @@ use crate::exit_account::{ExitAccount, ExitAccountTargets};
 use crate::nullifier::{Nullifier, NullifierTargets};
 use crate::storage_proof::{StorageProof, StorageProofTargets};
 use crate::unspendable_account::{UnspendableAccount, UnspendableAccountTargets};
+use plonky2::plonk::circuit_data::CircuitData;
 use plonky2::{
     field::{goldilocks_field::GoldilocksField, types::Field},
     iop::witness::PartialWitness,
@@ -100,6 +101,10 @@ impl WormholeCircuit {
 
     pub fn targets(&self) -> CircuitTargets {
         self.targets.clone()
+    }
+
+    pub fn build_circuit(self) -> CircuitData<F, C, D> {
+        self.builder.build()
     }
 
     pub fn build_prover(self) -> ProverCircuitData<F, C, D> {

@@ -14,6 +14,13 @@ wormhole-circuit = { path = "../circuit" }
 wormhole-prover = { path = "../prover" }
 wormhole-verifier = { path = "../verifier" }
 
+[dev-dependencies]
+# This is the same crate as used in plonky2. Need to have it for dummy proofs to work correctly.
+hashbrown = { version = "0.14.3", default-features = false, features = [
+  "ahash",
+  "serde",
+] }
+
 [features]
 testing = [
   "wormhole-circuit/testing",

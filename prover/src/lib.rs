@@ -41,7 +41,7 @@ use wormhole_circuit::{
 
 #[derive(Debug)]
 pub struct WormholeProver {
-    circuit_data: ProverCircuitData<F, C, D>,
+    pub circuit_data: ProverCircuitData<F, C, D>,
     partial_witness: PartialWitness<F>,
     targets: Option<CircuitTargets>,
 }
