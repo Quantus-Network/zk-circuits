@@ -1,4 +1,3 @@
-pub mod aggregator;
 pub mod circuit;
 
 /// The maximum numbers of proofs to aggregate into a composite proof.
