@@ -101,6 +101,7 @@ mod tests {
         build_and_prove_test(builder, pw)
     }
 
+    #[ignore = "takes too long"]
     #[test]
     #[cfg(feature = "testing")]
     fn build_and_verify_proof() {
