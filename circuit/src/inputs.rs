@@ -20,6 +20,8 @@ pub struct CircuitInputs {
     pub root_hash: [u8; 32],
     /// The address of the account to pay out to.
     pub exit_account: [u8; 32],
+    /// The duplicated exit account
+    pub exit_account_duplicate: [u8; 32],
 }
 
 #[cfg(any(test, feature = "testing"))]
@@ -46,6 +48,7 @@ pub mod test_helpers {
                 storage_proof: default_proof(),
                 root_hash,
                 exit_account: [0u8; 32],
+                exit_account_duplicate: [0u8; 32],
             }
         }
     }

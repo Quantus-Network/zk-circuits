@@ -38,6 +38,7 @@ use wormhole_circuit::{
     storage_proof::{StorageProof, StorageProofInputs},
     unspendable_account::{UnspendableAccount, UnspendableAccountInputs},
 };
+use wormhole_circuit::exit_account::ExitAccountPrivateInputs;
 
 #[derive(Debug)]
 pub struct WormholeProver {
@@ -83,6 +84,7 @@ impl WormholeProver {
         let unspendable_account = UnspendableAccount::from(circuit_inputs);
         let storage_proof = StorageProof::from(circuit_inputs);
         let exit_account = ExitAccount::from(circuit_inputs);
+        let exit_account_duplicate = ExitAccountPrivateInputs::from(circuit_inputs);
 
         let nullifier_inputs = NullifierInputs::new(&circuit_inputs.nullifier_preimage);
         let unspendable_account_inputs =
@@ -104,7 +106,7 @@ impl WormholeProver {
             targets.storage_proof,
             StorageProofInputs::new(circuit_inputs.root_hash),
         )?;
-        exit_account.fill_targets(&mut self.partial_witness, targets.exit_account, ())?;
+        exit_account.fill_targets(&mut self.partial_witness, targets.exit_account, exit_account_duplicate)?;
 
         Ok(self)
     }

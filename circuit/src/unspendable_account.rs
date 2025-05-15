@@ -156,8 +156,7 @@ pub mod tests {
         let targets = UnspendableAccount::circuit(&mut builder);
 
         unspendable_account
-            .fill_targets(&mut pw, targets, inputs)
-            .unwrap();
+            .fill_targets(&mut pw, targets, inputs)?;
         build_and_prove_test(builder, pw)
     }
 
