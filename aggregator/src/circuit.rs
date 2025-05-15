@@ -19,7 +19,7 @@ use crate::MAX_NUM_PROOFS_TO_AGGREGATE;
 
 pub struct WormholeProofAggregatorTargets {
     verifier_data: VerifierCircuitTarget,
-    proofs: Vec<ProofWithPublicInputsTarget<D>>,
+    proofs: [ProofWithPublicInputsTarget<D>; MAX_NUM_PROOFS_TO_AGGREGATE],
     num_proofs: Target,
 }
 
@@ -64,11 +64,12 @@ impl CircuitFragment for WormholeProofAggregator {
             proofs.push(builder.add_virtual_proof_with_pis(&circuit_data.common));
         }
 
+        let proofs: [ProofWithPublicInputsTarget<D>; MAX_NUM_PROOFS_TO_AGGREGATE] =
+            std::array::from_fn(|_| builder.add_virtual_proof_with_pis(&circuit_data.common));
+
         // Verify each aggregated proof separately.
         let n_log = (usize::BITS - (MAX_NUM_PROOFS_TO_AGGREGATE - 1).leading_zeros()) as usize;
         for (i, proof) in proofs.iter().enumerate() {
-            // NOTE: Due to this, any valid proofs sent beyond the maximum threshold will be
-            // replaced by dummy proofs.
             let is_proof = is_const_less_than(builder, i, num_proofs, n_log);
             builder
                 .conditionally_verify_proof_or_dummy::<C>(
@@ -172,24 +173,6 @@ mod tests {
         let num_proofs = proofs.len();
         proofs.extend_from_slice(&dummy_proofs);
 
-        let inputs = WormholeProofAggregatorInputs { proofs, num_proofs };
-        run_test(inputs).unwrap();
-    }
-
-    #[ignore = "takes too long"]
-    #[test]
-    #[cfg(feature = "testing")]
-    fn too_many_proofs_dont_pass() {
-        // Create proofs.
-        let mut proofs = Vec::with_capacity(MAX_NUM_PROOFS_TO_AGGREGATE);
-        for _ in 0..MAX_NUM_PROOFS_TO_AGGREGATE + 1 {
-            let prover = WormholeProver::new();
-            let inputs = CircuitInputs::default();
-            let proof = prover.commit(&inputs).unwrap().prove().unwrap();
-            proofs.push(proof);
-        }
-
-        let num_proofs = proofs.len();
         let inputs = WormholeProofAggregatorInputs { proofs, num_proofs };
         run_test(inputs).unwrap();
     }
