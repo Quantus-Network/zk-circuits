@@ -55,8 +55,8 @@ impl FieldElementCodec for UnspendableAccount {
 }
 
 impl From<&CircuitInputs> for UnspendableAccount {
-    fn from(value: &CircuitInputs) -> Self {
-        Self::new(&value.unspendable_account_preimage)
+    fn from(inputs: &CircuitInputs) -> Self {
+        Self::new(&inputs.private.unspendable_account_preimage)
     }
 }
 

@@ -48,8 +48,8 @@ impl FieldElementCodec for ExitAccount {
 }
 
 impl From<&CircuitInputs> for ExitAccount {
-    fn from(value: &CircuitInputs) -> Self {
-        Self::new(value.exit_account)
+    fn from(inputs: &CircuitInputs) -> Self {
+        Self::new(inputs.public.exit_account)
     }
 }
 

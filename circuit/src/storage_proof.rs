@@ -68,8 +68,8 @@ impl StorageProof {
 }
 
 impl From<&CircuitInputs> for StorageProof {
-    fn from(value: &CircuitInputs) -> Self {
-        Self::new(&value.storage_proof)
+    fn from(inputs: &CircuitInputs) -> Self {
+        Self::new(&inputs.private.storage_proof)
     }
 }
 

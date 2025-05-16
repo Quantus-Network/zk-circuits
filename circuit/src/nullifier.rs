@@ -50,8 +50,8 @@ impl FieldElementCodec for Nullifier {
 }
 
 impl From<&CircuitInputs> for Nullifier {
-    fn from(value: &CircuitInputs) -> Self {
-        Self::new(&value.nullifier_preimage)
+    fn from(inputs: &CircuitInputs) -> Self {
+        Self::new(&inputs.private.nullifier_preimage)
     }
 }
 

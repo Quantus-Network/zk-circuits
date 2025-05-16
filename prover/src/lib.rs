@@ -84,9 +84,9 @@ impl WormholeProver {
         let storage_proof = StorageProof::from(circuit_inputs);
         let exit_account = ExitAccount::from(circuit_inputs);
 
-        let nullifier_inputs = NullifierInputs::new(&circuit_inputs.nullifier_preimage);
+        let nullifier_inputs = NullifierInputs::new(&circuit_inputs.private.nullifier_preimage);
         let unspendable_account_inputs =
-            UnspendableAccountInputs::new(&circuit_inputs.unspendable_account_preimage);
+            UnspendableAccountInputs::new(&circuit_inputs.private.unspendable_account_preimage);
 
         amounts.fill_targets(&mut self.partial_witness, targets.amounts, ())?;
         nullifier.fill_targets(
@@ -102,7 +102,7 @@ impl WormholeProver {
         storage_proof.fill_targets(
             &mut self.partial_witness,
             targets.storage_proof,
-            StorageProofInputs::new(circuit_inputs.root_hash),
+            StorageProofInputs::new(circuit_inputs.public.root_hash),
         )?;
         exit_account.fill_targets(&mut self.partial_witness, targets.exit_account, ())?;
 
