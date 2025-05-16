@@ -9,7 +9,7 @@ use plonky2::{
 };
 use plonky2::field::types::Field64;
 use crate::circuit::{slice_to_field_elements, CircuitFragment, D, F};
-use crate::gadgets::is_const_less_than;
+use crate::gadgets::{is_const_equal, is_const_less_than, u128_to_felt};
 use crate::inputs::CircuitInputs;
 
 pub const MAX_PROOF_LEN: usize = 64;
@@ -43,13 +43,13 @@ pub struct StorageProof {
     nonce: F,
     funding_account: Vec<F>,
     to_account: Vec<F>,
-    funding_amount: Vec<F>,
+    funding_amount: F,
 }
 
 impl StorageProof {
     /// The input is a storage proof as a tuple where each part is split at the index where the child node's
     /// hash, if any, appears within this proof node
-    pub fn new(proof: &[(Vec<u8>, Vec<u8>)], nonce: u32, from_account: [u8; 32], to_account: [u8; 32], funding_amount: u128) -> Self {
+    pub fn new(proof: &[(Vec<u8>, Vec<u8>)], nonce: u32, from_account: [u8; 32], to_account: [u8; 32], funding_amount: u64) -> Self {
         // First construct the proof and the hash array
         let mut constructed_proof = Vec::with_capacity(proof.len());
         let mut hashes = Vec::with_capacity(proof.len());
@@ -72,17 +72,8 @@ impl StorageProof {
             nonce: F::from_canonical_u32(nonce),
             funding_account: slice_to_field_elements(&from_account),
             to_account: slice_to_field_elements(&to_account),
-            funding_amount: Self::u128_to_felt(funding_amount),
+            funding_amount: F::from_noncanonical_u64(funding_amount),
         }
-    }
-
-    pub fn u128_to_felt(num: u128) -> Vec<F> {
-        let mut amount_felts: Vec<F> = Vec::with_capacity(2);
-        let amount_high = F::from_noncanonical_u64((num >> 64) as u64 % F::ORDER);
-        let amount_low =  F::from_noncanonical_u64(num as u64 % F::ORDER);
-        amount_felts.push(amount_high);
-        amount_felts.push(amount_low);
-        amount_felts
     }
 }
 
@@ -117,6 +108,7 @@ impl CircuitFragment for StorageProof {
         }
 
         let leaf_inputs = builder.add_virtual_targets(11);
+        let leaf_hash = builder.hash_n_to_hash_no_pad::<PoseidonHash>(leaf_inputs.clone());
 
         // Setup constraints.
         // The first node should be the root node so we initialize `prev_hash` to the provided `root_hash`.
@@ -131,11 +123,12 @@ impl CircuitFragment for StorageProof {
             // Plonky2 has no actual native way to check that some input, a, is less than some input, b. There exists a function called
             // `range_check` that works similarly, but it's a constraint so we can't use it. The definition of the function is all in `src/gadgets.rs`.
             let is_proof_node = is_const_less_than(builder, i, proof_len, n_log);
+            let is_leaf_node = is_const_equal(builder, i, proof_len, n_log);
             let computed_hash = builder.hash_n_to_hash_no_pad::<PoseidonHash>(node.clone());
 
-            // How things like comparisions and equal statements actually work under the hood is really just field element subtraction.
+            // How things like comparisons and equal statements actually work under the hood is really just field element subtraction.
             // However, we can't just directly compare the two hashes, since the hash of a dummy node would not match up with
-            // the previous hash we had. Instead we're adding a intermittent step to simply multiply the diff by 1 or 0, depending on
+            // the previous hash we had. Instead, we're adding a intermittent step to simply multiply the diff by 1 or 0, depending on
             // if this is a proof node or not, and then comparing it to zero. Effectively, for any hash where `is_proof_node == 0`,
             // the constraint will hold, while hashes where `is_proof_node == 1` will need to match the previous hash (verifying inclusion).
             for y in 0..4 {
@@ -145,16 +138,18 @@ impl CircuitFragment for StorageProof {
                 builder.connect(result, zero);
             }
 
+            // Now do leaf hash
+            for y in 0..4 {
+                let leaf_diff = builder.sub(leaf_hash.elements[y], prev_hash.elements[y]);
+                let result = builder.mul(leaf_diff, is_leaf_node.target);
+                let zero = builder.zero();
+                builder.connect(result, zero);
+            }
+
             // Update `prev_hash` to the hash of the child that's stored within this node.
             prev_hash = hashes[i];
         }
 
-        // Now do leaf hash TODO: how?
-        let leaf_hash = builder.hash_n_to_hash_no_pad(leaf_inputs.clone());
-        for y in 0..4 {
-            let leaf_diff = builder.sub(leaf_hash.elements[y], prev_hash.elements[y]);
-            builder.connect(leaf_diff, builder.zero());
-        }
 
         StorageProofTargets {
             root_hash,
@@ -195,10 +190,10 @@ impl CircuitFragment for StorageProof {
 
         // Fill leaf inputs
         let mut leaf_inputs = Vec::with_capacity(11);
-        leaf_inputs.push(Self.nonce);
+        leaf_inputs.push(self.nonce);
         leaf_inputs.extend_from_slice(&self.funding_account);
         leaf_inputs.extend_from_slice(&self.to_account);
-        leaf_inputs.extend_from_slice(&self.funding_amount);
+        leaf_inputs.push(self.funding_amount);
         pw.set_target_arr(&targets.leaf_inputs, &leaf_inputs)?;
 
         Ok(())

@@ -2,11 +2,11 @@
 #[derive(Debug)]
 pub struct CircuitInputs {
     /// The amount sent in the funding transaction.
-    pub funding_amount: u128,
+    pub funding_amount: u64,
     /// Amount to be withdrawn.
-    pub exit_amount: u128,
+    pub exit_amount: u64,
     /// The fee for the transaction.
-    pub fee_amount: u128,
+    pub fee_amount: u64,
     /// Raw bytes of the nullifier preimage, used to prevent double spends.
     pub nullifier_preimage: Vec<u8>,
     /// Raw bytes of the unspendable account preimage.
