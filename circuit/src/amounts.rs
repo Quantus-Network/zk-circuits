@@ -60,6 +60,11 @@ impl CircuitFragment for Amounts {
         let sum = builder.add(exit_amount, fee_amount);
         builder.connect(sum, funding_tx_amount);
 
+        // This guarantees that exit_amount + fee_amount < F::ORDER = 2^64 - 2^32 + 1
+        builder.range_check(exit_amount, 63);
+        // 2*(2^63 - 1) > F::ORDER, so we require the fee to be a bit smaller
+        builder.range_check(fee_amount, 62);
+
         AmountsTargets {
             funding_tx_amount,
             exit_amount,
