@@ -135,4 +135,15 @@ mod tests {
         let inputs = CircuitInputs::default();
         prover.commit(&inputs).unwrap().prove().unwrap();
     }
+
+    #[test]
+    #[ignore = "debug"]
+    #[cfg(feature = "testing")]
+    fn get_public_inputs() {
+        let prover = WormholeProver::new();
+        let inputs = CircuitInputs::default();
+        let proof = prover.commit(&inputs).unwrap().prove().unwrap();
+        let public_inputs = proof.public_inputs;
+        println!("{:?}", public_inputs);
+    }
 }

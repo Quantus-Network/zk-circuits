@@ -1,3 +1,10 @@
+use anyhow::bail;
+use plonky2::{field::types::PrimeField64, plonk::proof::ProofWithPublicInputs};
+
+use crate::circuit::{field_elements_to_bytes, C, D, F};
+
+const PUBLIC_INPUTS_FELTS_LEN: usize = 19;
+
 /// Inputs required to commit to the wormhole circuit.
 #[derive(Debug)]
 pub struct CircuitInputs {
@@ -18,6 +25,44 @@ pub struct PublicCircuitInputs {
     pub root_hash: [u8; 32],
     /// The address of the account to pay out to.
     pub exit_account: [u8; 32],
+}
+
+impl TryFrom<ProofWithPublicInputs<F, C, D>> for PublicCircuitInputs {
+    type Error = anyhow::Error;
+
+    fn try_from(proof: ProofWithPublicInputs<F, C, D>) -> Result<Self, Self::Error> {
+        let public_inputs = proof.public_inputs;
+
+        if public_inputs.len() != PUBLIC_INPUTS_FELTS_LEN {
+            bail!(
+                "public inputs should contain: {} field elements, got: {}",
+                PUBLIC_INPUTS_FELTS_LEN,
+                public_inputs.len()
+            )
+        }
+
+        let funding_tx_amount = public_inputs[0].to_noncanonical_u64();
+        let exit_amount = public_inputs[1].to_noncanonical_u64();
+        let fee_amount = public_inputs[2].to_noncanonical_u64();
+
+        let root_hash: [u8; 32] = field_elements_to_bytes(&public_inputs[11..15])
+            .try_into()
+            .map_err(|_| anyhow::anyhow!("failed to deserialize root hash from public inputs"))?;
+
+        let exit_account: [u8; 32] = field_elements_to_bytes(&public_inputs[15..19])
+            .try_into()
+            .map_err(|_| {
+                anyhow::anyhow!("failed to deserialize exit account from public inputs")
+            })?;
+
+        Ok(PublicCircuitInputs {
+            funding_tx_amount,
+            exit_amount,
+            fee_amount,
+            root_hash,
+            exit_account,
+        })
+    }
 }
 
 /// All of the private inputs required for the circuit.

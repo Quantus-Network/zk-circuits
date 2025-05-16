@@ -6,6 +6,7 @@ use crate::exit_account::{ExitAccount, ExitAccountTargets};
 use crate::nullifier::{Nullifier, NullifierTargets};
 use crate::storage_proof::{StorageProof, StorageProofTargets};
 use crate::unspendable_account::{UnspendableAccount, UnspendableAccountTargets};
+use plonky2::field::types::PrimeField64;
 use plonky2::plonk::circuit_data::CircuitData;
 use plonky2::{
     field::{goldilocks_field::GoldilocksField, types::Field},
@@ -54,6 +55,19 @@ pub fn slice_to_field_elements(input: &[u8]) -> Vec<F> {
     }
 
     field_elements
+}
+
+/// Converts a given field element slice into its byte representation.
+pub fn field_elements_to_bytes(input: &[F]) -> Vec<u8> {
+    let mut bytes: Vec<u8> = Vec::new();
+
+    for field_element in input {
+        let value = field_element.to_noncanonical_u64();
+        let value_bytes = value.to_le_bytes();
+        bytes.extend_from_slice(&value_bytes);
+    }
+
+    bytes
 }
 
 #[derive(Debug, Clone)]
