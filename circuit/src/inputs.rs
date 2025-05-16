@@ -1,12 +1,12 @@
 /// Inputs required to commit to the wormhole circuit.
 #[derive(Debug)]
 pub struct CircuitInputs {
-    /// The amount sent in the transaction.
-    pub funding_tx_amount: u64,
+    /// The amount sent in the funding transaction.
+    pub funding_amount: u128,
     /// Amount to be withdrawn.
-    pub exit_amount: u64,
+    pub exit_amount: u128,
     /// The fee for the transaction.
-    pub fee_amount: u64,
+    pub fee_amount: u128,
     /// Raw bytes of the nullifier preimage, used to prevent double spends.
     pub nullifier_preimage: Vec<u8>,
     /// Raw bytes of the unspendable account preimage.
@@ -20,6 +20,12 @@ pub struct CircuitInputs {
     pub root_hash: [u8; 32],
     /// The address of the account to pay out to.
     pub exit_account: [u8; 32],
+    /// The nonce of the funding transaction
+    pub funding_nonce: u32,
+    /// The account that funded the unspendable account
+    pub funding_account: [u8; 32],
+    /// The account that was funded
+    pub unspendable_account: [u8; 32],
 }
 
 #[cfg(any(test, feature = "testing"))]
@@ -38,7 +44,7 @@ pub mod test_helpers {
                 hex::decode(unspendable_account::test_helpers::PREIMAGES[0]).unwrap();
             let root_hash: [u8; 32] = hex::decode(ROOT_HASH).unwrap().try_into().unwrap();
             Self {
-                funding_tx_amount: 0,
+                funding_amount: 0,
                 exit_amount: 0,
                 fee_amount: 0,
                 nullifier_preimage,

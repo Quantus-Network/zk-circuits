@@ -1,3 +1,4 @@
+use codec::Encode;
 use plonky2::{
     field::types::Field,
     hash::{
@@ -6,7 +7,7 @@ use plonky2::{
     },
     iop::{target::Target, witness::WitnessWrite},
 };
-
+use plonky2::field::types::Field64;
 use crate::circuit::{slice_to_field_elements, CircuitFragment, D, F};
 use crate::gadgets::is_const_less_than;
 use crate::inputs::CircuitInputs;
@@ -32,18 +33,23 @@ pub struct StorageProofTargets {
     pub proof_len: Target,
     pub proof_data: Vec<Vec<Target>>,
     pub hashes: Vec<HashOutTarget>,
+    pub leaf_inputs: Vec<Target>,
 }
 
 #[derive(Debug)]
 pub struct StorageProof {
     proof: Vec<Vec<F>>,
     hashes: Vec<Vec<F>>,
+    nonce: F,
+    funding_account: Vec<F>,
+    to_account: Vec<F>,
+    funding_amount: Vec<F>,
 }
 
 impl StorageProof {
     /// The input is a storage proof as a tuple where each part is split at the index where the child node's
     /// hash, if any, appears within this proof node
-    pub fn new(proof: &[(Vec<u8>, Vec<u8>)]) -> Self {
+    pub fn new(proof: &[(Vec<u8>, Vec<u8>)], nonce: u32, from_account: [u8; 32], to_account: [u8; 32], funding_amount: u128) -> Self {
         // First construct the proof and the hash array
         let mut constructed_proof = Vec::with_capacity(proof.len());
         let mut hashes = Vec::with_capacity(proof.len());
@@ -63,13 +69,26 @@ impl StorageProof {
         StorageProof {
             proof: constructed_proof,
             hashes,
+            nonce: F::from_canonical_u32(nonce),
+            funding_account: slice_to_field_elements(&from_account),
+            to_account: slice_to_field_elements(&to_account),
+            funding_amount: Self::u128_to_felt(funding_amount),
         }
+    }
+
+    pub fn u128_to_felt(num: u128) -> Vec<F> {
+        let mut amount_felts: Vec<F> = Vec::with_capacity(2);
+        let amount_high = F::from_noncanonical_u64((num >> 64) as u64 % F::ORDER);
+        let amount_low =  F::from_noncanonical_u64(num as u64 % F::ORDER);
+        amount_felts.push(amount_high);
+        amount_felts.push(amount_low);
+        amount_felts
     }
 }
 
 impl From<&CircuitInputs> for StorageProof {
     fn from(value: &CircuitInputs) -> Self {
-        Self::new(&value.storage_proof)
+        Self::new(&value.storage_proof, value.funding_nonce, value.funding_account, value.unspendable_account, value.funding_amount)
     }
 }
 
@@ -97,16 +116,28 @@ impl CircuitFragment for StorageProof {
             hashes.push(hash);
         }
 
+        let leaf_inputs = builder.add_virtual_targets(11);
+
         // Setup constraints.
         // The first node should be the root node so we initialize `prev_hash` to the provided `root_hash`.
         let mut prev_hash = root_hash;
+
         let n_log = (usize::BITS - (MAX_PROOF_LEN - 1).leading_zeros()) as usize;
         for i in 0..MAX_PROOF_LEN {
+            // The proof node will either be a proof node or a dummy node.
             let node = &proof_data[i];
 
+            // To check if it's a proof node we check if the current index, i, i is less than the number of proofs to be expected.
+            // Plonky2 has no actual native way to check that some input, a, is less than some input, b. There exists a function called
+            // `range_check` that works similarly, but it's a constraint so we can't use it. The definition of the function is all in `src/gadgets.rs`.
             let is_proof_node = is_const_less_than(builder, i, proof_len, n_log);
             let computed_hash = builder.hash_n_to_hash_no_pad::<PoseidonHash>(node.clone());
 
+            // How things like comparisions and equal statements actually work under the hood is really just field element subtraction.
+            // However, we can't just directly compare the two hashes, since the hash of a dummy node would not match up with
+            // the previous hash we had. Instead we're adding a intermittent step to simply multiply the diff by 1 or 0, depending on
+            // if this is a proof node or not, and then comparing it to zero. Effectively, for any hash where `is_proof_node == 0`,
+            // the constraint will hold, while hashes where `is_proof_node == 1` will need to match the previous hash (verifying inclusion).
             for y in 0..4 {
                 let diff = builder.sub(computed_hash.elements[y], prev_hash.elements[y]);
                 let result = builder.mul(diff, is_proof_node.target);
@@ -118,11 +149,19 @@ impl CircuitFragment for StorageProof {
             prev_hash = hashes[i];
         }
 
+        // Now do leaf hash TODO: how?
+        let leaf_hash = builder.hash_n_to_hash_no_pad(leaf_inputs.clone());
+        for y in 0..4 {
+            let leaf_diff = builder.sub(leaf_hash.elements[y], prev_hash.elements[y]);
+            builder.connect(leaf_diff, builder.zero());
+        }
+
         StorageProofTargets {
             root_hash,
             proof_len,
             proof_data,
             hashes,
+            leaf_inputs,
         }
     }
 
@@ -153,6 +192,14 @@ impl CircuitFragment for StorageProof {
             let hash = self.hashes.get(i).unwrap_or(&empty_hash);
             pw.set_hash_target(targets.hashes[i], HashOut::from_partial(&hash[..4]))?;
         }
+
+        // Fill leaf inputs
+        let mut leaf_inputs = Vec::with_capacity(11);
+        leaf_inputs.push(Self.nonce);
+        leaf_inputs.extend_from_slice(&self.funding_account);
+        leaf_inputs.extend_from_slice(&self.to_account);
+        leaf_inputs.extend_from_slice(&self.funding_amount);
+        pw.set_target_arr(&targets.leaf_inputs, &leaf_inputs)?;
 
         Ok(())
     }
@@ -185,9 +232,14 @@ pub mod test_helpers {
         ),
     ];
 
+    pub const FUNDING_NONCE: u32 = 1;
+    pub const FUNDING_ACCOUNT: [u8; 32] = [0u8; 32];
+    pub const TO_ACCOUNT: [u8; 32] = [0u8; 32];
+    pub const FUNDING_AMOUNT: u128 = 1000;
+
     impl Default for StorageProof {
         fn default() -> Self {
-            StorageProof::new(&default_proof())
+            StorageProof::new(&default_proof(), FUNDING_NONCE, FUNDING_ACCOUNT, TO_ACCOUNT, FUNDING_AMOUNT)
         }
     }
 

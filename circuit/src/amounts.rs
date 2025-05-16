@@ -32,7 +32,7 @@ impl Amounts {
 
 impl From<&CircuitInputs> for Amounts {
     fn from(value: &CircuitInputs) -> Self {
-        Self::new(value.funding_tx_amount, value.exit_amount, value.fee_amount)
+        Self::new(value.funding_amount, value.exit_amount, value.fee_amount)
     }
 }
 
