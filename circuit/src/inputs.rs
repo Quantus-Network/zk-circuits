@@ -7,10 +7,8 @@ pub struct CircuitInputs {
     pub exit_amount: u64,
     /// The fee for the transaction.
     pub fee_amount: u64,
-    /// Raw bytes of the nullifier preimage, used to prevent double spends.
-    pub nullifier_preimage: Vec<u8>,
-    /// Raw bytes of the unspendable account preimage.
-    pub unspendable_account_preimage: Vec<u8>,
+    /// Raw bytes of the nullifier and unspendable account preimage, used to prevent double spends.
+    pub secret: [u8; 32],
     /// A sequence of key-value nodes representing the storage proof.
     ///
     /// Each element is a tuple where the items are the left and right splits of a proof node split
@@ -26,6 +24,11 @@ pub struct CircuitInputs {
     pub funding_account: [u8; 32],
     /// The account that was funded
     pub unspendable_account: [u8; 32],
+}
+
+#[derive(Debug)]
+pub struct LeafInputs {
+
 }
 
 #[cfg(any(test, feature = "testing"))]
@@ -47,11 +50,13 @@ pub mod test_helpers {
                 funding_amount: 0,
                 exit_amount: 0,
                 fee_amount: 0,
-                nullifier_preimage,
-                unspendable_account_preimage,
+                secret: [111u8; 32],
                 storage_proof: default_proof(),
                 root_hash,
                 exit_account: [254u8; 32],
+                funding_nonce: 0,
+                funding_account: [222u8; 32],
+                unspendable_account: [201u8; 32],
             }
         }
     }

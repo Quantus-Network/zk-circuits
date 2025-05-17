@@ -7,11 +7,14 @@ use plonky2::{
     plonk::{circuit_builder::CircuitBuilder, config::Hasher},
 };
 
-use crate::circuit::{slice_to_field_elements, CircuitFragment, Digest, D, F};
+use crate::circuit::{CircuitFragment, Digest, D, F};
 use crate::inputs::CircuitInputs;
+use crate::nullifier::NULLIFIER_SALT;
+use crate::utils::{slice_to_field_elements, string_to_felt};
 
 // FIXME: Adjust as needed.
 pub const PREIMAGE_NUM_TARGETS: usize = 5;
+pub const UNSPENDABLE_SALT: &str = "~unspen~";
 
 pub type AccountId = Digest;
 
@@ -21,9 +24,11 @@ pub struct UnspendableAccount {
 }
 
 impl UnspendableAccount {
-    pub fn new(preimage: &[u8]) -> Self {
+    pub fn new(secret: &[u8]) -> Self {
         // First, convert the preimage to its representation as field elements.
-        let preimage = slice_to_field_elements(preimage);
+        let mut preimage = slice_to_field_elements(secret);
+        let salt = string_to_felt(UNSPENDABLE_SALT);
+        preimage.insert(0, salt);
 
         // Hash twice to get the account id.
         let inner_hash = PoseidonHash::hash_no_pad(&preimage).elements;
@@ -35,7 +40,7 @@ impl UnspendableAccount {
 
 impl From<&CircuitInputs> for UnspendableAccount {
     fn from(value: &CircuitInputs) -> Self {
-        Self::new(&value.unspendable_account_preimage)
+        Self::new(&value.secret)
     }
 }
 
@@ -64,7 +69,9 @@ impl CircuitFragment for UnspendableAccount {
     /// Builds a circuit that asserts that the `unspendable_account` was generated from `H(H(salt+secret))`.
     fn circuit(builder: &mut CircuitBuilder<F, D>) -> Self::Targets {
         let account_id = builder.add_virtual_hash_public_input();
-        let preimage = builder.add_virtual_targets(PREIMAGE_NUM_TARGETS);
+        let mut preimage = builder.add_virtual_targets(PREIMAGE_NUM_TARGETS - 1);
+        let salt = builder.constant(string_to_felt(UNSPENDABLE_SALT));
+        preimage.insert(0, salt);
 
         // Compute the `generated_account` by double-hashing the preimage (salt + secret).
         let inner_hash = builder.hash_n_to_hash_no_pad::<PoseidonHash>(preimage.clone());

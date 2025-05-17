@@ -8,13 +8,15 @@ use plonky2::{
     iop::{target::Target, witness::WitnessWrite},
 };
 use plonky2::field::types::Field64;
-use crate::circuit::{slice_to_field_elements, CircuitFragment, D, F};
-use crate::gadgets::{is_const_equal, is_const_less_than, u128_to_felt};
+use crate::utils::{slice_to_digest, slice_to_field_elements};
+use crate::circuit::{CircuitFragment, Digest, D, F};
+use crate::gadgets::is_const_less_than;
 use crate::inputs::CircuitInputs;
 
 pub const MAX_PROOF_LEN: usize = 64;
 pub const PROOF_NODE_MAX_SIZE_F: usize = 73;
 pub const PROOF_NODE_MAX_SIZE_B: usize = 256;
+pub const LEAF_INPUTS_NUM_FELTS: usize = 11;
 
 #[derive(Debug, Default)]
 pub struct StorageProofInputs {
@@ -41,8 +43,8 @@ pub struct StorageProof {
     proof: Vec<Vec<F>>,
     hashes: Vec<Vec<F>>,
     nonce: F,
-    funding_account: Vec<F>,
-    to_account: Vec<F>,
+    funding_account: Digest,
+    to_account: Digest,
     funding_amount: F,
 }
 
@@ -70,8 +72,8 @@ impl StorageProof {
             proof: constructed_proof,
             hashes,
             nonce: F::from_canonical_u32(nonce),
-            funding_account: slice_to_field_elements(&from_account),
-            to_account: slice_to_field_elements(&to_account),
+            funding_account: slice_to_digest(&from_account),
+            to_account: slice_to_digest(&to_account),
             funding_amount: F::from_noncanonical_u64(funding_amount),
         }
     }
@@ -107,7 +109,7 @@ impl CircuitFragment for StorageProof {
             hashes.push(hash);
         }
 
-        let leaf_inputs = builder.add_virtual_targets(11);
+        let leaf_inputs = builder.add_virtual_targets(LEAF_INPUTS_NUM_FELTS);
         let leaf_hash = builder.hash_n_to_hash_no_pad::<PoseidonHash>(leaf_inputs.clone());
 
         // Setup constraints.
@@ -123,7 +125,8 @@ impl CircuitFragment for StorageProof {
             // Plonky2 has no actual native way to check that some input, a, is less than some input, b. There exists a function called
             // `range_check` that works similarly, but it's a constraint so we can't use it. The definition of the function is all in `src/gadgets.rs`.
             let is_proof_node = is_const_less_than(builder, i, proof_len, n_log);
-            let is_leaf_node = is_const_equal(builder, i, proof_len, n_log);
+            let index = builder.constant(F::from_canonical_usize(i));
+            let is_leaf_node = builder.is_equal(proof_len, index);
             let computed_hash = builder.hash_n_to_hash_no_pad::<PoseidonHash>(node.clone());
 
             // How things like comparisons and equal statements actually work under the hood is really just field element subtraction.
@@ -189,7 +192,7 @@ impl CircuitFragment for StorageProof {
         }
 
         // Fill leaf inputs
-        let mut leaf_inputs = Vec::with_capacity(11);
+        let mut leaf_inputs = Vec::with_capacity(LEAF_INPUTS_NUM_FELTS);
         leaf_inputs.push(self.nonce);
         leaf_inputs.extend_from_slice(&self.funding_account);
         leaf_inputs.extend_from_slice(&self.to_account);
@@ -230,7 +233,7 @@ pub mod test_helpers {
     pub const FUNDING_NONCE: u32 = 1;
     pub const FUNDING_ACCOUNT: [u8; 32] = [0u8; 32];
     pub const TO_ACCOUNT: [u8; 32] = [0u8; 32];
-    pub const FUNDING_AMOUNT: u128 = 1000;
+    pub const FUNDING_AMOUNT: u64 = 1000;
 
     impl Default for StorageProof {
         fn default() -> Self {

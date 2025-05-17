@@ -1,4 +1,4 @@
-use crate::circuit::{slice_to_field_elements, CircuitFragment, D, F};
+use crate::circuit::{CircuitFragment, D, F};
 use crate::inputs::CircuitInputs;
 use plonky2::field::types::{Field, PrimeField64};
 use plonky2::{
@@ -6,6 +6,7 @@ use plonky2::{
     iop::witness::{PartialWitness, WitnessWrite},
     plonk::circuit_builder::CircuitBuilder,
 };
+use crate::utils::slice_to_field_elements;
 
 #[derive(Debug, Default, Eq, PartialEq)]
 pub struct ExitAccount([u8; 32]);

@@ -38,23 +38,6 @@ pub trait CircuitFragment {
     ) -> anyhow::Result<()>;
 }
 
-/// Converts a given slice into its field element representation.
-pub fn slice_to_field_elements(input: &[u8]) -> Vec<F> {
-    const BYTES_PER_ELEMENT: usize = 8;
-
-    let mut field_elements: Vec<F> = Vec::new();
-    for chunk in input.chunks(BYTES_PER_ELEMENT) {
-        let mut bytes = [0u8; 8];
-        bytes[..chunk.len()].copy_from_slice(chunk);
-        // Convert the chunk to a field element.
-        let value = u64::from_le_bytes(bytes);
-        let field_element = F::from_noncanonical_u64(value);
-        field_elements.push(field_element);
-    }
-
-    field_elements
-}
-
 #[derive(Debug, Clone)]
 pub struct CircuitTargets {
     pub amounts: AmountsTargets,
@@ -71,7 +54,7 @@ pub struct WormholeCircuit {
 
 impl Default for WormholeCircuit {
     fn default() -> Self {
-        let config = CircuitConfig::standard_recursion_config();
+        let config = CircuitConfig::standard_recursion_zk_config();
         let mut builder = CircuitBuilder::<F, D>::new(config);
 
         // Setup circuits and their targets.
@@ -119,7 +102,7 @@ pub mod tests {
 
     /// Convenince function for initializing a test circuit environment.
     pub fn setup_test_builder_and_witness() -> (CircuitBuilder<F, D>, PartialWitness<F>) {
-        let config = CircuitConfig::standard_recursion_config();
+        let config = CircuitConfig::standard_recursion_zk_config();
         let builder = CircuitBuilder::<F, D>::new(config);
         let pw = PartialWitness::new();
 

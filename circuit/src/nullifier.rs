@@ -7,11 +7,13 @@ use plonky2::{
     plonk::{circuit_builder::CircuitBuilder, config::Hasher},
 };
 
-use crate::circuit::{slice_to_field_elements, CircuitFragment, Digest, D, F};
+use crate::circuit::{CircuitFragment, Digest, D, F};
 use crate::inputs::CircuitInputs;
+use crate::utils::{slice_to_field_elements, string_to_felt};
 
 // FIXME: Adjust as needed.
 pub const PREIMAGE_NUM_TARGETS: usize = 5;
+pub const NULLIFIER_SALT: &str = "~nullif~";
 
 #[derive(Debug)]
 pub struct Nullifier {
@@ -20,7 +22,9 @@ pub struct Nullifier {
 
 impl Nullifier {
     pub fn new(preimage: &[u8]) -> Self {
-        let preimage = slice_to_field_elements(preimage);
+        let mut preimage = slice_to_field_elements(preimage);
+        let salt = string_to_felt(NULLIFIER_SALT);
+        preimage.insert(0, salt);
         let inner_hash = PoseidonHash::hash_no_pad(&preimage).elements;
         let hash = PoseidonHash::hash_no_pad(&inner_hash).elements;
 
@@ -30,7 +34,7 @@ impl Nullifier {
 
 impl From<&CircuitInputs> for Nullifier {
     fn from(value: &CircuitInputs) -> Self {
-        Self::new(&value.nullifier_preimage)
+        Self::new(&value.secret)
     }
 }
 
@@ -60,7 +64,9 @@ impl CircuitFragment for Nullifier {
     /// extrinsic_index + secret))`
     fn circuit(builder: &mut CircuitBuilder<F, D>) -> Self::Targets {
         let hash = builder.add_virtual_hash_public_input();
-        let preimage = builder.add_virtual_targets(PREIMAGE_NUM_TARGETS);
+        let mut preimage = builder.add_virtual_targets(PREIMAGE_NUM_TARGETS - 1);
+        let salt = builder.constant(string_to_felt(NULLIFIER_SALT));
+        preimage.insert(0, salt);
 
         // Compute the `generated_account` by double-hashing the preimage (salt + secret).
         let inner_hash = builder.hash_n_to_hash_no_pad::<PoseidonHash>(preimage.clone());
