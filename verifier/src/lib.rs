@@ -55,9 +55,7 @@ impl WormholeVerifier {
 #[cfg(test)]
 mod tests {
     use super::WormholeVerifier;
-    use plonky2::field::types::Field;
     use plonky2::plonk::proof::ProofWithPublicInputs;
-    use wormhole_circuit::circuit::F;
     use wormhole_circuit::codec::FieldElementCodec;
     use wormhole_circuit::exit_account::ExitAccount;
     use wormhole_circuit::inputs::CircuitInputs;
@@ -82,18 +80,8 @@ mod tests {
         println!("proof before: {:?}", proof.public_inputs);
         let exit_account = ExitAccount::from_field_elements(&proof.public_inputs[15..19]);
         println!("exit_account: {:?}", exit_account);
-        let modified_exit_account = ExitAccount::new([8u8; 32]);
-        proof.public_inputs[15..19].copy_from_slice(&{
-            let this = &modified_exit_account;
-            let mut elements = Vec::with_capacity(4);
-            for i in 0..4 {
-                let mut bytes = [0u8; 8];
-                bytes.copy_from_slice(&this.0[i * 8..(i + 1) * 8]);
-                let value = u64::from_le_bytes(bytes);
-                elements.push(F::from_noncanonical_u64(value));
-            }
-            elements
-        });
+        let modified_exit_account = ExitAccount::new(&[8u8; 32]).unwrap();
+        proof.public_inputs[15..19].copy_from_slice(&modified_exit_account.to_field_elements());
         println!("proof after: {:?}", proof.public_inputs);
 
         let verifier = WormholeVerifier::new();

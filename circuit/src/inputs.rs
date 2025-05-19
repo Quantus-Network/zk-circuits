@@ -4,6 +4,7 @@ use plonky2::{field::types::PrimeField64, plonk::proof::ProofWithPublicInputs};
 use crate::{
     circuit::{field_elements_to_bytes, C, D, F},
     codec::FieldElementCodec,
+    exit_account::ExitAccount,
     nullifier::Nullifier,
     unspendable_account::UnspendableAccount,
 };
@@ -33,7 +34,7 @@ pub struct PublicCircuitInputs {
     /// The root hash of the storage trie.
     pub root_hash: [u8; 32],
     /// The address of the account to pay out to.
-    pub exit_account: [u8; 32],
+    pub exit_account: ExitAccount,
 }
 
 impl TryFrom<ProofWithPublicInputs<F, C, D>> for PublicCircuitInputs {
@@ -61,11 +62,7 @@ impl TryFrom<ProofWithPublicInputs<F, C, D>> for PublicCircuitInputs {
             .try_into()
             .map_err(|_| anyhow::anyhow!("failed to deserialize root hash from public inputs"))?;
 
-        let exit_account: [u8; 32] = field_elements_to_bytes(&public_inputs[15..19])
-            .try_into()
-            .map_err(|_| {
-                anyhow::anyhow!("failed to deserialize exit account from public inputs")
-            })?;
+        let exit_account = ExitAccount::from_field_elements(&public_inputs[15..19])?;
 
         Ok(PublicCircuitInputs {
             funding_tx_amount,
@@ -95,6 +92,7 @@ pub struct PrivateCircuitInputs {
 
 #[cfg(any(test, feature = "testing"))]
 pub mod test_helpers {
+    use crate::exit_account::ExitAccount;
     use crate::nullifier::{self, Nullifier};
     use crate::storage_proof::test_helpers::{default_proof, ROOT_HASH};
     use crate::unspendable_account::{self, UnspendableAccount};
@@ -110,6 +108,7 @@ pub mod test_helpers {
 
             let nullifier = Nullifier::new(&nullifier_preimage);
             let unspendable_account = UnspendableAccount::new(&unspendable_account_preimage);
+            let exit_account = ExitAccount::new(&[254u8; 32]).unwrap();
 
             Self {
                 public: PublicCircuitInputs {
@@ -119,7 +118,7 @@ pub mod test_helpers {
                     nullifier,
                     unspendable_account,
                     root_hash,
-                    exit_account: [254u8; 32],
+                    exit_account,
                 },
                 private: PrivateCircuitInputs {
                     nullifier_preimage,

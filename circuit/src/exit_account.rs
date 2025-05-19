@@ -1,55 +1,57 @@
-use crate::circuit::{slice_to_field_elements, CircuitFragment, D, F};
-use crate::codec::FieldElementCodec;
+use crate::circuit::{
+    field_elements_to_bytes, slice_to_field_elements, CircuitFragment, Digest, D, F,
+};
+use crate::codec::{ByteCodec, FieldElementCodec};
 use crate::inputs::CircuitInputs;
-use plonky2::field::types::{Field, PrimeField64};
 use plonky2::{
-    hash::hash_types::{HashOut, HashOutTarget},
+    hash::hash_types::HashOutTarget,
     iop::witness::{PartialWitness, WitnessWrite},
     plonk::circuit_builder::CircuitBuilder,
 };
 
-#[derive(Debug, Default, Eq, PartialEq)]
-pub struct ExitAccount(pub [u8; 32]);
+#[derive(Debug, Default, Eq, PartialEq, Clone, Copy)]
+pub struct ExitAccount(Digest);
 
 impl ExitAccount {
-    pub fn new(address: [u8; 32]) -> Self {
-        Self(address)
+    pub fn new(address: &[u8]) -> anyhow::Result<Self> {
+        Self::from_bytes(address)
+    }
+}
+
+impl ByteCodec for ExitAccount {
+    fn to_bytes(&self) -> Vec<u8> {
+        field_elements_to_bytes(&self.0)
+    }
+
+    fn from_bytes(slice: &[u8]) -> anyhow::Result<Self> {
+        let address = slice_to_field_elements(slice).try_into().map_err(|_| {
+            anyhow::anyhow!("failed to deserialize bytes into exit account address")
+        })?;
+        Ok(ExitAccount(address))
     }
 }
 
 impl FieldElementCodec for ExitAccount {
-    /// Encode [u8; 32] into Vec<F> (4 field elements, 8 bytes each)
     fn to_field_elements(&self) -> Vec<F> {
-        let mut elements = Vec::with_capacity(4);
-        for i in 0..4 {
-            let mut bytes = [0u8; 8];
-            bytes.copy_from_slice(&self.0[i * 8..(i + 1) * 8]);
-            let value = u64::from_le_bytes(bytes);
-            elements.push(F::from_noncanonical_u64(value));
-        }
-        elements
+        self.0.to_vec()
     }
 
-    /// Decode [u8; 32] from Vec<F> (expects 4 field elements)
     fn from_field_elements(elements: &[F]) -> anyhow::Result<Self> {
         if elements.len() != 4 {
             return Err(anyhow::anyhow!(
-                "Expected 4 field elements for ExitAccount address"
+                "Expected 4 field elements for ExitAccount address, got: {}",
+                elements.len()
             ));
         }
-        let mut address = [0u8; 32];
-        for i in 0..4 {
-            let value = elements[i].to_noncanonical_u64();
-            let bytes = value.to_le_bytes();
-            address[i * 8..(i + 1) * 8].copy_from_slice(&bytes);
-        }
-        Ok(ExitAccount::new(address))
+
+        let address = elements.try_into()?;
+        Ok(Self(address))
     }
 }
 
 impl From<&CircuitInputs> for ExitAccount {
     fn from(inputs: &CircuitInputs) -> Self {
-        Self::new(inputs.public.exit_account)
+        inputs.public.exit_account
     }
 }
 
@@ -74,8 +76,7 @@ impl CircuitFragment for ExitAccount {
         targets: Self::Targets,
         _inputs: Self::PrivateInputs,
     ) -> anyhow::Result<()> {
-        let address = HashOut::from_partial(&slice_to_field_elements(&self.0));
-        pw.set_hash_target(targets.address, address)
+        pw.set_hash_target(targets.address, self.0.into())
     }
 }
 
@@ -85,7 +86,7 @@ mod tests {
         tests::{build_and_prove_test, setup_test_builder_and_witness},
         C,
     };
-    use plonky2::field::types::Field64;
+    use plonky2::field::types::{Field, Field64};
 
     use super::*;
     use plonky2::plonk::proof::ProofWithPublicInputs;
@@ -106,7 +107,7 @@ mod tests {
 
     #[test]
     fn test_exit_account_round_trip() -> anyhow::Result<()> {
-        let exit_account = ExitAccount::new([42u8; 32]);
+        let exit_account = ExitAccount::new(&[42u8; 32])?;
         let elements = exit_account.to_field_elements();
         assert_eq!(elements.len(), 4, "Expected 4 field elements");
         let decoded = ExitAccount::from_field_elements(&elements)?;
@@ -116,7 +117,7 @@ mod tests {
 
     #[test]
     fn test_exit_account_zero_address() -> anyhow::Result<()> {
-        let exit_account = ExitAccount::new([0u8; 32]);
+        let exit_account = ExitAccount::new(&[0u8; 32])?;
         let elements = exit_account.to_field_elements();
         assert_eq!(elements.len(), 4, "Expected 4 field elements");
         assert_eq!(
@@ -131,7 +132,7 @@ mod tests {
 
     #[test]
     fn test_exit_account_max_address() -> anyhow::Result<()> {
-        let exit_account = ExitAccount::new([255u8; 32]);
+        let exit_account = ExitAccount::new(&[255u8; 32])?;
         let elements = exit_account.to_field_elements();
         assert_eq!(elements.len(), 4, "Expected 4 field elements");
         // Each element should be u64::MAX (0xFFFFFFFFFFFFFFFF)
@@ -156,7 +157,7 @@ mod tests {
         );
         assert_eq!(
             result.unwrap_err().to_string(),
-            "Expected 4 field elements for ExitAccount address"
+            "Expected 4 field elements for ExitAccount address, got: 3"
         );
     }
 
@@ -165,7 +166,7 @@ mod tests {
         let mut address = [0u8; 32];
         address[0] = 1;
         address[31] = 255; // Non-zero first and last bytes
-        let exit_account = ExitAccount::new(address);
+        let exit_account = ExitAccount::new(&address)?;
         let elements = exit_account.to_field_elements();
         assert_eq!(elements.len(), 4, "Expected 4 field elements");
         // First element: 0x0000000000000001 (little-endian)
@@ -185,7 +186,7 @@ mod tests {
             1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24,
             25, 26, 27, 28, 29, 30, 31, 32,
         ];
-        let account = ExitAccount::new(address_bytes);
+        let account = ExitAccount::new(&address_bytes).unwrap();
 
         // Encode the account's address into field elements.
         let field_elements = account.to_field_elements();
@@ -214,7 +215,7 @@ mod tests {
         assert!(recovered_account_result.is_err());
         assert_eq!(
             recovered_account_result.unwrap_err().to_string(),
-            "Expected 4 field elements for ExitAccount address"
+            "Expected 4 field elements for ExitAccount address, got: 2"
         );
 
         let long_elements = vec![
@@ -229,7 +230,7 @@ mod tests {
         assert!(recovered_account_result.is_err());
         assert_eq!(
             recovered_account_result.unwrap_err().to_string(),
-            "Expected 4 field elements for ExitAccount address"
+            "Expected 4 field elements for ExitAccount address, got: 5"
         );
     }
 
@@ -240,7 +241,7 @@ mod tests {
         assert!(recovered_account_result.is_err());
         assert_eq!(
             recovered_account_result.unwrap_err().to_string(),
-            "Expected 4 field elements for ExitAccount address"
+            "Expected 4 field elements for ExitAccount address, got: 0"
         );
     }
 
@@ -248,14 +249,14 @@ mod tests {
     fn codec_different_byte_patterns() {
         // Test with all zeros.
         let zero_address = [0u8; 32];
-        let account_zero = ExitAccount::new(zero_address);
+        let account_zero = ExitAccount::new(&zero_address).unwrap();
         let field_elements_zero = account_zero.to_field_elements();
         let recovered_zero = ExitAccount::from_field_elements(&field_elements_zero).unwrap();
         assert_eq!(account_zero, recovered_zero);
 
         // Test with all ones.
         let one_address = [1u8; 32];
-        let account_one = ExitAccount::new(one_address);
+        let account_one = ExitAccount::new(&one_address).unwrap();
         let field_elements_one = account_one.to_field_elements();
         let recovered_one = ExitAccount::from_field_elements(&field_elements_one).unwrap();
         assert_eq!(account_one, recovered_one);
@@ -266,7 +267,7 @@ mod tests {
             0x10, 0x32, 0x54, 0x76, 0x98, 0xBA, 0xDC, 0xFE, 0x21, 0x43, 0x65, 0x87, 0xA9, 0xCB,
             0xE1, 0xF0, 0x34, 0x56,
         ];
-        let account_varied = ExitAccount::new(varied_address);
+        let account_varied = ExitAccount::new(&varied_address).unwrap();
         let field_elements_varied = account_varied.to_field_elements();
         let recovered_varied = ExitAccount::from_field_elements(&field_elements_varied).unwrap();
         assert_eq!(account_varied, recovered_varied);
