@@ -7,7 +7,7 @@ use plonky2::{
     plonk::{circuit_builder::CircuitBuilder, config::Hasher},
 };
 
-use crate::inputs::CircuitInputs;
+use crate::{circuit::field_elements_to_bytes, codec::ByteCodec, inputs::CircuitInputs};
 use crate::{
     circuit::{slice_to_field_elements, CircuitFragment, Digest, D, F},
     codec::FieldElementCodec,
@@ -18,9 +18,9 @@ pub const PREIMAGE_NUM_TARGETS: usize = 5;
 
 pub type AccountId = Digest;
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub struct UnspendableAccount {
-    pub account_id: AccountId,
+    account_id: AccountId,
 }
 
 impl UnspendableAccount {
@@ -33,6 +33,19 @@ impl UnspendableAccount {
         let account_id = PoseidonHash::hash_no_pad(&inner_hash).elements;
 
         Self { account_id }
+    }
+}
+
+impl ByteCodec for UnspendableAccount {
+    fn to_bytes(&self) -> Vec<u8> {
+        field_elements_to_bytes(&self.account_id)
+    }
+
+    fn from_bytes(slice: &[u8]) -> anyhow::Result<Self> {
+        let account_id = slice_to_field_elements(slice).try_into().map_err(|_| {
+            anyhow::anyhow!("failed to deserialize bytes into unspendable account hash")
+        })?;
+        Ok(Self { account_id })
     }
 }
 
@@ -56,7 +69,7 @@ impl FieldElementCodec for UnspendableAccount {
 
 impl From<&CircuitInputs> for UnspendableAccount {
     fn from(inputs: &CircuitInputs) -> Self {
-        Self::new(&inputs.private.unspendable_account_preimage)
+        inputs.public.unspendable_account
     }
 }
 

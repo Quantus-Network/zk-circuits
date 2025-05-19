@@ -7,18 +7,18 @@ use plonky2::{
     plonk::{circuit_builder::CircuitBuilder, config::Hasher},
 };
 
-use crate::inputs::CircuitInputs;
 use crate::{
-    circuit::{slice_to_field_elements, CircuitFragment, Digest, D, F},
+    circuit::{field_elements_to_bytes, slice_to_field_elements, CircuitFragment, Digest, D, F},
     codec::FieldElementCodec,
 };
+use crate::{codec::ByteCodec, inputs::CircuitInputs};
 
 // FIXME: Adjust as needed.
 pub const PREIMAGE_NUM_TARGETS: usize = 5;
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub struct Nullifier {
-    pub hash: Digest,
+    hash: Digest,
 }
 
 impl Nullifier {
@@ -28,6 +28,19 @@ impl Nullifier {
         let hash = PoseidonHash::hash_no_pad(&inner_hash).elements;
 
         Self { hash }
+    }
+}
+
+impl ByteCodec for Nullifier {
+    fn to_bytes(&self) -> Vec<u8> {
+        field_elements_to_bytes(&self.hash)
+    }
+
+    fn from_bytes(slice: &[u8]) -> anyhow::Result<Self> {
+        let hash = slice_to_field_elements(slice)
+            .try_into()
+            .map_err(|_| anyhow::anyhow!("failed to deserialize bytes into nullifier hash"))?;
+        Ok(Self { hash })
     }
 }
 
@@ -51,7 +64,7 @@ impl FieldElementCodec for Nullifier {
 
 impl From<&CircuitInputs> for Nullifier {
     fn from(inputs: &CircuitInputs) -> Self {
-        Self::new(&inputs.private.nullifier_preimage)
+        inputs.public.nullifier
     }
 }
 

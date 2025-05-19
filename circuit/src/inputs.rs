@@ -1,7 +1,12 @@
 use anyhow::bail;
 use plonky2::{field::types::PrimeField64, plonk::proof::ProofWithPublicInputs};
 
-use crate::circuit::{field_elements_to_bytes, C, D, F};
+use crate::{
+    circuit::{field_elements_to_bytes, C, D, F},
+    codec::FieldElementCodec,
+    nullifier::Nullifier,
+    unspendable_account::UnspendableAccount,
+};
 
 const PUBLIC_INPUTS_FELTS_LEN: usize = 19;
 
@@ -21,11 +26,10 @@ pub struct PublicCircuitInputs {
     pub exit_amount: u64,
     /// The fee for the transaction.
     pub fee_amount: u64,
-    // TODO: Store struct directly. We first need to implement a byte codec.
     /// The nullifier.
-    pub nullifier: [u8; 32],
+    pub nullifier: Nullifier,
     /// The unspendable account hash.
-    pub unspendable_account: [u8; 32],
+    pub unspendable_account: UnspendableAccount,
     /// The root hash of the storage trie.
     pub root_hash: [u8; 32],
     /// The address of the account to pay out to.
@@ -50,15 +54,8 @@ impl TryFrom<ProofWithPublicInputs<F, C, D>> for PublicCircuitInputs {
         let exit_amount = public_inputs[1].to_noncanonical_u64();
         let fee_amount = public_inputs[2].to_noncanonical_u64();
 
-        let nullifier: [u8; 32] = field_elements_to_bytes(&public_inputs[11..15])
-            .try_into()
-            .map_err(|_| anyhow::anyhow!("failed to deserialize nullifier from public inputs"))?;
-
-        let unspendable_account: [u8; 32] = field_elements_to_bytes(&public_inputs[11..15])
-            .try_into()
-            .map_err(|_| {
-                anyhow::anyhow!("failed to deserialize unspendable account from public inputs")
-            })?;
+        let nullifier = Nullifier::from_field_elements(&public_inputs[3..7])?;
+        let unspendable_account = UnspendableAccount::from_field_elements(&public_inputs[7..11])?;
 
         let root_hash: [u8; 32] = field_elements_to_bytes(&public_inputs[11..15])
             .try_into()
@@ -98,7 +95,6 @@ pub struct PrivateCircuitInputs {
 
 #[cfg(any(test, feature = "testing"))]
 pub mod test_helpers {
-    use crate::circuit::field_elements_to_bytes;
     use crate::nullifier::{self, Nullifier};
     use crate::storage_proof::test_helpers::{default_proof, ROOT_HASH};
     use crate::unspendable_account::{self, UnspendableAccount};
@@ -112,15 +108,8 @@ pub mod test_helpers {
                 hex::decode(unspendable_account::test_helpers::PREIMAGES[0]).unwrap();
             let root_hash: [u8; 32] = hex::decode(ROOT_HASH).unwrap().try_into().unwrap();
 
-            // TODO: Implement a new trait, `BytesCodec`, to do this automatically.
-            let nullifier_felts = &Nullifier::new(&nullifier_preimage).hash;
-            let nullifier = field_elements_to_bytes(nullifier_felts).try_into().unwrap();
-
-            let unspendable_account_felts =
-                &UnspendableAccount::new(&unspendable_account_preimage).account_id;
-            let unspendable_account = field_elements_to_bytes(unspendable_account_felts)
-                .try_into()
-                .unwrap();
+            let nullifier = Nullifier::new(&nullifier_preimage);
+            let unspendable_account = UnspendableAccount::new(&unspendable_account_preimage);
 
             Self {
                 public: PublicCircuitInputs {
