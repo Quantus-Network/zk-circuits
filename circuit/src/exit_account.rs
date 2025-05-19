@@ -1,5 +1,5 @@
 use crate::circuit::{slice_to_field_elements, CircuitFragment, D, F};
-use crate::fcodec::FieldElementCodec;
+use crate::codec::FieldElementCodec;
 use crate::inputs::CircuitInputs;
 use plonky2::field::types::{Field, PrimeField64};
 use plonky2::{

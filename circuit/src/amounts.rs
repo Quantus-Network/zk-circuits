@@ -10,7 +10,7 @@ use plonky2::{
 use crate::inputs::CircuitInputs;
 use crate::{
     circuit::{CircuitFragment, D, F},
-    fcodec::FieldElementCodec,
+    codec::FieldElementCodec,
 };
 
 #[derive(Debug, Default, PartialEq, Eq)]

@@ -10,7 +10,7 @@ use plonky2::{
 use crate::inputs::CircuitInputs;
 use crate::{
     circuit::{slice_to_field_elements, CircuitFragment, Digest, D, F},
-    fcodec::FieldElementCodec,
+    codec::FieldElementCodec,
 };
 
 // FIXME: Adjust as needed.

@@ -58,8 +58,8 @@ mod tests {
     use plonky2::field::types::Field;
     use plonky2::plonk::proof::ProofWithPublicInputs;
     use wormhole_circuit::circuit::F;
+    use wormhole_circuit::codec::FieldElementCodec;
     use wormhole_circuit::exit_account::ExitAccount;
-    use wormhole_circuit::fcodec::FieldElementCodec;
     use wormhole_circuit::inputs::CircuitInputs;
     use wormhole_prover::WormholeProver;
 
