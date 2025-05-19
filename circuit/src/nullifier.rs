@@ -18,7 +18,7 @@ pub const PREIMAGE_NUM_TARGETS: usize = 5;
 
 #[derive(Debug, PartialEq, Eq)]
 pub struct Nullifier {
-    hash: Digest,
+    pub hash: Digest,
 }
 
 impl Nullifier {

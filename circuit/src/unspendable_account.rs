@@ -20,7 +20,7 @@ pub type AccountId = Digest;
 
 #[derive(Debug, PartialEq, Eq)]
 pub struct UnspendableAccount {
-    account_id: AccountId,
+    pub account_id: AccountId,
 }
 
 impl UnspendableAccount {
