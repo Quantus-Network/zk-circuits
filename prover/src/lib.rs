@@ -146,4 +146,16 @@ mod tests {
         let public_inputs = proof.public_inputs;
         println!("{:?}", public_inputs);
     }
+
+    #[test]
+    #[cfg(feature = "testing")]
+    fn proof_can_be_deserialized() {
+        use wormhole_circuit::inputs::PublicCircuitInputs;
+
+        let prover = WormholeProver::new();
+        let inputs = CircuitInputs::default();
+        let proof = prover.commit(&inputs).unwrap().prove().unwrap();
+        let public_inputs = PublicCircuitInputs::try_from(proof).unwrap();
+        println!("{:?}", public_inputs);
+    }
 }
