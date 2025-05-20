@@ -34,12 +34,10 @@ impl Amounts {
 }
 
 impl FieldElementCodec for Amounts {
-    /// Encode [u8; 32] into Vec<F> (4 field elements, 8 bytes each).
     fn to_field_elements(&self) -> Vec<F> {
         [self.funding_tx_amount, self.exit_amount, self.fee_amount].to_vec()
     }
 
-    /// Decode [u8; 32] from Vec<F> (expects 4 field elements).
     fn from_field_elements(elements: &[F]) -> anyhow::Result<Self> {
         if elements.len() != 3 {
             return Err(anyhow::anyhow!(
