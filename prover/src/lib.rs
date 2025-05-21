@@ -32,7 +32,7 @@ use wormhole_circuit::circuit::{WormholeCircuit, C, D, F};
 use wormhole_circuit::{
     amounts::Amounts,
     circuit::{CircuitFragment, CircuitTargets},
-    exit_account::ExitAccount,
+    substrate_account::SubstrateAccount,
     inputs::CircuitInputs,
     nullifier::{Nullifier, NullifierInputs},
     storage_proof::StorageProof,
@@ -82,9 +82,9 @@ impl WormholeProver {
         let nullifier = Nullifier::from(circuit_inputs);
         let unspendable_account = UnspendableAccount::from(circuit_inputs);
         let storage_proof = StorageProof::from(circuit_inputs);
-        let exit_account = ExitAccount::from(circuit_inputs);
+        let exit_account = SubstrateAccount::from(circuit_inputs);
 
-        let nullifier_inputs = NullifierInputs::new(&circuit_inputs.private.nullifier_preimage);
+        let nullifier_inputs = NullifierInputs::new(&circuit_inputs.private.secret);
         let unspendable_account_inputs =
             UnspendableAccountInputs::new(&circuit_inputs.private.unspendable_account_preimage);
 

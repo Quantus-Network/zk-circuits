@@ -7,20 +7,19 @@ use plonky2::{
     plonk::{circuit_builder::CircuitBuilder, config::Hasher},
 };
 
-use crate::{circuit::field_elements_to_bytes, codec::ByteCodec, inputs::CircuitInputs};
+use crate::{codec::ByteCodec, inputs::CircuitInputs};
 use crate::{
-    circuit::{slice_to_field_elements, CircuitFragment, Digest, D, F},
+    circuit::{CircuitFragment, Digest, D, F},
     codec::FieldElementCodec,
 };
+use crate::utils::{field_elements_to_bytes, slice_to_field_elements};
 
 // FIXME: Adjust as needed.
 pub const PREIMAGE_NUM_TARGETS: usize = 5;
 
-pub type AccountId = Digest;
-
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub struct UnspendableAccount {
-    account_id: AccountId,
+    account_id: Digest,
 }
 
 impl UnspendableAccount {

@@ -1,8 +1,7 @@
 //! Wormhole Circuit.
 //!
 //! This module defines the zero-knowledge circuit for the Wormhole protocol.
-use crate::amounts::{Amounts, AmountsTargets};
-use crate::exit_account::{ExitAccount, ExitAccountTargets};
+use crate::substrate_account::{SubstrateAccount, ExitAccountTargets};
 use crate::nullifier::{Nullifier, NullifierTargets};
 use crate::storage_proof::{StorageProof, StorageProofTargets};
 use crate::unspendable_account::{UnspendableAccount, UnspendableAccountTargets};
@@ -44,39 +43,8 @@ pub trait CircuitFragment {
     ) -> anyhow::Result<()>;
 }
 
-/// Converts a given slice into its field element representation.
-pub fn slice_to_field_elements(input: &[u8]) -> Vec<F> {
-    const BYTES_PER_ELEMENT: usize = 8;
-
-    let mut field_elements: Vec<F> = Vec::new();
-    for chunk in input.chunks(BYTES_PER_ELEMENT) {
-        let mut bytes = [0u8; 8];
-        bytes[..chunk.len()].copy_from_slice(chunk);
-        // Convert the chunk to a field element.
-        let value = u64::from_le_bytes(bytes);
-        let field_element = F::from_noncanonical_u64(value);
-        field_elements.push(field_element);
-    }
-
-    field_elements
-}
-
-/// Converts a given field element slice into its byte representation.
-pub fn field_elements_to_bytes(input: &[F]) -> Vec<u8> {
-    let mut bytes: Vec<u8> = Vec::new();
-
-    for field_element in input {
-        let value = field_element.to_noncanonical_u64();
-        let value_bytes = value.to_le_bytes();
-        bytes.extend_from_slice(&value_bytes);
-    }
-
-    bytes
-}
-
 #[derive(Debug, Clone)]
 pub struct CircuitTargets {
-    pub amounts: AmountsTargets,
     pub nullifier: NullifierTargets,
     pub unspendable_account: UnspendableAccountTargets,
     pub storage_proof: StorageProofTargets,
@@ -86,7 +54,6 @@ pub struct CircuitTargets {
 impl CircuitTargets {
     pub fn new(builder: &mut CircuitBuilder<F, D>) -> Self {
         Self {
-            amounts: AmountsTargets::new(builder),
             nullifier: NullifierTargets::new(builder),
             unspendable_account: UnspendableAccountTargets::new(builder),
             storage_proof: StorageProofTargets::new(builder),
@@ -109,11 +76,10 @@ impl Default for WormholeCircuit {
         let targets = CircuitTargets::new(&mut builder);
 
         // Setup circuits.
-        Amounts::circuit(&targets.amounts, &mut builder);
         Nullifier::circuit(&targets.nullifier, &mut builder);
         UnspendableAccount::circuit(&targets.unspendable_account, &mut builder);
         StorageProof::circuit(&targets.storage_proof, &mut builder);
-        ExitAccount::circuit(&targets.exit_account, &mut builder);
+        SubstrateAccount::circuit(&targets.exit_account, &mut builder);
 
         Self { builder, targets }
     }

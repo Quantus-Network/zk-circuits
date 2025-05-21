@@ -8,10 +8,11 @@ use plonky2::{
 };
 
 use crate::{
-    circuit::{field_elements_to_bytes, slice_to_field_elements, CircuitFragment, Digest, D, F},
+    circuit::{CircuitFragment, Digest, D, F},
     codec::FieldElementCodec,
 };
 use crate::{codec::ByteCodec, inputs::CircuitInputs};
+use crate::utils::{field_elements_to_bytes, slice_to_field_elements};
 
 // FIXME: Adjust as needed.
 pub const PREIMAGE_NUM_TARGETS: usize = 5;
