@@ -11,7 +11,7 @@ use plonky2::{
 use crate::circuit::{CircuitFragment, D, F};
 use crate::gadgets::is_const_less_than;
 use crate::inputs::CircuitInputs;
-use crate::utils::{bytes_to_felts, felts_to_bytes};
+use crate::utils::{bytes_to_felts};
 
 pub const MAX_PROOF_LEN: usize = 64;
 pub const PROOF_NODE_MAX_SIZE_F: usize = 73;

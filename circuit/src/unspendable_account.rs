@@ -15,7 +15,7 @@ use crate::{
 use crate::utils::{felts_to_bytes, bytes_to_felts, string_to_felt};
 
 // FIXME: Adjust as needed.
-pub const PREIMAGE_NUM_TARGETS: usize = 5;
+pub const PREIMAGE_NUM_TARGETS: usize = 4;
 pub const UNSPENDABLE_SALT: &str = "wormhole";
 
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
@@ -29,13 +29,9 @@ impl UnspendableAccount {
         let mut preimage = Vec::new();
         preimage.push(string_to_felt(UNSPENDABLE_SALT));
         preimage.extend(bytes_to_felts(&secret));
-        println!("preimage: {:?}", preimage);
 
         // Hash twice to get the account id.
         let inner_hash = PoseidonHash::hash_no_pad(&preimage).elements;
-        let inner_bytes = felts_to_bytes(&inner_hash);
-        println!("inner_bytes: {:?}", inner_bytes);
-        println!("inner_hash: {:?}", hex::encode(inner_bytes));
         let account_id = PoseidonHash::hash_no_pad(&inner_hash).elements;
 
         Self { account_id }
@@ -140,9 +136,7 @@ impl CircuitFragment for UnspendableAccount {
     ) -> anyhow::Result<()> {
         // Unspendable account circuit values.
         pw.set_hash_target(targets.account_id, self.account_id.into())?;
-        for (i, element) in inputs.secret.into_iter().enumerate() {
-            pw.set_target(targets.secret[i], element)?;
-        }
+        pw.set_target_arr(&targets.secret, &inputs.secret);
 
         Ok(())
     }
@@ -155,20 +149,20 @@ pub mod test_helpers {
     /// An array of secrets generated from the Resonance Node with `./resonance-node key resonance --scheme wormhole`.
     pub const SECRETS: [&str; 5] = [
         "cd94df2e3c38a87f3e429b62af022dbe4363143811219d80037e8798b2ec9229",
-        "4d787f5685d9b0d5af1746441f7fdd5a6d189b5c257033f2509dda7754a4e381",
-        "12c1f6b87e9fd64ed87e408a6beb4561aaa35114f0884e095470bc2d67be625e",
-        "c109956a9e99d7927c75a28546c6b9ffcd71ddc868082b3c2828cf255a256f4e",
-        "f27ae056a192551a2966c99e2b60976658221d78560a285dba0a3fe27871f86c",
+        "8b680b2421968a0c1d3cff6f3408e9d780157ae725724a78c3bc0998d1ac8194",
+        "87f5fc11df0d12f332ccfeb92ddd8995e6c11709501a8b59c2aaf9eefee63ec1",
+        "ef69da4e3aa2a6f15b3a9eec5e481f17260ac812faf1e685e450713327c3ab1c",
+        "9aa84f99ef2de22e3070394176868df41d6a148117a36132d010529e19b018b7",
     ];
 
     /// An array of addresses generated from the Resoncance Node with `./resonance-node key resonance --scheme wormhole`.
     #[allow(dead_code)]
     pub const ADDRESSES: [&str; 5] = [
         "c7334fbc8d75054ba3dd33b97db841c1031075ab9a26485fffe46bb519ccf25e",
-        "75707beb4aa2afbeb9b8a283e562ad6378f66aa039c09b9dc99c8376a7f9ce46",
-        "fdc010595da8653ff6629ad9a0ac5855080dc2b2cd94e70b8c68b24dfe5d28c2",
-        "ffc1f415adb8f3b3489a1669cf7153a3f6ade3f58bb49debc0be99204409fb11",
-        "2c7c2cb96e72f99d7e959d68b13e95017a3683e72cdd7db5809b780113edd117",
+        "f904e475a317a4f45541492d86ec79ef0b5f3ef3ff1a022db1c461f1ec7e623c",
+        "e6060566ae1301253936d754ef21be71a02b00d59a40e265f25318f2359f7b3d",
+        "49499c5d8a14b300b6ceb5459f31a7c2887b03dd5ebfef788abe067c7a84ab5f",
+        "39fe23f1e26aa62001144e6b3250b753f5aabb4b5ecd5a86b8c4a7302744597e",
     ];
 
     impl Default for UnspendableAccount {
@@ -214,7 +208,7 @@ pub mod tests {
     }
 
     #[test]
-    fn build_and_verify_proof() {
+    fn build_and_verify_unspendable_account_proof() {
         let unspendable_account = UnspendableAccount::default();
         let inputs = UnspendableAccountInputs::default();
         run_test(&unspendable_account, inputs).unwrap();
@@ -230,15 +224,8 @@ pub mod tests {
 
             let address = bytes_to_felts(&decoded_address);
             assert_eq!(unspendable_account.account_id.to_vec(), address);
-
             let result = run_test(&unspendable_account, inputs);
-            match result {
-                Ok(_) => {},
-                Err(e) => {
-                    println!("run_test failed: {:?}", e);
-                    assert!(false);
-                }
-            }
+            assert!(result.is_ok());
         }
     }
 

@@ -37,6 +37,7 @@ use wormhole_circuit::{
     storage_proof::StorageProof,
     unspendable_account::{UnspendableAccount, UnspendableAccountInputs},
 };
+use wormhole_circuit::codec::ByteCodec;
 
 #[derive(Debug)]
 pub struct WormholeProver {
@@ -82,7 +83,11 @@ impl WormholeProver {
         let storage_proof = StorageProof::from(circuit_inputs);
         let exit_account = SubstrateAccount::from(circuit_inputs);
 
-        let nullifier_inputs = NullifierInputs::new(&circuit_inputs.private.secret);
+        let nullifier_inputs = NullifierInputs::new(
+            &circuit_inputs.private.secret,
+            circuit_inputs.private.funding_nonce,
+            &circuit_inputs.private.funding_account.to_bytes()
+        );
         let unspendable_account_inputs =
             UnspendableAccountInputs::new(&circuit_inputs.private.secret);
 

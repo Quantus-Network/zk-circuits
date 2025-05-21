@@ -179,7 +179,7 @@ mod tests {
         // First element: 0x0000000000000001 (little-endian)
         // Last element: 0xFF00000000000000
         let expected_first = F::from_canonical_u64(1);
-        let expected_last = F::from_canonical_u64((255u64 << 56) % F::ORDER);
+        let expected_last = F::from_canonical_u64(255u64 << 56);
         assert_eq!(elements[0], expected_first, "First element incorrect");
         assert_eq!(elements[3], expected_last, "Last element incorrect");
         let decoded = SubstrateAccount::from_field_elements(&elements)?;

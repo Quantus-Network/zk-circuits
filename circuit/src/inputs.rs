@@ -68,7 +68,7 @@ impl TryFrom<ProofWithPublicInputs<F, C, D>> for PublicCircuitInputs {
 /// All of the private inputs required for the circuit.
 #[derive(Debug)]
 pub struct PrivateCircuitInputs {
-    /// Raw bytes of the preimage of the nullifier and the unspendable account
+    /// Raw bytes of the secret of the nullifier and the unspendable account
     pub secret: Vec<u8>,
     /// A sequence of key-value nodes representing the storage proof.
     ///
@@ -86,6 +86,7 @@ pub mod test_helpers {
     use crate::codec::ByteCodec;
     use crate::substrate_account::SubstrateAccount;
     use crate::nullifier::Nullifier;
+    use crate::nullifier::test_helpers::{SECRET, FUNDING_ACCOUNT, FUNDING_NONCE};
     use crate::storage_proof::test_helpers::{default_proof, ROOT_HASH};
     use crate::unspendable_account::{self, UnspendableAccount};
 
@@ -94,11 +95,11 @@ pub mod test_helpers {
     impl Default for CircuitInputs {
         fn default() -> Self {
             let secret =
-                hex::decode(unspendable_account::test_helpers::SECRETS[0]).unwrap();
+                hex::decode(SECRET).unwrap();
             let root_hash: [u8; 32] = hex::decode(ROOT_HASH).unwrap().try_into().unwrap();
 
-            let funding_account = SubstrateAccount::new(&[234u8; 32]).unwrap();
-            let nullifier = Nullifier::new(&secret, 0, <[u8; 32]>::try_from(funding_account.to_bytes()).unwrap());
+            let funding_account = SubstrateAccount::new(FUNDING_ACCOUNT).unwrap();
+            let nullifier = Nullifier::new(&secret, FUNDING_NONCE, FUNDING_ACCOUNT);
             let unspendable_account = UnspendableAccount::new(&secret);
             let exit_account = SubstrateAccount::new(&[254u8; 32]).unwrap();
 

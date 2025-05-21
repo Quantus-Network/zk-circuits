@@ -3,8 +3,8 @@ use crate::circuit::F;
 
 pub fn u128_to_felts(num: u128) -> Vec<F> {
     let mut amount_felts: Vec<F> = Vec::with_capacity(2);
-    let amount_high = F::from_noncanonical_u64((num >> 64) as u64 % F::ORDER);
-    let amount_low =  F::from_noncanonical_u64(num as u64 % F::ORDER);
+    let amount_high = F::from_noncanonical_u64((num >> 64) as u64);
+    let amount_low =  F::from_noncanonical_u64(num as u64);
     amount_felts.push(amount_high);
     amount_felts.push(amount_low);
     amount_felts
@@ -16,7 +16,7 @@ pub fn felts_to_u128(felts: Vec<F>) -> u128 {
     (amount_high << 64) | amount_low
 }
 
-// Function to encode an 8-byte string into a single field element
+// Encodes an 8-byte string into a single field element
 pub fn string_to_felt(
     input: &str,
 ) -> F {
@@ -90,9 +90,9 @@ mod tests {
             // Vec<F> -> u128
             let round_trip_num = felts_to_u128(felts.clone());
 
-            // Check that the high and low parts match after modulo reduction
-            let expected_high = (num >> 64) as u64 % F::ORDER;
-            let expected_low = (num as u64) % F::ORDER;
+            // Check that the high and low parts match
+            let expected_high = (num >> 64) as u64 ;
+            let expected_low = num as u64;
             let expected = ((expected_high as u128) << 64) | (expected_low as u128);
             assert_eq!(
                 round_trip_num, expected,
@@ -136,8 +136,8 @@ mod tests {
         let felts = u128_to_felts(num);
         assert_eq!(felts.len(), 2);
         let result = felts_to_u128(felts);
-        let expected_high = (u128::MAX >> 64) as u64 % F::ORDER;
-        let expected_low = (u128::MAX as u64) % F::ORDER;
+        let expected_high = (u128::MAX >> 64) as u64;
+        let expected_low = u128::MAX as u64;
         let expected = ((expected_high as u128) << 64) | (expected_low as u128);
         assert_eq!(result, expected);
 
