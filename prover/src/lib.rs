@@ -30,7 +30,6 @@ use plonky2::{
 
 use wormhole_circuit::circuit::{WormholeCircuit, C, D, F};
 use wormhole_circuit::{
-    amounts::Amounts,
     circuit::{CircuitFragment, CircuitTargets},
     substrate_account::SubstrateAccount,
     inputs::CircuitInputs,
@@ -78,7 +77,6 @@ impl WormholeProver {
             bail!("prover has already commited to inputs");
         };
 
-        let amounts = Amounts::from(circuit_inputs);
         let nullifier = Nullifier::from(circuit_inputs);
         let unspendable_account = UnspendableAccount::from(circuit_inputs);
         let storage_proof = StorageProof::from(circuit_inputs);
@@ -86,9 +84,8 @@ impl WormholeProver {
 
         let nullifier_inputs = NullifierInputs::new(&circuit_inputs.private.secret);
         let unspendable_account_inputs =
-            UnspendableAccountInputs::new(&circuit_inputs.private.unspendable_account_preimage);
+            UnspendableAccountInputs::new(&circuit_inputs.private.secret);
 
-        amounts.fill_targets(&mut self.partial_witness, targets.amounts, ())?;
         nullifier.fill_targets(
             &mut self.partial_witness,
             targets.nullifier,

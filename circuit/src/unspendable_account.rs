@@ -68,7 +68,7 @@ impl FieldElementCodec for UnspendableAccount {
 
 impl From<&CircuitInputs> for UnspendableAccount {
     fn from(inputs: &CircuitInputs) -> Self {
-        inputs.public.unspendable_account
+        inputs.private.unspendable_account
     }
 }
 

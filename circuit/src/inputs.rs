@@ -27,8 +27,6 @@ pub struct PublicCircuitInputs {
     pub funding_amount: u128,
     /// The nullifier.
     pub nullifier: Nullifier,
-    /// The unspendable account hash.
-    pub unspendable_account: UnspendableAccount,
     /// The root hash of the storage trie.
     pub root_hash: [u8; 32],
     /// The address of the account to pay out to.
@@ -51,18 +49,16 @@ impl TryFrom<ProofWithPublicInputs<F, C, D>> for PublicCircuitInputs {
 
         let funding_amount = felts_to_u128(public_inputs[0..2].to_vec());
         let nullifier = Nullifier::from_field_elements(&public_inputs[2..6])?;
-        let unspendable_account = UnspendableAccount::from_field_elements(&public_inputs[6..10])?;
 
-        let root_hash: [u8; 32] = field_elements_to_bytes(&public_inputs[10..14])
+        let root_hash: [u8; 32] = field_elements_to_bytes(&public_inputs[6..10])
             .try_into()
             .map_err(|_| anyhow::anyhow!("failed to deserialize root hash from public inputs"))?;
 
-        let exit_account = SubstrateAccount::from_field_elements(&public_inputs[14..18])?;
+        let exit_account = SubstrateAccount::from_field_elements(&public_inputs[10..14])?;
 
         Ok(PublicCircuitInputs {
             funding_amount,
             nullifier,
-            unspendable_account,
             root_hash,
             exit_account,
         })
@@ -81,6 +77,8 @@ pub struct PrivateCircuitInputs {
     pub storage_proof: Vec<(Vec<u8>, Vec<u8>)>,
     pub funding_nonce: u32,
     pub funding_account: SubstrateAccount,
+    /// The unspendable account hash.
+    pub unspendable_account: UnspendableAccount,
 }
 
 #[cfg(any(test, feature = "testing"))]
@@ -108,7 +106,6 @@ pub mod test_helpers {
                 public: PublicCircuitInputs {
                     funding_amount: 0,
                     nullifier,
-                    unspendable_account,
                     root_hash,
                     exit_account,
                 },
@@ -116,7 +113,8 @@ pub mod test_helpers {
                     secret: nullifier_preimage,
                     storage_proof: default_proof(),
                     funding_nonce: 0,
-                    funding_account: funding_account,
+                    funding_account,
+                    unspendable_account,
                 },
             }
         }

@@ -69,7 +69,7 @@ pub struct WormholeCircuit {
 
 impl Default for WormholeCircuit {
     fn default() -> Self {
-        let config = CircuitConfig::standard_recursion_config();
+        let config = CircuitConfig::standard_recursion_zk_config();
         let mut builder = CircuitBuilder::<F, D>::new(config);
 
         // Setup targets.
@@ -115,7 +115,7 @@ pub mod tests {
 
     /// Convenince function for initializing a test circuit environment.
     pub fn setup_test_builder_and_witness() -> (CircuitBuilder<F, D>, PartialWitness<F>) {
-        let config = CircuitConfig::standard_recursion_config();
+        let config = CircuitConfig::standard_recursion_zk_config();
         let builder = CircuitBuilder::<F, D>::new(config);
         let pw = PartialWitness::new();
 
