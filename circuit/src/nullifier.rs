@@ -15,7 +15,7 @@ use crate::{codec::ByteCodec, inputs::CircuitInputs};
 use crate::utils::{string_to_felt, bytes_to_felts, felts_to_bytes};
 
 pub const NULLIFIER_SALT: &str = "~nullif~";
-pub const SECRET_NUM_TARGETS: usize = 5;
+pub const SECRET_NUM_TARGETS: usize = 4;
 pub const NONCE_NUM_TARGETS: usize = 1;
 pub const FUNDING_ACCOUNT_NUM_TARGETS: usize = 4;
 pub const PREIMAGE_NUM_TARGETS: usize = SECRET_NUM_TARGETS + NONCE_NUM_TARGETS + FUNDING_ACCOUNT_NUM_TARGETS;
@@ -84,9 +84,9 @@ impl From<&CircuitInputs> for Nullifier {
 #[derive(Debug, Clone)]
 pub struct NullifierTargets {
     hash: HashOutTarget,
-    secret: Vec<Target>,
+    pub secret: Vec<Target>,
     funding_nonce: Target,
-    funding_account: Vec<Target>,
+    pub funding_account: Vec<Target>,
 }
 
 impl NullifierTargets {
@@ -103,9 +103,9 @@ impl NullifierTargets {
 
 #[derive(Debug)]
 pub struct NullifierInputs {
-    secret: Vec<F>,
+    pub secret: Vec<F>,
     funding_nonce: F,
-    funding_account: Vec<F>,
+    pub funding_account: Vec<F>,
 }
 
 impl NullifierInputs {
@@ -162,7 +162,7 @@ pub mod test_helpers {
     use super::{Nullifier, NullifierInputs};
 
     pub const SECRET: &str =
-        "776f726d686f6c650908804f8983b91253f3b2e4d49b71afc8e2c707608d9ae456990fb21591037f";
+        "9aa84f99ef2de22e3070394176868df41d6a148117a36132d010529e19b018b7";
     pub const FUNDING_NONCE: u32 = 0;
     pub const FUNDING_ACCOUNT: &[u8] = &[10u8; 32];
     impl Default for Nullifier {

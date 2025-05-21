@@ -77,7 +77,6 @@ impl WormholeProver {
         let Some(targets) = self.targets.take() else {
             bail!("prover has already commited to inputs");
         };
-
         let nullifier = Nullifier::from(circuit_inputs);
         let unspendable_account = UnspendableAccount::from(circuit_inputs);
         let storage_proof = StorageProof::from(circuit_inputs);
@@ -91,6 +90,7 @@ impl WormholeProver {
         let unspendable_account_inputs =
             UnspendableAccountInputs::new(&circuit_inputs.private.secret);
 
+
         nullifier.fill_targets(
             &mut self.partial_witness,
             targets.nullifier,
@@ -101,6 +101,7 @@ impl WormholeProver {
             targets.unspendable_account,
             unspendable_account_inputs,
         )?;
+
         storage_proof.fill_targets(&mut self.partial_witness, targets.storage_proof, ())?;
         exit_account.fill_targets(&mut self.partial_witness, targets.exit_account, ())?;
 
