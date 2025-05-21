@@ -31,7 +31,7 @@ pub fn string_to_felt(
 }
 
 /// Converts a given slice into its field element representation.
-pub fn slice_to_field_elements(input: &[u8]) -> Vec<F> {
+pub fn bytes_to_felts(input: &[u8]) -> Vec<F> {
     const BYTES_PER_ELEMENT: usize = 8;
 
     let mut field_elements: Vec<F> = Vec::new();
@@ -47,8 +47,9 @@ pub fn slice_to_field_elements(input: &[u8]) -> Vec<F> {
     field_elements
 }
 
+
 /// Converts a given field element slice into its byte representation.
-pub fn field_elements_to_bytes(input: &[F]) -> Vec<u8> {
+pub fn felts_to_bytes(input: &[F]) -> Vec<u8> {
     let mut bytes: Vec<u8> = Vec::new();
 
     for field_element in input {

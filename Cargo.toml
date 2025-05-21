@@ -5,7 +5,6 @@ resolver = "2"
 [workspace.dependencies]
 anyhow = "1.0.95"
 plonky2 = "1.0.2"
-poseidon-resonance = { git = "https://github.com/Quantus-Network/poseidon-resonance" }
 criterion = "0.5.1"
 rand = "0.9.1"
 

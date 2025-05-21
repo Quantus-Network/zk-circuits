@@ -9,7 +9,7 @@ use crate::{
     unspendable_account::UnspendableAccount,
 };
 use crate::circuit::Digest;
-use crate::utils::{felts_to_u128, field_elements_to_bytes};
+use crate::utils::{ felts_to_u128, felts_to_bytes};
 
 const PUBLIC_INPUTS_FELTS_LEN: usize = 19;
 
@@ -50,7 +50,7 @@ impl TryFrom<ProofWithPublicInputs<F, C, D>> for PublicCircuitInputs {
         let funding_amount = felts_to_u128(public_inputs[0..2].to_vec());
         let nullifier = Nullifier::from_field_elements(&public_inputs[2..6])?;
 
-        let root_hash: [u8; 32] = field_elements_to_bytes(&public_inputs[6..10])
+        let root_hash: [u8; 32] = felts_to_bytes(&public_inputs[6..10])
             .try_into()
             .map_err(|_| anyhow::anyhow!("failed to deserialize root hash from public inputs"))?;
 
@@ -83,8 +83,9 @@ pub struct PrivateCircuitInputs {
 
 #[cfg(any(test, feature = "testing"))]
 pub mod test_helpers {
+    use crate::codec::ByteCodec;
     use crate::substrate_account::SubstrateAccount;
-    use crate::nullifier::{self, Nullifier};
+    use crate::nullifier::Nullifier;
     use crate::storage_proof::test_helpers::{default_proof, ROOT_HASH};
     use crate::unspendable_account::{self, UnspendableAccount};
 
@@ -92,15 +93,14 @@ pub mod test_helpers {
 
     impl Default for CircuitInputs {
         fn default() -> Self {
-            let nullifier_preimage = hex::decode(nullifier::test_helpers::PREIMAGE).unwrap();
-            let unspendable_account_preimage =
+            let secret =
                 hex::decode(unspendable_account::test_helpers::SECRETS[0]).unwrap();
             let root_hash: [u8; 32] = hex::decode(ROOT_HASH).unwrap().try_into().unwrap();
 
-            let nullifier = Nullifier::new(&nullifier_preimage);
-            let unspendable_account = UnspendableAccount::new(&unspendable_account_preimage);
-            let exit_account = SubstrateAccount::new(&[254u8; 32]).unwrap();
             let funding_account = SubstrateAccount::new(&[234u8; 32]).unwrap();
+            let nullifier = Nullifier::new(&secret, 0, <[u8; 32]>::try_from(funding_account.to_bytes()).unwrap());
+            let unspendable_account = UnspendableAccount::new(&secret);
+            let exit_account = SubstrateAccount::new(&[254u8; 32]).unwrap();
 
             Self {
                 public: PublicCircuitInputs {
@@ -110,7 +110,7 @@ pub mod test_helpers {
                     exit_account,
                 },
                 private: PrivateCircuitInputs {
-                    secret: nullifier_preimage,
+                    secret,
                     storage_proof: default_proof(),
                     funding_nonce: 0,
                     funding_account,

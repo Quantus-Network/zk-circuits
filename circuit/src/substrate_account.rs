@@ -8,7 +8,7 @@ use plonky2::{
     iop::witness::{PartialWitness, WitnessWrite},
     plonk::circuit_builder::CircuitBuilder,
 };
-use crate::utils::{field_elements_to_bytes, slice_to_field_elements};
+use crate::utils::{bytes_to_felts, felts_to_bytes};
 
 #[derive(Debug, Default, Eq, PartialEq, Clone, Copy)]
 pub struct SubstrateAccount(Digest);
@@ -21,11 +21,11 @@ impl SubstrateAccount {
 
 impl ByteCodec for SubstrateAccount {
     fn to_bytes(&self) -> Vec<u8> {
-        field_elements_to_bytes(&self.0)
+        felts_to_bytes(&self.0)
     }
 
     fn from_bytes(slice: &[u8]) -> anyhow::Result<Self> {
-        let address = slice_to_field_elements(slice).try_into().map_err(|_| {
+        let address = bytes_to_felts(slice).try_into().map_err(|_| {
             anyhow::anyhow!("failed to deserialize bytes into exit account address")
         })?;
         Ok(SubstrateAccount(address))

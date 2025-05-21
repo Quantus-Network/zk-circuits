@@ -11,7 +11,7 @@ use plonky2::{
 use crate::circuit::{CircuitFragment, D, F};
 use crate::gadgets::is_const_less_than;
 use crate::inputs::CircuitInputs;
-use crate::utils::slice_to_field_elements;
+use crate::utils::{bytes_to_felts, felts_to_bytes};
 
 pub const MAX_PROOF_LEN: usize = 64;
 pub const PROOF_NODE_MAX_SIZE_F: usize = 73;
@@ -66,8 +66,8 @@ impl StorageProof {
             proof_node.extend_from_slice(right);
 
             // We make sure to convert to field elements after an eventual hash has been appended.
-            let proof_node_f = slice_to_field_elements(&proof_node);
-            let hash = slice_to_field_elements(right)[..4].to_vec();
+            let proof_node_f = bytes_to_felts(&proof_node);
+            let hash = bytes_to_felts(right)[..4].to_vec();
 
             constructed_proof.push(proof_node_f);
             hashes.push(hash);
@@ -155,7 +155,7 @@ impl CircuitFragment for StorageProof {
 }
 
 fn slice_to_hashout(slice: &[u8]) -> HashOut<F> {
-    let elements = slice_to_field_elements(slice);
+    let elements = bytes_to_felts(slice);
     HashOut {
         elements: elements.try_into().unwrap(),
     }
