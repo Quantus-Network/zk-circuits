@@ -12,10 +12,11 @@ use crate::{
     codec::FieldElementCodec,
 };
 use crate::{codec::ByteCodec, inputs::CircuitInputs};
-use crate::utils::{field_elements_to_bytes, slice_to_field_elements};
+use crate::utils::{field_elements_to_bytes, slice_to_field_elements, string_to_felt};
 
 // FIXME: Adjust as needed.
 pub const PREIMAGE_NUM_TARGETS: usize = 5;
+pub const NULLIFIER_SALT: &str = "~nullif~";
 
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub struct Nullifier {
@@ -24,7 +25,9 @@ pub struct Nullifier {
 
 impl Nullifier {
     pub fn new(preimage: &[u8]) -> Self {
-        let preimage = slice_to_field_elements(preimage);
+        let mut preimage = slice_to_field_elements(preimage);
+        let salt = string_to_felt(NULLIFIER_SALT);
+        preimage.insert(0, salt);
         let inner_hash = PoseidonHash::hash_no_pad(&preimage).elements;
         let hash = PoseidonHash::hash_no_pad(&inner_hash).elements;
 
@@ -106,6 +109,10 @@ impl CircuitFragment for Nullifier {
         &Self::Targets { hash, ref preimage }: &Self::Targets,
         builder: &mut CircuitBuilder<F, D>,
     ) {
+        let mut preimage = builder.add_virtual_targets(PREIMAGE_NUM_TARGETS - 1);
+        let salt = builder.constant(string_to_felt(NULLIFIER_SALT));
+        preimage.insert(0, salt);
+
         // Compute the `generated_account` by double-hashing the preimage (salt + secret).
         let inner_hash = builder.hash_n_to_hash_no_pad::<PoseidonHash>(preimage.clone());
         let computed_hash =

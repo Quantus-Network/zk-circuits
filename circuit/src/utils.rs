@@ -16,6 +16,19 @@ pub fn felts_to_u128(felts: Vec<F>) -> u128 {
     (amount_high << 64) | amount_low
 }
 
+// Function to encode an 8-byte string into a single field element
+pub fn string_to_felt(
+    input: &str,
+) -> F {
+    // Convert string to UTF-8 bytes
+    let bytes = input.as_bytes();
+
+    let mut arr = [0u8; 8];
+    arr[..bytes.len()].copy_from_slice(bytes);
+
+    let num = u64::from_le_bytes(arr);
+    F::from_noncanonical_u64(num)
+}
 
 /// Converts a given slice into its field element representation.
 pub fn slice_to_field_elements(input: &[u8]) -> Vec<F> {

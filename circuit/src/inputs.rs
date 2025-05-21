@@ -94,7 +94,7 @@ pub mod test_helpers {
         fn default() -> Self {
             let nullifier_preimage = hex::decode(nullifier::test_helpers::PREIMAGE).unwrap();
             let unspendable_account_preimage =
-                hex::decode(unspendable_account::test_helpers::PREIMAGES[0]).unwrap();
+                hex::decode(unspendable_account::test_helpers::SECRETS[0]).unwrap();
             let root_hash: [u8; 32] = hex::decode(ROOT_HASH).unwrap().try_into().unwrap();
 
             let nullifier = Nullifier::new(&nullifier_preimage);
