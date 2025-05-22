@@ -10,7 +10,8 @@ use crate::{
     unspendable_account::UnspendableAccount,
 };
 
-const PUBLIC_INPUTS_FELTS_LEN: usize = 19;
+/// The total size of the public inputs field element vector.
+const PUBLIC_INPUTS_FELTS_LEN: usize = 16;
 
 /// Inputs required to commit to the wormhole circuit.
 #[derive(Debug)]
@@ -46,6 +47,8 @@ impl TryFrom<ProofWithPublicInputs<F, C, D>> for PublicCircuitInputs {
             )
         }
 
+        // TODO: Create constants for the indices where each field is expected in the public
+        // inputs.
         let funding_amount = felts_to_u128(public_inputs[0..2].to_vec());
         let nullifier = Nullifier::from_field_elements(&public_inputs[2..6])?;
 
