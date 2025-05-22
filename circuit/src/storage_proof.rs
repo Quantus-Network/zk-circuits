@@ -130,6 +130,7 @@ impl From<&CircuitInputs> for StorageProof {
     }
 }
 
+// TODO: Consider splitting storage proof circuit.
 impl CircuitFragment for StorageProof {
     type PrivateInputs = ();
     type Targets = StorageProofTargets;
@@ -285,16 +286,21 @@ pub mod test_helpers {
 
 #[cfg(test)]
 pub mod tests {
-    use plonky2::plonk::proof::ProofWithPublicInputs;
+    use plonky2::{field::types::Field, plonk::proof::ProofWithPublicInputs};
     use std::panic;
 
-    use super::*;
-    use crate::circuit::{
-        tests::{build_and_prove_test, setup_test_builder_and_witness},
-        C,
+    use crate::{
+        circuit::{
+            tests::{build_and_prove_test, setup_test_builder_and_witness},
+            CircuitFragment, C, D, F,
+        },
+        codec::ByteCodec,
+        test_helpers::storage_proof::{default_root_hash, default_storage_proof},
+        unspendable_account::UnspendableAccount,
     };
-    use crate::test_helpers::storage_proof::{default_root_hash, default_storage_proof};
     use rand::Rng;
+
+    use super::{LeafInputs, StorageProof, StorageProofTargets};
 
     fn run_test(storage_proof: &StorageProof) -> anyhow::Result<ProofWithPublicInputs<F, C, D>> {
         let (mut builder, mut pw) = setup_test_builder_and_witness(false);
@@ -331,7 +337,33 @@ pub mod tests {
         run_test(&proof).unwrap();
     }
 
-    // TODO: Leaf inputs constraint tests.
+    #[test]
+    #[should_panic(expected = "set twice with different values")]
+    fn invalid_leaf_nonce_fails() {
+        let leaf_inputs = LeafInputs {
+            nonce: F::from_canonical_u32(10),
+            ..Default::default()
+        };
+        let proof = StorageProof {
+            leaf_inputs,
+            ..Default::default()
+        };
+        run_test(&proof).unwrap();
+    }
+
+    #[test]
+    #[should_panic(expected = "set twice with different values")]
+    fn invalid_leaf_account_fails() {
+        let leaf_inputs = LeafInputs {
+            to_account: UnspendableAccount::from_bytes(&[0u8; 32]).unwrap(),
+            ..Default::default()
+        };
+        let proof = StorageProof {
+            leaf_inputs,
+            ..Default::default()
+        };
+        run_test(&proof).unwrap();
+    }
 
     #[ignore = "performance"]
     #[test]
