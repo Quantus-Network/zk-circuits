@@ -1,9 +1,9 @@
 //! Wormhole Circuit.
 //!
 //! This module defines the zero-knowledge circuit for the Wormhole protocol.
-use crate::substrate_account::{SubstrateAccount, ExitAccountTargets};
 use crate::nullifier::{Nullifier, NullifierTargets};
 use crate::storage_proof::{StorageProof, StorageProofTargets};
+use crate::substrate_account::{ExitAccountTargets, SubstrateAccount};
 use crate::unspendable_account::{UnspendableAccount, UnspendableAccountTargets};
 use plonky2::field::types::PrimeField64;
 use plonky2::plonk::circuit_data::CircuitData;

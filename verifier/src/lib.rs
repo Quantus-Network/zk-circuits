@@ -57,8 +57,8 @@ mod tests {
     use super::WormholeVerifier;
     use plonky2::plonk::proof::ProofWithPublicInputs;
     use wormhole_circuit::codec::FieldElementCodec;
-    use wormhole_circuit::substrate_account::SubstrateAccount;
     use wormhole_circuit::inputs::CircuitInputs;
+    use wormhole_circuit::substrate_account::SubstrateAccount;
     use wormhole_prover::WormholeProver;
 
     #[test]

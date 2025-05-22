@@ -29,15 +29,15 @@ use plonky2::{
 };
 
 use wormhole_circuit::circuit::{WormholeCircuit, C, D, F};
+use wormhole_circuit::codec::ByteCodec;
 use wormhole_circuit::{
     circuit::{CircuitFragment, CircuitTargets},
-    substrate_account::SubstrateAccount,
     inputs::CircuitInputs,
     nullifier::{Nullifier, NullifierInputs},
     storage_proof::StorageProof,
+    substrate_account::SubstrateAccount,
     unspendable_account::{UnspendableAccount, UnspendableAccountInputs},
 };
-use wormhole_circuit::codec::ByteCodec;
 
 #[derive(Debug)]
 pub struct WormholeProver {
@@ -85,11 +85,10 @@ impl WormholeProver {
         let nullifier_inputs = NullifierInputs::new(
             &circuit_inputs.private.secret,
             circuit_inputs.private.funding_nonce,
-            &circuit_inputs.private.funding_account.to_bytes()
+            &circuit_inputs.private.funding_account.to_bytes(),
         );
         let unspendable_account_inputs =
             UnspendableAccountInputs::new(&circuit_inputs.private.secret);
-
 
         nullifier.fill_targets(
             &mut self.partial_witness,

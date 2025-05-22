@@ -7,12 +7,12 @@ use plonky2::{
     plonk::{circuit_builder::CircuitBuilder, config::Hasher},
 };
 
-use crate::{codec::ByteCodec, inputs::CircuitInputs};
+use crate::utils::{bytes_to_felts, felts_to_bytes, string_to_felt};
 use crate::{
     circuit::{CircuitFragment, Digest, D, F},
     codec::FieldElementCodec,
 };
-use crate::utils::{felts_to_bytes, bytes_to_felts, string_to_felt};
+use crate::{codec::ByteCodec, inputs::CircuitInputs};
 
 // FIXME: Adjust as needed.
 pub const PREIMAGE_NUM_TARGETS: usize = 4;
@@ -202,8 +202,7 @@ pub mod tests {
         let targets = UnspendableAccountTargets::new(&mut builder);
         UnspendableAccount::circuit(&targets, &mut builder);
 
-        unspendable_account
-            .fill_targets(&mut pw, targets, inputs)?;
+        unspendable_account.fill_targets(&mut pw, targets, inputs)?;
         build_and_prove_test(builder, pw)
     }
 

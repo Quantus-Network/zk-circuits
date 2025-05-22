@@ -1,15 +1,15 @@
 use anyhow::bail;
 use plonky2::{field::types::PrimeField64, plonk::proof::ProofWithPublicInputs};
 
+use crate::circuit::Digest;
+use crate::utils::{felts_to_bytes, felts_to_u128};
 use crate::{
     circuit::{C, D, F},
     codec::FieldElementCodec,
-    substrate_account::SubstrateAccount,
     nullifier::Nullifier,
+    substrate_account::SubstrateAccount,
     unspendable_account::UnspendableAccount,
 };
-use crate::circuit::Digest;
-use crate::utils::{ felts_to_u128, felts_to_bytes};
 
 const PUBLIC_INPUTS_FELTS_LEN: usize = 19;
 
@@ -84,18 +84,17 @@ pub struct PrivateCircuitInputs {
 #[cfg(any(test, feature = "testing"))]
 pub mod test_helpers {
     use crate::codec::ByteCodec;
-    use crate::substrate_account::SubstrateAccount;
+    use crate::nullifier::test_helpers::{FUNDING_ACCOUNT, FUNDING_NONCE, SECRET};
     use crate::nullifier::Nullifier;
-    use crate::nullifier::test_helpers::{SECRET, FUNDING_ACCOUNT, FUNDING_NONCE};
     use crate::storage_proof::test_helpers::{default_proof, ROOT_HASH};
+    use crate::substrate_account::SubstrateAccount;
     use crate::unspendable_account::{self, UnspendableAccount};
 
     use super::{CircuitInputs, PrivateCircuitInputs, PublicCircuitInputs};
 
     impl Default for CircuitInputs {
         fn default() -> Self {
-            let secret =
-                hex::decode(SECRET).unwrap();
+            let secret = hex::decode(SECRET).unwrap();
             let root_hash: [u8; 32] = hex::decode(ROOT_HASH).unwrap().try_into().unwrap();
 
             let funding_account = SubstrateAccount::new(FUNDING_ACCOUNT).unwrap();

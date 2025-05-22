@@ -1,10 +1,10 @@
-use plonky2::field::types::{Field, Field64, PrimeField64};
 use crate::circuit::F;
+use plonky2::field::types::{Field, Field64, PrimeField64};
 
 pub fn u128_to_felts(num: u128) -> Vec<F> {
     let mut amount_felts: Vec<F> = Vec::with_capacity(2);
     let amount_high = F::from_noncanonical_u64((num >> 64) as u64);
-    let amount_low =  F::from_noncanonical_u64(num as u64);
+    let amount_low = F::from_noncanonical_u64(num as u64);
     amount_felts.push(amount_high);
     amount_felts.push(amount_low);
     amount_felts
@@ -17,9 +17,7 @@ pub fn felts_to_u128(felts: Vec<F>) -> u128 {
 }
 
 // Encodes an 8-byte string into a single field element
-pub fn string_to_felt(
-    input: &str,
-) -> F {
+pub fn string_to_felt(input: &str) -> F {
     // Convert string to UTF-8 bytes
     let bytes = input.as_bytes();
 
@@ -46,7 +44,6 @@ pub fn bytes_to_felts(input: &[u8]) -> Vec<F> {
 
     field_elements
 }
-
 
 /// Converts a given field element slice into its byte representation.
 pub fn felts_to_bytes(input: &[F]) -> Vec<u8> {
@@ -78,7 +75,7 @@ mod tests {
             1u128,
             0x1234567890abcdefu128,
             u128::MAX,
-            (1u128 << 64) - 1, // Max value for high part
+            (1u128 << 64) - 1,            // Max value for high part
             (1u128 << 64) | 0xabcdefu128, // Mixed high and low
         ];
 
@@ -91,7 +88,7 @@ mod tests {
             let round_trip_num = felts_to_u128(felts.clone());
 
             // Check that the high and low parts match
-            let expected_high = (num >> 64) as u64 ;
+            let expected_high = (num >> 64) as u64;
             let expected_low = num as u64;
             let expected = ((expected_high as u128) << 64) | (expected_low as u128);
             assert_eq!(
@@ -110,8 +107,8 @@ mod tests {
             (f(1), f(1)),
             (f(0x1234567890abcdef), f(0xabcdef1234567890)),
             (f(F::ORDER - 1), f(F::ORDER - 1)), // Max field element
-            (f(0), f(F::ORDER - 1)), // Zero high, max low
-            (f(F::ORDER - 1), f(0)), // Max high, zero low
+            (f(0), f(F::ORDER - 1)),            // Zero high, max low
+            (f(F::ORDER - 1), f(0)),            // Max high, zero low
         ];
 
         for (high, low) in test_cases {
@@ -124,7 +121,8 @@ mod tests {
             let round_trip_felts = u128_to_felts(num);
             assert_eq!(
                 round_trip_felts, felts,
-                "Round trip failed for input {:?}. Got {:?}", felts, round_trip_felts
+                "Round trip failed for input {:?}. Got {:?}",
+                felts, round_trip_felts
             );
         }
     }

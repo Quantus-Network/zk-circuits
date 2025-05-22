@@ -1,3 +1,10 @@
+use crate::utils::{bytes_to_felts, felts_to_bytes, string_to_felt};
+use crate::{
+    circuit::{CircuitFragment, Digest, D, F},
+    codec::FieldElementCodec,
+};
+use crate::{codec::ByteCodec, inputs::CircuitInputs};
+use plonky2::field::types::Field;
 use plonky2::{
     hash::{hash_types::HashOutTarget, poseidon::PoseidonHash},
     iop::{
@@ -6,19 +13,13 @@ use plonky2::{
     },
     plonk::{circuit_builder::CircuitBuilder, config::Hasher},
 };
-use plonky2::field::types::Field;
-use crate::{
-    circuit::{CircuitFragment, Digest, D, F},
-    codec::FieldElementCodec,
-};
-use crate::{codec::ByteCodec, inputs::CircuitInputs};
-use crate::utils::{string_to_felt, bytes_to_felts, felts_to_bytes};
 
 pub const NULLIFIER_SALT: &str = "~nullif~";
 pub const SECRET_NUM_TARGETS: usize = 4;
 pub const NONCE_NUM_TARGETS: usize = 1;
 pub const FUNDING_ACCOUNT_NUM_TARGETS: usize = 4;
-pub const PREIMAGE_NUM_TARGETS: usize = SECRET_NUM_TARGETS + NONCE_NUM_TARGETS + FUNDING_ACCOUNT_NUM_TARGETS;
+pub const PREIMAGE_NUM_TARGETS: usize =
+    SECRET_NUM_TARGETS + NONCE_NUM_TARGETS + FUNDING_ACCOUNT_NUM_TARGETS;
 
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub struct Nullifier {
@@ -96,7 +97,7 @@ impl NullifierTargets {
             hash: builder.add_virtual_hash_public_input(),
             secret: builder.add_virtual_targets(SECRET_NUM_TARGETS),
             funding_nonce: builder.add_virtual_target(),
-            funding_account: builder.add_virtual_targets(FUNDING_ACCOUNT_NUM_TARGETS)
+            funding_account: builder.add_virtual_targets(FUNDING_ACCOUNT_NUM_TARGETS),
         }
     }
 }
@@ -113,7 +114,11 @@ impl NullifierInputs {
         let secret = bytes_to_felts(secret);
         let funding_nonce = F::from_canonical_u32(funding_nonce);
         let funding_account = bytes_to_felts(funding_account);
-        Self { secret, funding_nonce, funding_account }
+        Self {
+            secret,
+            funding_nonce,
+            funding_account,
+        }
     }
 }
 
@@ -124,7 +129,12 @@ impl CircuitFragment for Nullifier {
     /// Builds a circuit that assert that nullifier was computed with `H(H(nullifier +
     /// extrinsic_index + secret))`
     fn circuit(
-        &Self::Targets { hash, ref secret, funding_nonce, ref funding_account }: &Self::Targets,
+        &Self::Targets {
+            hash,
+            ref secret,
+            funding_nonce,
+            ref funding_account,
+        }: &Self::Targets,
         builder: &mut CircuitBuilder<F, D>,
     ) {
         let mut preimage = Vec::new();
@@ -161,8 +171,7 @@ impl CircuitFragment for Nullifier {
 pub mod test_helpers {
     use super::{Nullifier, NullifierInputs};
 
-    pub const SECRET: &str =
-        "9aa84f99ef2de22e3070394176868df41d6a148117a36132d010529e19b018b7";
+    pub const SECRET: &str = "9aa84f99ef2de22e3070394176868df41d6a148117a36132d010529e19b018b7";
     pub const FUNDING_NONCE: u32 = 0;
     pub const FUNDING_ACCOUNT: &[u8] = &[10u8; 32];
     impl Default for Nullifier {

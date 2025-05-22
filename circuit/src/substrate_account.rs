@@ -1,14 +1,12 @@
-use crate::circuit::{
-    CircuitFragment, Digest, D, F,
-};
+use crate::circuit::{CircuitFragment, Digest, D, F};
 use crate::codec::{ByteCodec, FieldElementCodec};
 use crate::inputs::CircuitInputs;
+use crate::utils::{bytes_to_felts, felts_to_bytes};
 use plonky2::{
     hash::hash_types::HashOutTarget,
     iop::witness::{PartialWitness, WitnessWrite},
     plonk::circuit_builder::CircuitBuilder,
 };
-use crate::utils::{bytes_to_felts, felts_to_bytes};
 
 #[derive(Debug, Default, Eq, PartialEq, Clone, Copy)]
 pub struct SubstrateAccount(Digest);
@@ -276,7 +274,8 @@ mod tests {
         ];
         let account_varied = SubstrateAccount::new(&varied_address).unwrap();
         let field_elements_varied = account_varied.to_field_elements();
-        let recovered_varied = SubstrateAccount::from_field_elements(&field_elements_varied).unwrap();
+        let recovered_varied =
+            SubstrateAccount::from_field_elements(&field_elements_varied).unwrap();
         assert_eq!(account_varied, recovered_varied);
     }
 }
