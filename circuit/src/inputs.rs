@@ -1,7 +1,6 @@
 use anyhow::bail;
-use plonky2::{field::types::PrimeField64, plonk::proof::ProofWithPublicInputs};
+use plonky2::plonk::proof::ProofWithPublicInputs;
 
-use crate::circuit::Digest;
 use crate::utils::{felts_to_bytes, felts_to_u128};
 use crate::{
     circuit::{C, D, F},
@@ -83,12 +82,11 @@ pub struct PrivateCircuitInputs {
 
 #[cfg(any(test, feature = "testing"))]
 pub mod test_helpers {
-    use crate::codec::ByteCodec;
     use crate::nullifier::test_helpers::{FUNDING_ACCOUNT, FUNDING_NONCE, SECRET};
     use crate::nullifier::Nullifier;
     use crate::storage_proof::test_helpers::{default_proof, ROOT_HASH};
     use crate::substrate_account::SubstrateAccount;
-    use crate::unspendable_account::{self, UnspendableAccount};
+    use crate::unspendable_account::UnspendableAccount;
 
     use super::{CircuitInputs, PrivateCircuitInputs, PublicCircuitInputs};
 

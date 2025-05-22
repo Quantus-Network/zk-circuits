@@ -1,5 +1,5 @@
 use crate::circuit::F;
-use plonky2::field::types::{Field, Field64, PrimeField64};
+use plonky2::field::types::{Field, PrimeField64};
 
 pub fn u128_to_felts(num: u128) -> Vec<F> {
     let mut amount_felts: Vec<F> = Vec::with_capacity(2);
@@ -60,6 +60,8 @@ pub fn felts_to_bytes(input: &[F]) -> Vec<u8> {
 
 #[cfg(test)]
 mod tests {
+    use plonky2::field::types::Field64;
+
     use super::*;
 
     // Helper to create F from a u64 for concise test cases

@@ -5,10 +5,9 @@ use crate::nullifier::{Nullifier, NullifierTargets};
 use crate::storage_proof::{StorageProof, StorageProofTargets};
 use crate::substrate_account::{ExitAccountTargets, SubstrateAccount};
 use crate::unspendable_account::{UnspendableAccount, UnspendableAccountTargets};
-use plonky2::field::types::PrimeField64;
 use plonky2::plonk::circuit_data::CircuitData;
 use plonky2::{
-    field::{goldilocks_field::GoldilocksField, types::Field},
+    field::goldilocks_field::GoldilocksField,
     iop::witness::PartialWitness,
     plonk::{
         circuit_builder::CircuitBuilder,

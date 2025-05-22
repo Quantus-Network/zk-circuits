@@ -90,7 +90,7 @@ mod tests {
         tests::{build_and_prove_test, setup_test_builder_and_witness},
         C,
     };
-    use plonky2::field::types::{Field, Field64};
+    use plonky2::field::types::Field;
 
     use super::*;
     use plonky2::plonk::proof::ProofWithPublicInputs;

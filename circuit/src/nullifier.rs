@@ -30,9 +30,9 @@ impl Nullifier {
     pub fn new(secret: &[u8], funding_nonce: u32, funding_account: &[u8]) -> Self {
         let mut preimage = Vec::new();
         let salt = string_to_felt(NULLIFIER_SALT);
-        let secret = bytes_to_felts(&secret);
+        let secret = bytes_to_felts(secret);
         let funding_nonce = F::from_canonical_u32(funding_nonce);
-        let funding_account = bytes_to_felts(&funding_account);
+        let funding_account = bytes_to_felts(funding_account);
         preimage.push(salt);
         preimage.extend(secret);
         preimage.push(funding_nonce);
@@ -228,7 +228,7 @@ pub mod tests {
         let mut invalid_bytes = hex::decode(SECRET).unwrap();
         invalid_bytes[0] ^= 0xFF;
 
-        let bad_inputs = NullifierInputs::new(&invalid_bytes, FUNDING_NONCE, &FUNDING_ACCOUNT);
+        let bad_inputs = NullifierInputs::new(&invalid_bytes, FUNDING_NONCE, FUNDING_ACCOUNT);
 
         let res = run_test(&valid_nullifier, bad_inputs);
         assert!(res.is_err());

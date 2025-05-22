@@ -28,7 +28,7 @@ impl UnspendableAccount {
         // First, convert the preimage to its representation as field elements.
         let mut preimage = Vec::new();
         preimage.push(string_to_felt(UNSPENDABLE_SALT));
-        preimage.extend(bytes_to_felts(&secret));
+        preimage.extend(bytes_to_felts(secret));
 
         // Hash twice to get the account id.
         let inner_hash = PoseidonHash::hash_no_pad(&preimage).elements;
@@ -136,7 +136,7 @@ impl CircuitFragment for UnspendableAccount {
     ) -> anyhow::Result<()> {
         // Unspendable account circuit values.
         pw.set_hash_target(targets.account_id, self.account_id.into())?;
-        pw.set_target_arr(&targets.secret, &inputs.secret);
+        pw.set_target_arr(&targets.secret, &inputs.secret)?;
 
         Ok(())
     }
