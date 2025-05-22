@@ -3,11 +3,11 @@ members = ["aggregator", "circuit", "prover", "verifier"]
 resolver = "2"
 
 [workspace.dependencies]
-anyhow = "1.0.95"
-plonky2 = "1.0.2"
+anyhow = { version = "1.0.98", default-features = false }
+plonky2 = { git = "https://github.com/Quantus-Network/plonky2", default-features = false, features = ["no_random"] }
 poseidon-resonance = { git = "https://github.com/Quantus-Network/poseidon-resonance" }
-criterion = "0.5.1"
-rand = "0.9.1"
+hex = { version = "0.4.3", default-features = false }
+criterion = { version = "0.5.1", features = ["html_reports"] }
 
 [workspace.package]
 version = "0.1.0"

@@ -10,11 +10,11 @@ license.workspace = true
 anyhow.workspace = true
 plonky2.workspace = true
 poseidon-resonance.workspace = true
-hex = "0.4.3"
+hex.workspace = true
 
 [dev-dependencies]
 criterion.workspace = true
-rand.workspace = true
+rand = { version = "0.9.1" }
 
 [features]
 default = []
