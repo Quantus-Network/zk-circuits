@@ -59,8 +59,8 @@ mod tests {
     use super::WormholeVerifier;
     use plonky2::plonk::proof::ProofWithPublicInputs;
     use wormhole_circuit::codec::FieldElementCodec;
-    use wormhole_circuit::exit_account::ExitAccount;
     use wormhole_circuit::inputs::CircuitInputs;
+    use wormhole_circuit::substrate_account::SubstrateAccount;
     use wormhole_prover::WormholeProver;
 
     #[test]
@@ -80,10 +80,10 @@ mod tests {
         let mut proof = prover.commit(&inputs).unwrap().prove().unwrap();
 
         println!("proof before: {:?}", proof.public_inputs);
-        let exit_account = ExitAccount::from_field_elements(&proof.public_inputs[15..19]);
+        let exit_account = SubstrateAccount::from_field_elements(&proof.public_inputs[10..14]);
         println!("exit_account: {:?}", exit_account);
-        let modified_exit_account = ExitAccount::new(&[8u8; 32]).unwrap();
-        proof.public_inputs[15..19].copy_from_slice(&modified_exit_account.to_field_elements());
+        let modified_exit_account = SubstrateAccount::new(&[8u8; 32]).unwrap();
+        proof.public_inputs[10..14].copy_from_slice(&modified_exit_account.to_field_elements());
         println!("proof after: {:?}", proof.public_inputs);
 
         let verifier = WormholeVerifier::new();

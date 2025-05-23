@@ -1,15 +1,17 @@
 use anyhow::bail;
-use plonky2::{field::types::PrimeField64, plonk::proof::ProofWithPublicInputs};
+use plonky2::plonk::proof::ProofWithPublicInputs;
 
+use crate::utils::{felts_to_bytes, felts_to_u128};
 use crate::{
-    circuit::{field_elements_to_bytes, C, D, F},
+    circuit::{C, D, F},
     codec::FieldElementCodec,
-    exit_account::ExitAccount,
     nullifier::Nullifier,
+    substrate_account::SubstrateAccount,
     unspendable_account::UnspendableAccount,
 };
 
-const PUBLIC_INPUTS_FELTS_LEN: usize = 19;
+/// The total size of the public inputs field element vector.
+const PUBLIC_INPUTS_FELTS_LEN: usize = 16;
 
 /// Inputs required to commit to the wormhole circuit.
 #[derive(Debug)]
@@ -21,20 +23,14 @@ pub struct CircuitInputs {
 /// All of the public inputs required for the circuit.
 #[derive(Debug)]
 pub struct PublicCircuitInputs {
-    /// The amount sent in the transaction.
-    pub funding_tx_amount: u64,
     /// Amount to be withdrawn.
-    pub exit_amount: u64,
-    /// The fee for the transaction.
-    pub fee_amount: u64,
+    pub funding_amount: u128,
     /// The nullifier.
     pub nullifier: Nullifier,
-    /// The unspendable account hash.
-    pub unspendable_account: UnspendableAccount,
     /// The root hash of the storage trie.
     pub root_hash: [u8; 32],
     /// The address of the account to pay out to.
-    pub exit_account: ExitAccount,
+    pub exit_account: SubstrateAccount,
 }
 
 impl TryFrom<ProofWithPublicInputs<F, C, D>> for PublicCircuitInputs {
@@ -51,25 +47,20 @@ impl TryFrom<ProofWithPublicInputs<F, C, D>> for PublicCircuitInputs {
             )
         }
 
-        let funding_tx_amount = public_inputs[0].to_noncanonical_u64();
-        let exit_amount = public_inputs[1].to_noncanonical_u64();
-        let fee_amount = public_inputs[2].to_noncanonical_u64();
+        // TODO: Create constants for the indices where each field is expected in the public
+        // inputs.
+        let funding_amount = felts_to_u128(public_inputs[0..2].to_vec());
+        let nullifier = Nullifier::from_field_elements(&public_inputs[2..6])?;
 
-        let nullifier = Nullifier::from_field_elements(&public_inputs[3..7])?;
-        let unspendable_account = UnspendableAccount::from_field_elements(&public_inputs[7..11])?;
-
-        let root_hash: [u8; 32] = field_elements_to_bytes(&public_inputs[11..15])
+        let root_hash: [u8; 32] = felts_to_bytes(&public_inputs[6..10])
             .try_into()
             .map_err(|_| anyhow::anyhow!("failed to deserialize root hash from public inputs"))?;
 
-        let exit_account = ExitAccount::from_field_elements(&public_inputs[15..19])?;
+        let exit_account = SubstrateAccount::from_field_elements(&public_inputs[10..14])?;
 
         Ok(PublicCircuitInputs {
-            funding_tx_amount,
-            exit_amount,
-            fee_amount,
+            funding_amount,
             nullifier,
-            unspendable_account,
             root_hash,
             exit_account,
         })
@@ -79,51 +70,52 @@ impl TryFrom<ProofWithPublicInputs<F, C, D>> for PublicCircuitInputs {
 /// All of the private inputs required for the circuit.
 #[derive(Debug)]
 pub struct PrivateCircuitInputs {
-    /// Raw bytes of the nullifier preimage, used to prevent double spends.
-    pub nullifier_preimage: Vec<u8>,
-    /// Raw bytes of the unspendable account preimage.
-    pub unspendable_account_preimage: Vec<u8>,
+    /// Raw bytes of the secret of the nullifier and the unspendable account
+    pub secret: Vec<u8>,
     /// A sequence of key-value nodes representing the storage proof.
     ///
     /// Each element is a tuple where the items are the left and right splits of a proof node split
     /// in half at the expected childs hash index.
     pub storage_proof: Vec<(Vec<u8>, Vec<u8>)>,
+    pub funding_nonce: u32,
+    pub funding_account: SubstrateAccount,
+    /// The unspendable account hash.
+    pub unspendable_account: UnspendableAccount,
 }
 
 #[cfg(any(test, feature = "testing"))]
 pub mod test_helpers {
-    use crate::exit_account::ExitAccount;
-    use crate::nullifier::{self, Nullifier};
+    use crate::nullifier::test_helpers::{FUNDING_ACCOUNT, FUNDING_NONCE, SECRET};
+    use crate::nullifier::Nullifier;
     use crate::storage_proof::test_helpers::{default_proof, ROOT_HASH};
-    use crate::unspendable_account::{self, UnspendableAccount};
+    use crate::substrate_account::SubstrateAccount;
+    use crate::unspendable_account::UnspendableAccount;
 
     use super::{CircuitInputs, PrivateCircuitInputs, PublicCircuitInputs};
 
     impl Default for CircuitInputs {
         fn default() -> Self {
-            let nullifier_preimage = hex::decode(nullifier::test_helpers::PREIMAGE).unwrap();
-            let unspendable_account_preimage =
-                hex::decode(unspendable_account::test_helpers::PREIMAGES[0]).unwrap();
+            let secret = hex::decode(SECRET).unwrap();
             let root_hash: [u8; 32] = hex::decode(ROOT_HASH).unwrap().try_into().unwrap();
 
-            let nullifier = Nullifier::new(&nullifier_preimage);
-            let unspendable_account = UnspendableAccount::new(&unspendable_account_preimage);
-            let exit_account = ExitAccount::new(&[254u8; 32]).unwrap();
+            let funding_account = SubstrateAccount::new(FUNDING_ACCOUNT).unwrap();
+            let nullifier = Nullifier::new(&secret, FUNDING_NONCE, FUNDING_ACCOUNT);
+            let unspendable_account = UnspendableAccount::new(&secret);
+            let exit_account = SubstrateAccount::new(&[254u8; 32]).unwrap();
 
             Self {
                 public: PublicCircuitInputs {
-                    funding_tx_amount: 0,
-                    exit_amount: 0,
-                    fee_amount: 0,
+                    funding_amount: 0,
                     nullifier,
-                    unspendable_account,
                     root_hash,
                     exit_account,
                 },
                 private: PrivateCircuitInputs {
-                    nullifier_preimage,
-                    unspendable_account_preimage,
+                    secret,
                     storage_proof: default_proof(),
+                    funding_nonce: 0,
+                    funding_account,
+                    unspendable_account,
                 },
             }
         }

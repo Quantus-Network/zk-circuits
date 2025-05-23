@@ -29,13 +29,13 @@ use plonky2::{
 };
 
 use wormhole_circuit::circuit::{WormholeCircuit, C, D, F};
+use wormhole_circuit::codec::ByteCodec;
 use wormhole_circuit::{
-    amounts::Amounts,
     circuit::{CircuitFragment, CircuitTargets},
-    exit_account::ExitAccount,
     inputs::CircuitInputs,
     nullifier::{Nullifier, NullifierInputs},
     storage_proof::StorageProof,
+    substrate_account::SubstrateAccount,
     unspendable_account::{UnspendableAccount, UnspendableAccountInputs},
 };
 
@@ -77,18 +77,19 @@ impl WormholeProver {
         let Some(targets) = self.targets.take() else {
             bail!("prover has already commited to inputs");
         };
-
-        let amounts = Amounts::from(circuit_inputs);
         let nullifier = Nullifier::from(circuit_inputs);
         let unspendable_account = UnspendableAccount::from(circuit_inputs);
         let storage_proof = StorageProof::from(circuit_inputs);
-        let exit_account = ExitAccount::from(circuit_inputs);
+        let exit_account = SubstrateAccount::from(circuit_inputs);
 
-        let nullifier_inputs = NullifierInputs::new(&circuit_inputs.private.nullifier_preimage);
+        let nullifier_inputs = NullifierInputs::new(
+            &circuit_inputs.private.secret,
+            circuit_inputs.private.funding_nonce,
+            &circuit_inputs.private.funding_account.to_bytes(),
+        );
         let unspendable_account_inputs =
-            UnspendableAccountInputs::new(&circuit_inputs.private.unspendable_account_preimage);
+            UnspendableAccountInputs::new(&circuit_inputs.private.secret);
 
-        amounts.fill_targets(&mut self.partial_witness, targets.amounts, ())?;
         nullifier.fill_targets(
             &mut self.partial_witness,
             targets.nullifier,
@@ -99,6 +100,7 @@ impl WormholeProver {
             targets.unspendable_account,
             unspendable_account_inputs,
         )?;
+
         storage_proof.fill_targets(&mut self.partial_witness, targets.storage_proof, ())?;
         exit_account.fill_targets(&mut self.partial_witness, targets.exit_account, ())?;
 
