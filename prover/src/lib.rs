@@ -17,7 +17,7 @@
 //!
 //! # fn main() -> anyhow::Result<()> {
 //! # let inputs = CircuitInputs::default();
-//! let prover = WormholeProver::new();
+//! let prover = WormholeProver::new(false);
 //! let proof = prover.commit(&inputs)?.prove()?;
 //! # Ok(())
 //! # }
@@ -48,7 +48,7 @@ pub struct WormholeProver {
 
 impl Default for WormholeProver {
     fn default() -> Self {
-        let wormhole_circuit = WormholeCircuit::new();
+        let wormhole_circuit = WormholeCircuit::new(false);
         let partial_witness = PartialWitness::new();
 
         let targets = Some(wormhole_circuit.targets());
@@ -64,8 +64,18 @@ impl Default for WormholeProver {
 
 impl WormholeProver {
     /// Creates a new [`WormholeProver`].
-    pub fn new() -> Self {
-        Self::default()
+    pub fn new(zk: bool) -> Self {
+        let wormhole_circuit = WormholeCircuit::new(zk);
+        let partial_witness = PartialWitness::new();
+
+        let targets = Some(wormhole_circuit.targets());
+        let circuit_data = wormhole_circuit.build_prover();
+
+        Self {
+            circuit_data,
+            partial_witness,
+            targets,
+        }
     }
 
     /// Commits the provided [`CircuitInputs`] to the circuit by filling relevant targets.
@@ -127,18 +137,16 @@ mod tests {
     use wormhole_circuit::inputs::CircuitInputs;
 
     #[test]
-    #[cfg(feature = "testing")]
     fn commit_and_prove() {
-        let prover = WormholeProver::new();
+        let prover = WormholeProver::new(false);
         let inputs = CircuitInputs::default();
         prover.commit(&inputs).unwrap().prove().unwrap();
     }
 
     #[test]
     #[ignore = "debug"]
-    #[cfg(feature = "testing")]
     fn get_public_inputs() {
-        let prover = WormholeProver::new();
+        let prover = WormholeProver::new(false);
         let inputs = CircuitInputs::default();
         let proof = prover.commit(&inputs).unwrap().prove().unwrap();
         let public_inputs = proof.public_inputs;
@@ -146,11 +154,10 @@ mod tests {
     }
 
     #[test]
-    #[cfg(feature = "testing")]
     fn proof_can_be_deserialized() {
         use wormhole_circuit::inputs::PublicCircuitInputs;
 
-        let prover = WormholeProver::new();
+        let prover = WormholeProver::new(false);
         let inputs = CircuitInputs::default();
         let proof = prover.commit(&inputs).unwrap().prove().unwrap();
         let public_inputs = PublicCircuitInputs::try_from(proof).unwrap();

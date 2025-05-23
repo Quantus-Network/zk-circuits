@@ -161,46 +161,6 @@ fn slice_to_hashout(slice: &[u8]) -> HashOut<F> {
     }
 }
 
-#[cfg(any(test, feature = "testing"))]
-pub mod test_helpers {
-    use super::StorageProof;
-
-    pub const ROOT_HASH: &str = "77eb9d80cd12acfd902b459eb3b8876f05f31ef6a17ed5fdb060ee0e86dd8139";
-    pub const STORAGE_PROOF: [(&str, &str); 3] = [
-        (
-            "802cb08072547dce8ca905abf49c9c644951ff048087cc6f4b497fcc6c24e5592da3bc6a80c9f21db91c755ab0e99f00c73c93eb1742e9d8ba3facffa6e5fda8718006e05e80e4faa006b3beae9cb837950c42a2ab760843d05d224dc437b1add4627ddf6b4580",
-            "68ff0ee21014648cb565ea90c578e0d345b51e857ecb71aaa8e307e20655a83680d8496e0fd1b138c06197ed42f322409c66a8abafd87b3256089ea7777495992180966518d63d0d450bdf3a4f16bb755b96e022464082e2cb3cf9072dd9ef7c9b53",
-        ),
-        (
-            "9f02261276cc9d1f8598ea4b6a74b15c2f3000505f0e7b9012096b41c4eb3aaf947f6ea42908010080",
-            "91a67194de54f5741ef011a470a09ad4319935c7ddc4ec11f5a9fa75dd173bd8",
-        ),
-        (
-            "80840080",
-            "2febfc925f8398a1cf35c5de15443d3940255e574ce541f7e67a3f86dbc2a98580cbfbed5faf5b9f416c54ee9d0217312d230bcc0cb57c5817dbdd7f7df9006a63",
-        ),
-    ];
-
-    impl Default for StorageProof {
-        fn default() -> Self {
-            StorageProof::new(&default_proof(), default_root_hash())
-        }
-    }
-
-    pub fn default_proof() -> Vec<(Vec<u8>, Vec<u8>)> {
-        STORAGE_PROOF
-            .map(|(l, r)| {
-                let left = hex::decode(l).unwrap();
-                let right = hex::decode(r).unwrap();
-                (left, right)
-            })
-            .to_vec()
-    }
-
-    pub fn default_root_hash() -> [u8; 32] {
-        hex::decode(ROOT_HASH).unwrap().try_into().unwrap()
-    }
-}
 
 #[cfg(test)]
 pub mod tests {
@@ -208,7 +168,6 @@ pub mod tests {
     use std::panic;
 
     use super::{
-        test_helpers::{default_proof, default_root_hash},
         *,
     };
     use crate::circuit::{
@@ -216,9 +175,10 @@ pub mod tests {
         C,
     };
     use rand::Rng;
+    use crate::test_helpers::test_helpers::{default_root_hash, default_storage_proof};
 
     fn run_test(storage_proof: &StorageProof) -> anyhow::Result<ProofWithPublicInputs<F, C, D>> {
-        let (mut builder, mut pw) = setup_test_builder_and_witness();
+        let (mut builder, mut pw) = setup_test_builder_and_witness(false);
         let targets = StorageProofTargets::new(&mut builder);
         StorageProof::circuit(&targets, &mut builder);
 
@@ -245,7 +205,7 @@ pub mod tests {
     #[test]
     #[should_panic(expected = "set twice with different values")]
     fn tampered_proof_fails() {
-        let mut tampered_proof = default_proof();
+        let mut tampered_proof = default_storage_proof();
 
         // Flip the first byte in the first node hash.
         tampered_proof[0].1[0] ^= 0xFF;
@@ -266,7 +226,7 @@ pub mod tests {
 
         for i in 0..FUZZ_ITERATIONS {
             // Clone the original storage proof
-            let mut tampered_proof = default_proof();
+            let mut tampered_proof = default_storage_proof();
 
             // Randomly select a node in the proof to tamper
             let node_index = rng.random_range(0..tampered_proof.len());

@@ -142,7 +142,6 @@ impl CircuitFragment for UnspendableAccount {
     }
 }
 
-#[cfg(any(test, feature = "testing"))]
 pub mod test_helpers {
     use super::{UnspendableAccount, UnspendableAccountInputs};
 
@@ -184,21 +183,16 @@ pub mod test_helpers {
 pub mod tests {
     use plonky2::{field::types::Field, plonk::proof::ProofWithPublicInputs};
 
-    use crate::circuit::{
-        tests::{build_and_prove_test, setup_test_builder_and_witness},
-        C,
-    };
-
-    use super::{
-        test_helpers::{ADDRESSES, SECRETS},
-        *,
-    };
+    use crate::circuit::{tests::{build_and_prove_test, setup_test_builder_and_witness}, CircuitFragment, C, D, F};
+    use crate::codec::FieldElementCodec;
+    use crate::utils::bytes_to_felts;
+    use super::{test_helpers::{ADDRESSES, SECRETS}, UnspendableAccount, UnspendableAccountInputs, UnspendableAccountTargets};
 
     fn run_test(
         unspendable_account: &UnspendableAccount,
         inputs: UnspendableAccountInputs,
     ) -> anyhow::Result<ProofWithPublicInputs<F, C, D>> {
-        let (mut builder, mut pw) = setup_test_builder_and_witness();
+        let (mut builder, mut pw) = setup_test_builder_and_witness(false);
         let targets = UnspendableAccountTargets::new(&mut builder);
         UnspendableAccount::circuit(&targets, &mut builder);
 

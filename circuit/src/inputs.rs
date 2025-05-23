@@ -83,41 +83,4 @@ pub struct PrivateCircuitInputs {
     pub unspendable_account: UnspendableAccount,
 }
 
-#[cfg(any(test, feature = "testing"))]
-pub mod test_helpers {
-    use crate::nullifier::test_helpers::{FUNDING_ACCOUNT, FUNDING_NONCE, SECRET};
-    use crate::nullifier::Nullifier;
-    use crate::storage_proof::test_helpers::{default_proof, ROOT_HASH};
-    use crate::substrate_account::SubstrateAccount;
-    use crate::unspendable_account::UnspendableAccount;
 
-    use super::{CircuitInputs, PrivateCircuitInputs, PublicCircuitInputs};
-
-    impl Default for CircuitInputs {
-        fn default() -> Self {
-            let secret = hex::decode(SECRET).unwrap();
-            let root_hash: [u8; 32] = hex::decode(ROOT_HASH).unwrap().try_into().unwrap();
-
-            let funding_account = SubstrateAccount::new(FUNDING_ACCOUNT).unwrap();
-            let nullifier = Nullifier::new(&secret, FUNDING_NONCE, FUNDING_ACCOUNT);
-            let unspendable_account = UnspendableAccount::new(&secret);
-            let exit_account = SubstrateAccount::new(&[254u8; 32]).unwrap();
-
-            Self {
-                public: PublicCircuitInputs {
-                    funding_amount: 0,
-                    nullifier,
-                    root_hash,
-                    exit_account,
-                },
-                private: PrivateCircuitInputs {
-                    secret,
-                    storage_proof: default_proof(),
-                    funding_nonce: 0,
-                    funding_account,
-                    unspendable_account,
-                },
-            }
-        }
-    }
-}

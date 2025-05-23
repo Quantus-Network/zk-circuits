@@ -40,7 +40,7 @@ cd wormhole-prover
 Run the test suite:
 
 ```sh
-cargo test --features testing
+cargo test
 ```
 
 ## Benchmarks
@@ -48,5 +48,5 @@ cargo test --features testing
 To run prover and verifier benchmarks:
 
 ```sh
-cargo bench --features testing
+cargo bench
 ```

@@ -85,8 +85,23 @@ impl Default for WormholeCircuit {
 }
 
 impl WormholeCircuit {
-    pub fn new() -> Self {
-        Self::default()
+    pub fn new(zk: bool) -> Self {
+        let mut config = CircuitConfig::standard_recursion_config();
+        if zk {
+            config.zero_knowledge = true;
+        }
+        let mut builder = CircuitBuilder::<F, D>::new(config);
+
+        // Setup targets.
+        let targets = CircuitTargets::new(&mut builder);
+
+        // Setup circuits.
+        Nullifier::circuit(&targets.nullifier, &mut builder);
+        UnspendableAccount::circuit(&targets.unspendable_account, &mut builder);
+        StorageProof::circuit(&targets.storage_proof, &mut builder);
+        SubstrateAccount::circuit(&targets.exit_account, &mut builder);
+
+        Self { builder, targets }
     }
 
     pub fn targets(&self) -> CircuitTargets {
@@ -106,15 +121,19 @@ impl WormholeCircuit {
     }
 }
 
-#[cfg(any(test, feature = "testing"))]
 pub mod tests {
+    use plonky2::iop::witness::PartialWitness;
+    use plonky2::plonk::circuit_builder::CircuitBuilder;
+    use plonky2::plonk::circuit_data::CircuitConfig;
     use plonky2::plonk::proof::ProofWithPublicInputs;
-
-    use super::*;
+    use crate::circuit::{F, C, D};
 
     /// Convenince function for initializing a test circuit environment.
-    pub fn setup_test_builder_and_witness() -> (CircuitBuilder<F, D>, PartialWitness<F>) {
-        let config = CircuitConfig::standard_recursion_zk_config();
+    pub fn setup_test_builder_and_witness(zk: bool) -> (CircuitBuilder<F, D>, PartialWitness<F>) {
+        let mut config = CircuitConfig::standard_recursion_config();
+        if zk {
+            config.zero_knowledge = true;
+        }
         let builder = CircuitBuilder::<F, D>::new(config);
         let pw = PartialWitness::new();
 

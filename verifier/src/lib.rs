@@ -11,10 +11,10 @@
 /// #
 /// # fn main() -> anyhow::Result<()> {
 /// # let inputs = CircuitInputs::default();
-/// # let prover = WormholeProver::new();
+/// # let prover = WormholeProver::new(false);
 /// # let proof = prover.commit(&inputs)?.prove()?;
 ///
-/// let verifier = WormholeVerifier::new();
+/// let verifier = WormholeVerifier::new(false);
 /// verifier.verify(proof)?;
 /// # Ok(())
 /// # }
@@ -31,7 +31,7 @@ pub struct WormholeVerifier {
 
 impl Default for WormholeVerifier {
     fn default() -> Self {
-        let wormhole_circuit = WormholeCircuit::new();
+        let wormhole_circuit = WormholeCircuit::new(false);
         let circuit_data = wormhole_circuit.build_verifier();
 
         Self { circuit_data }
@@ -40,8 +40,11 @@ impl Default for WormholeVerifier {
 
 impl WormholeVerifier {
     /// Creates a new [`WormholeVerifier`].
-    pub fn new() -> Self {
-        Self::default()
+    pub fn new(zk: bool) -> Self {
+        let wormhole_circuit = WormholeCircuit::new(zk);
+        let circuit_data = wormhole_circuit.build_verifier();
+
+        Self { circuit_data }
     }
 
     /// Verify a [`ProofWithPublicInputs`] generated from a [`crate::prover::WormholeProver`].
@@ -65,17 +68,17 @@ mod tests {
 
     #[test]
     fn verify_simple_proof() {
-        let prover = WormholeProver::new();
+        let prover = WormholeProver::new(false);
         let inputs = CircuitInputs::default();
         let proof = prover.commit(&inputs).unwrap().prove().unwrap();
 
-        let verifier = WormholeVerifier::new();
+        let verifier = WormholeVerifier::new(false);
         verifier.verify(proof).unwrap();
     }
 
     #[test]
     fn cannot_verify_with_modified_exit_account() {
-        let prover = WormholeProver::new();
+        let prover = WormholeProver::new(false);
         let inputs = CircuitInputs::default();
         let mut proof = prover.commit(&inputs).unwrap().prove().unwrap();
 
@@ -86,7 +89,7 @@ mod tests {
         proof.public_inputs[10..14].copy_from_slice(&modified_exit_account.to_field_elements());
         println!("proof after: {:?}", proof.public_inputs);
 
-        let verifier = WormholeVerifier::new();
+        let verifier = WormholeVerifier::new(false);
         let result = verifier.verify(proof);
         assert!(
             result.is_err(),
@@ -96,10 +99,10 @@ mod tests {
 
     #[test]
     fn cannot_verify_with_any_public_input_modification() {
-        let prover = WormholeProver::new();
+        let prover = WormholeProver::new(false);
         let inputs = CircuitInputs::default();
         let proof = prover.commit(&inputs).unwrap().prove().unwrap();
-        let verifier = WormholeVerifier::new();
+        let verifier = WormholeVerifier::new(false);
 
         for ix in 0..proof.public_inputs.len() {
             let mut p = proof.clone();
@@ -117,10 +120,10 @@ mod tests {
     #[ignore]
     #[test]
     fn cannot_verify_with_modified_proof() {
-        let prover = WormholeProver::new();
+        let prover = WormholeProver::new(false);
         let inputs = CircuitInputs::default();
         let proof = prover.commit(&inputs).unwrap().prove().unwrap();
-        let verifier = WormholeVerifier::new();
+        let verifier = WormholeVerifier::new(false);
 
         let proof_bytes = proof.to_bytes();
         println!("proof length: {:?}", proof_bytes.len());

@@ -96,7 +96,7 @@ mod tests {
     use plonky2::plonk::proof::ProofWithPublicInputs;
 
     fn run_test(exit_account: &SubstrateAccount) -> anyhow::Result<ProofWithPublicInputs<F, C, D>> {
-        let (mut builder, mut pw) = setup_test_builder_and_witness();
+        let (mut builder, mut pw) = setup_test_builder_and_witness(false);
         let targets = ExitAccountTargets::new(&mut builder);
         SubstrateAccount::circuit(&targets, &mut builder);
 

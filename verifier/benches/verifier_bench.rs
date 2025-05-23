@@ -1,24 +1,32 @@
-#![cfg(feature = "testing")]
+use std::fs;
 use std::time::Duration;
 
 use criterion::{criterion_group, criterion_main, Criterion};
+use plonky2::plonk::circuit_data::CommonCircuitData;
+use plonky2::plonk::proof::ProofWithPublicInputs;
+use plonky2::util::serialization::DefaultGateSerializer;
 use wormhole_circuit::inputs::CircuitInputs;
-use wormhole_prover::WormholeProver;
 use wormhole_verifier::WormholeVerifier;
 
 const MEASUREMENT_TIME_S: u64 = 20;
+const PROOF_PATH: &str = "./benches/proof.bin";
 
 fn verify_proof_benchmark(c: &mut Criterion) {
     c.bench_function("verifier_verify_proof", |b| {
-        let inputs = CircuitInputs::default();
-        let proof = WormholeProver::default()
-            .commit(&inputs)
-            .unwrap()
-            .prove()
-            .unwrap();
+        let common_data = fs::read("./benches/common.bin").unwrap();
+        let circuit_data = CommonCircuitData::from_bytes(common_data, &DefaultGateSerializer).unwrap();
+        let proof_data = fs::read(PROOF_PATH).unwrap();
+        let proof = ProofWithPublicInputs::from_bytes(proof_data, &circuit_data).unwrap();
+
+        // let inputs = CircuitInputs::default();
+        // let proof = WormholeProver::new(true)
+        //     .commit(&inputs)
+        //     .unwrap()
+        //     .prove()
+        //     .unwrap();
 
         b.iter(|| {
-            let verifier = WormholeVerifier::new();
+            let verifier = WormholeVerifier::new(true);
             verifier.verify(proof.clone()).unwrap();
         });
     });
@@ -26,7 +34,9 @@ fn verify_proof_benchmark(c: &mut Criterion) {
 
 criterion_group!(
     name = benches;
-    config = Criterion::default().measurement_time(Duration::from_secs(MEASUREMENT_TIME_S));
+    config = Criterion::default()
+        .measurement_time(Duration::from_secs(MEASUREMENT_TIME_S))
+        .sample_size(10);
     targets = verify_proof_benchmark
 );
 criterion_main!(benches);
