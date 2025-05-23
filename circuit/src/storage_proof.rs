@@ -171,7 +171,7 @@ pub mod tests {
         tests::{build_and_prove_test, setup_test_builder_and_witness},
         C,
     };
-    use crate::test_helpers::{default_root_hash, default_storage_proof};
+    use crate::test_helpers::storage_proof::{default_root_hash, default_storage_proof};
     use rand::Rng;
 
     fn run_test(storage_proof: &StorageProof) -> anyhow::Result<ProofWithPublicInputs<F, C, D>> {
@@ -185,17 +185,15 @@ pub mod tests {
 
     #[test]
     fn build_and_verify_proof() {
-        let storage_proof = StorageProof::default();
+        let storage_proof = StorageProof::test_inputs();
         run_test(&storage_proof).unwrap();
     }
 
     #[test]
     #[should_panic(expected = "set twice with different values")]
     fn invalid_root_hash_fails() {
-        let proof = StorageProof {
-            root_hash: [0u8; 32],
-            ..Default::default()
-        };
+        let mut proof = StorageProof::test_inputs();
+        proof.root_hash = [0u8; 32];
         run_test(&proof).unwrap();
     }
 

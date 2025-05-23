@@ -16,7 +16,7 @@
 //! use wormhole_prover::WormholeProver;
 //!
 //! # fn main() -> anyhow::Result<()> {
-//! # let inputs = CircuitInputs::default();
+//! # let inputs = CircuitInputs::test_inputs();
 //! let prover = WormholeProver::new(false);
 //! let proof = prover.commit(&inputs)?.prove()?;
 //! # Ok(())
@@ -139,7 +139,7 @@ mod tests {
     #[test]
     fn commit_and_prove() {
         let prover = WormholeProver::new(false);
-        let inputs = CircuitInputs::default();
+        let inputs = CircuitInputs::test_inputs();
         prover.commit(&inputs).unwrap().prove().unwrap();
     }
 
@@ -147,7 +147,7 @@ mod tests {
     #[ignore = "debug"]
     fn get_public_inputs() {
         let prover = WormholeProver::new(false);
-        let inputs = CircuitInputs::default();
+        let inputs = CircuitInputs::test_inputs();
         let proof = prover.commit(&inputs).unwrap().prove().unwrap();
         let public_inputs = proof.public_inputs;
         println!("{:?}", public_inputs);
@@ -158,7 +158,7 @@ mod tests {
         use wormhole_circuit::inputs::PublicCircuitInputs;
 
         let prover = WormholeProver::new(false);
-        let inputs = CircuitInputs::default();
+        let inputs = CircuitInputs::test_inputs();
         let proof = prover.commit(&inputs).unwrap().prove().unwrap();
         let public_inputs = PublicCircuitInputs::try_from(proof).unwrap();
         println!("{:?}", public_inputs);

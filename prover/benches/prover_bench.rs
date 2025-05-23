@@ -14,7 +14,7 @@ fn create_proof_benchmark(c: &mut Criterion) {
             let prover = WormholeProver::new(true);
             // let circuit_bytes = prover.circuit_data.common.to_bytes(&DefaultGateSerializer).unwrap();
             // fs::write("common.bin", circuit_bytes).unwrap();
-            let inputs = CircuitInputs::default();
+            let inputs = CircuitInputs::test_inputs();
             prover.commit(&inputs).unwrap().prove().unwrap()
         });
     });

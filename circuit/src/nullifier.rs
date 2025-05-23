@@ -192,14 +192,14 @@ pub mod tests {
 
     #[test]
     fn build_and_verify_nullifier_proof() {
-        let nullifier = Nullifier::default();
-        let inputs = NullifierInputs::default();
+        let nullifier = Nullifier::test_inputs();
+        let inputs = NullifierInputs::test_inputs();
         run_test(&nullifier, inputs).unwrap();
     }
 
     #[test]
     fn invalid_secret_fails_proof() {
-        let valid_nullifier = Nullifier::default();
+        let valid_nullifier = Nullifier::test_inputs();
 
         // Flip the first byte of the preimage.
         let mut invalid_bytes = hex::decode(DEFAULT_SECRET).unwrap();

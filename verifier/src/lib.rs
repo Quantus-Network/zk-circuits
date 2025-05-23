@@ -10,7 +10,7 @@
 /// use wormhole_verifier::WormholeVerifier;
 /// #
 /// # fn main() -> anyhow::Result<()> {
-/// # let inputs = CircuitInputs::default();
+/// # let inputs = CircuitInputs::test_inputs();
 /// # let prover = WormholeProver::new(false);
 /// # let proof = prover.commit(&inputs)?.prove()?;
 ///
@@ -75,7 +75,7 @@ mod tests {
     #[test]
     fn verify_simple_proof() {
         let prover = WormholeProver::new(false);
-        let inputs = CircuitInputs::default();
+        let inputs = CircuitInputs::test_inputs();
         let proof = prover.commit(&inputs).unwrap().prove().unwrap();
 
         let verifier = WormholeVerifier::new(false, None);
@@ -88,7 +88,7 @@ mod tests {
     #[test]
     fn cannot_verify_with_modified_exit_account() {
         let prover = WormholeProver::new(false);
-        let inputs = CircuitInputs::default();
+        let inputs = CircuitInputs::test_inputs();
         let mut proof = prover.commit(&inputs).unwrap().prove().unwrap();
 
         println!("proof before: {:?}", proof.public_inputs);
@@ -109,7 +109,7 @@ mod tests {
     #[test]
     fn cannot_verify_with_any_public_input_modification() {
         let prover = WormholeProver::new(false);
-        let inputs = CircuitInputs::default();
+        let inputs = CircuitInputs::test_inputs();
         let proof = prover.commit(&inputs).unwrap().prove().unwrap();
         let verifier = WormholeVerifier::new(false, None);
 
@@ -130,7 +130,7 @@ mod tests {
     #[test]
     fn cannot_verify_with_modified_proof() {
         let prover = WormholeProver::new(false);
-        let inputs = CircuitInputs::default();
+        let inputs = CircuitInputs::test_inputs();
         let proof = prover.commit(&inputs).unwrap().prove().unwrap();
         let verifier = WormholeVerifier::new(false, None);
 

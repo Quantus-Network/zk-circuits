@@ -154,7 +154,7 @@ mod tests {
         let mut proofs = Vec::with_capacity(MAX_NUM_PROOFS_TO_AGGREGATE);
         for _ in 0..MAX_NUM_PROOFS_TO_AGGREGATE {
             let prover = WormholeProver::new(false);
-            let inputs = CircuitInputs::default();
+            let inputs = CircuitInputs::test_inputs();
             let proof = prover.commit(&inputs).unwrap().prove().unwrap();
             proofs.push(proof);
         }
@@ -173,7 +173,7 @@ mod tests {
         for i in 0..MAX_NUM_PROOFS_TO_AGGREGATE {
             let prover = WormholeProver::new(false);
             if i < MAX_NUM_PROOFS_TO_AGGREGATE / 2 {
-                let inputs = CircuitInputs::default();
+                let inputs = CircuitInputs::test_inputs();
                 let proof = prover.commit(&inputs).unwrap().prove().unwrap();
                 proofs.push(proof);
             } else {
