@@ -5,6 +5,6 @@ pub mod inputs;
 pub mod nullifier;
 pub mod storage_proof;
 pub mod substrate_account;
+mod test_helpers;
 pub mod unspendable_account;
 pub mod utils;
-mod test_helpers;

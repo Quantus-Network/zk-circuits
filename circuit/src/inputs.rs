@@ -82,5 +82,3 @@ pub struct PrivateCircuitInputs {
     /// The unspendable account hash.
     pub unspendable_account: UnspendableAccount,
 }
-
-

@@ -14,12 +14,15 @@ const PROOF_PATH: &str = "./benches/proof.bin";
 fn verify_proof_benchmark(c: &mut Criterion) {
     c.bench_function("verifier_verify_proof", |b| {
         let common_data = fs::read("./benches/common.bin").unwrap();
-        let common_circuit_data = CommonCircuitData::from_bytes(common_data, &DefaultGateSerializer).unwrap();
+        let common_circuit_data =
+            CommonCircuitData::from_bytes(common_data, &DefaultGateSerializer).unwrap();
         let proof_data = fs::read(PROOF_PATH).unwrap();
         let proof = ProofWithPublicInputs::from_bytes(proof_data, &common_circuit_data).unwrap();
 
         let verifier_circuit_data_bytes = fs::read("./benches/verifier.bin").unwrap();
-        let verifier_circuit_data = VerifierCircuitData::from_bytes(verifier_circuit_data_bytes, &DefaultGateSerializer).unwrap();
+        let verifier_circuit_data =
+            VerifierCircuitData::from_bytes(verifier_circuit_data_bytes, &DefaultGateSerializer)
+                .unwrap();
 
         // let inputs = CircuitInputs::default();
         // let proof = WormholeProver::new(true)

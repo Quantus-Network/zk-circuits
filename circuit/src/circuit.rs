@@ -120,11 +120,11 @@ impl WormholeCircuit {
 }
 
 pub mod tests {
+    use crate::circuit::{C, D, F};
     use plonky2::iop::witness::PartialWitness;
     use plonky2::plonk::circuit_builder::CircuitBuilder;
     use plonky2::plonk::circuit_data::CircuitConfig;
     use plonky2::plonk::proof::ProofWithPublicInputs;
-    use crate::circuit::{F, C, D};
 
     /// Convenince function for initializing a test circuit environment.
     pub fn setup_test_builder_and_witness(zk: bool) -> (CircuitBuilder<F, D>, PartialWitness<F>) {

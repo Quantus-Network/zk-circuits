@@ -171,12 +171,14 @@ impl CircuitFragment for Nullifier {
 pub mod tests {
     use plonky2::{field::types::Field, plonk::proof::ProofWithPublicInputs};
 
+    use super::*;
     use crate::circuit::{
         tests::{build_and_prove_test, setup_test_builder_and_witness},
         C,
     };
-    use crate::test_helpers::test_helpers::{DEFAULT_FUNDING_ACCOUNT, DEFAULT_FUNDING_NONCE, DEFAULT_SECRET};
-    use super::*;
+    use crate::test_helpers::test_helpers::{
+        DEFAULT_FUNDING_ACCOUNT, DEFAULT_FUNDING_NONCE, DEFAULT_SECRET,
+    };
 
     fn run_test(
         nullifier: &Nullifier,
@@ -205,7 +207,11 @@ pub mod tests {
         let mut invalid_bytes = hex::decode(DEFAULT_SECRET).unwrap();
         invalid_bytes[0] ^= 0xFF;
 
-        let bad_inputs = NullifierInputs::new(&invalid_bytes, DEFAULT_FUNDING_NONCE, DEFAULT_FUNDING_ACCOUNT);
+        let bad_inputs = NullifierInputs::new(
+            &invalid_bytes,
+            DEFAULT_FUNDING_NONCE,
+            DEFAULT_FUNDING_ACCOUNT,
+        );
 
         let res = run_test(&valid_nullifier, bad_inputs);
         assert!(res.is_err());

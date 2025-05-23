@@ -183,10 +183,16 @@ pub mod test_helpers {
 pub mod tests {
     use plonky2::{field::types::Field, plonk::proof::ProofWithPublicInputs};
 
-    use crate::circuit::{tests::{build_and_prove_test, setup_test_builder_and_witness}, CircuitFragment, C, D, F};
+    use super::{
+        test_helpers::{ADDRESSES, SECRETS},
+        UnspendableAccount, UnspendableAccountInputs, UnspendableAccountTargets,
+    };
+    use crate::circuit::{
+        tests::{build_and_prove_test, setup_test_builder_and_witness},
+        CircuitFragment, C, D, F,
+    };
     use crate::codec::FieldElementCodec;
     use crate::utils::bytes_to_felts;
-    use super::{test_helpers::{ADDRESSES, SECRETS}, UnspendableAccount, UnspendableAccountInputs, UnspendableAccountTargets};
 
     fn run_test(
         unspendable_account: &UnspendableAccount,

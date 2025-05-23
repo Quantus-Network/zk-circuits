@@ -161,21 +161,18 @@ fn slice_to_hashout(slice: &[u8]) -> HashOut<F> {
     }
 }
 
-
 #[cfg(test)]
 pub mod tests {
     use plonky2::plonk::proof::ProofWithPublicInputs;
     use std::panic;
 
-    use super::{
-        *,
-    };
+    use super::*;
     use crate::circuit::{
         tests::{build_and_prove_test, setup_test_builder_and_witness},
         C,
     };
-    use rand::Rng;
     use crate::test_helpers::test_helpers::{default_root_hash, default_storage_proof};
+    use rand::Rng;
 
     fn run_test(storage_proof: &StorageProof) -> anyhow::Result<ProofWithPublicInputs<F, C, D>> {
         let (mut builder, mut pw) = setup_test_builder_and_witness(false);

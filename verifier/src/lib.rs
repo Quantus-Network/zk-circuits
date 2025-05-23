@@ -40,12 +40,12 @@ impl Default for WormholeVerifier {
 
 impl WormholeVerifier {
     /// Creates a new [`WormholeVerifier`].
-    pub fn new(zk: bool, circuit_data: Option<VerifierCircuitData<F,C,D>>) -> Self {
+    pub fn new(zk: bool, circuit_data: Option<VerifierCircuitData<F, C, D>>) -> Self {
         // TODO: this won't work if zk == true and circuit_data == None
         let wormhole_circuit = WormholeCircuit::new(zk);
         let circuit_data = match circuit_data {
             Some(circuit_data) => circuit_data,
-            None => wormhole_circuit.build_verifier()
+            None => wormhole_circuit.build_verifier(),
         };
 
         Self { circuit_data }
