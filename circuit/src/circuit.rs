@@ -87,9 +87,7 @@ impl Default for WormholeCircuit {
 impl WormholeCircuit {
     pub fn new(zk: bool) -> Self {
         let mut config = CircuitConfig::standard_recursion_config();
-        if zk {
-            config.zero_knowledge = true;
-        }
+        config.zero_knowledge = zk;
         let mut builder = CircuitBuilder::<F, D>::new(config);
 
         // Setup targets.
