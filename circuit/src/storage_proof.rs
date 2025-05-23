@@ -171,7 +171,7 @@ pub mod tests {
         tests::{build_and_prove_test, setup_test_builder_and_witness},
         C,
     };
-    use crate::test_helpers::test_helpers::{default_root_hash, default_storage_proof};
+    use crate::test_helpers::{default_root_hash, default_storage_proof};
     use rand::Rng;
 
     fn run_test(storage_proof: &StorageProof) -> anyhow::Result<ProofWithPublicInputs<F, C, D>> {

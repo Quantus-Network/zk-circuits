@@ -15,8 +15,7 @@ fn create_proof_benchmark(c: &mut Criterion) {
             // let circuit_bytes = prover.circuit_data.common.to_bytes(&DefaultGateSerializer).unwrap();
             // fs::write("common.bin", circuit_bytes).unwrap();
             let inputs = CircuitInputs::default();
-            let proof = prover.commit(&inputs).unwrap().prove().unwrap();
-            proof
+            prover.commit(&inputs).unwrap().prove().unwrap()
         });
     });
 }
