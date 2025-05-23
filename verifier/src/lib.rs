@@ -71,11 +71,9 @@ impl WormholeVerifier {
 
 #[cfg(test)]
 mod tests {
-    // use std::fs;
     use super::WormholeVerifier;
     use plonky2::plonk::circuit_data::CircuitConfig;
     use plonky2::plonk::proof::ProofWithPublicInputs;
-    // use plonky2::util::serialization::DefaultGateSerializer;
     use wormhole_circuit::codec::FieldElementCodec;
     use wormhole_circuit::inputs::CircuitInputs;
     use wormhole_circuit::substrate_account::SubstrateAccount;
@@ -90,9 +88,6 @@ mod tests {
         let proof = prover.commit(&inputs).unwrap().prove().unwrap();
 
         let verifier = WormholeVerifier::new(CIRCUIT_CONFIG, None);
-        // let circuit_bytes = verifier.circuit_data.to_bytes(&DefaultGateSerializer).unwrap();
-        // fs::write("verifier.bin", circuit_bytes).unwrap();
-
         verifier.verify(proof).unwrap();
     }
 

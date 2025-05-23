@@ -1,5 +1,3 @@
-// use std::fs;
-// use plonky2::util::serialization::DefaultGateSerializer;
 use std::time::Duration;
 
 use criterion::{criterion_group, criterion_main, Criterion};
