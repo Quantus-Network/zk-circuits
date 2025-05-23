@@ -14,7 +14,7 @@
 /// # let prover = WormholeProver::new(false);
 /// # let proof = prover.commit(&inputs)?.prove()?;
 ///
-/// let verifier = WormholeVerifier::new(false);
+/// let verifier = WormholeVerifier::new(false, None);
 /// verifier.verify(proof)?;
 /// # Ok(())
 /// # }
@@ -40,9 +40,13 @@ impl Default for WormholeVerifier {
 
 impl WormholeVerifier {
     /// Creates a new [`WormholeVerifier`].
-    pub fn new(zk: bool) -> Self {
+    pub fn new(zk: bool, circuit_data: Option<VerifierCircuitData<F,C,D>>) -> Self {
+        // TODO: this won't work if zk == true and circuit_data == None
         let wormhole_circuit = WormholeCircuit::new(zk);
-        let circuit_data = wormhole_circuit.build_verifier();
+        let circuit_data = match circuit_data {
+            Some(circuit_data) => circuit_data,
+            None => wormhole_circuit.build_verifier()
+        };
 
         Self { circuit_data }
     }
@@ -59,8 +63,10 @@ impl WormholeVerifier {
 
 #[cfg(test)]
 mod tests {
+    // use std::fs;
     use super::WormholeVerifier;
     use plonky2::plonk::proof::ProofWithPublicInputs;
+    // use plonky2::util::serialization::DefaultGateSerializer;
     use wormhole_circuit::codec::FieldElementCodec;
     use wormhole_circuit::inputs::CircuitInputs;
     use wormhole_circuit::substrate_account::SubstrateAccount;
@@ -72,7 +78,10 @@ mod tests {
         let inputs = CircuitInputs::default();
         let proof = prover.commit(&inputs).unwrap().prove().unwrap();
 
-        let verifier = WormholeVerifier::new(false);
+        let verifier = WormholeVerifier::new(false, None);
+        // let circuit_bytes = verifier.circuit_data.to_bytes(&DefaultGateSerializer).unwrap();
+        // fs::write("verifier.bin", circuit_bytes).unwrap();
+
         verifier.verify(proof).unwrap();
     }
 
@@ -89,7 +98,7 @@ mod tests {
         proof.public_inputs[10..14].copy_from_slice(&modified_exit_account.to_field_elements());
         println!("proof after: {:?}", proof.public_inputs);
 
-        let verifier = WormholeVerifier::new(false);
+        let verifier = WormholeVerifier::new(false, None);
         let result = verifier.verify(proof);
         assert!(
             result.is_err(),
@@ -102,7 +111,7 @@ mod tests {
         let prover = WormholeProver::new(false);
         let inputs = CircuitInputs::default();
         let proof = prover.commit(&inputs).unwrap().prove().unwrap();
-        let verifier = WormholeVerifier::new(false);
+        let verifier = WormholeVerifier::new(false, None);
 
         for ix in 0..proof.public_inputs.len() {
             let mut p = proof.clone();
@@ -123,7 +132,7 @@ mod tests {
         let prover = WormholeProver::new(false);
         let inputs = CircuitInputs::default();
         let proof = prover.commit(&inputs).unwrap().prove().unwrap();
-        let verifier = WormholeVerifier::new(false);
+        let verifier = WormholeVerifier::new(false, None);
 
         let proof_bytes = proof.to_bytes();
         println!("proof length: {:?}", proof_bytes.len());

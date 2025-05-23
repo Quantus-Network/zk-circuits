@@ -8,7 +8,7 @@ license.workspace = true
 
 [dependencies]
 anyhow.workspace = true
-plonky2 = { workspace = true, features = ["no_random"] }
+plonky2 = { workspace = true } #, features = ["no_random"] }
 wormhole-circuit = { path = "../circuit" }
 
 [dev-dependencies]
