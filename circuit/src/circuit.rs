@@ -69,25 +69,12 @@ pub struct WormholeCircuit {
 impl Default for WormholeCircuit {
     fn default() -> Self {
         let config = CircuitConfig::standard_recursion_zk_config();
-        let mut builder = CircuitBuilder::<F, D>::new(config);
-
-        // Setup targets.
-        let targets = CircuitTargets::new(&mut builder);
-
-        // Setup circuits.
-        Nullifier::circuit(&targets.nullifier, &mut builder);
-        UnspendableAccount::circuit(&targets.unspendable_account, &mut builder);
-        StorageProof::circuit(&targets.storage_proof, &mut builder);
-        SubstrateAccount::circuit(&targets.exit_account, &mut builder);
-
-        Self { builder, targets }
+        Self::new(config)
     }
 }
 
 impl WormholeCircuit {
-    pub fn new(zk: bool) -> Self {
-        let mut config = CircuitConfig::standard_recursion_config();
-        config.zero_knowledge = zk;
+    pub fn new(config: CircuitConfig) -> Self {
         let mut builder = CircuitBuilder::<F, D>::new(config);
 
         // Setup targets.

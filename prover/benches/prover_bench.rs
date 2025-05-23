@@ -3,17 +3,17 @@
 use std::time::Duration;
 
 use criterion::{criterion_group, criterion_main, Criterion};
+use plonky2::plonk::circuit_data::CircuitConfig;
 use wormhole_circuit::inputs::CircuitInputs;
 use wormhole_prover::WormholeProver;
 
 const MEASUREMENT_TIME_S: u64 = 20;
-
 fn create_proof_benchmark(c: &mut Criterion) {
+    let config = CircuitConfig::standard_recursion_zk_config();
     c.bench_function("prover_create_proof", |b| {
         b.iter(|| {
-            let prover = WormholeProver::new(true);
-            // let circuit_bytes = prover.circuit_data.common.to_bytes(&DefaultGateSerializer).unwrap();
-            // fs::write("common.bin", circuit_bytes).unwrap();
+            let config = config.clone();
+            let prover = WormholeProver::new(config);
             let inputs = CircuitInputs::test_inputs();
             prover.commit(&inputs).unwrap().prove().unwrap()
         });
