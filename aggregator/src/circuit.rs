@@ -29,7 +29,7 @@ pub struct WormholeProofAggregatorTargets {
 
 impl WormholeProofAggregatorTargets {
     pub fn new(builder: &mut CircuitBuilder<F, D>, zk: bool) -> Self {
-        let circuit_data = WormholeVerifier::new(zk).circuit_data.common;
+        let circuit_data = WormholeVerifier::new(zk, None).circuit_data.common;
         let verifier_data =
             builder.add_virtual_verifier_data(circuit_data.fri_params.config.cap_height);
 
@@ -64,7 +64,7 @@ pub struct WormholeProofAggregator {
 
 impl Default for WormholeProofAggregator {
     fn default() -> Self {
-        let inner_verifier = WormholeVerifier::new(false);
+        let inner_verifier = WormholeVerifier::new(false, None);
         Self { inner_verifier }
     }
 }
