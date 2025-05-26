@@ -9,15 +9,14 @@ use plonky2::{
     plonk::{
         circuit_builder::CircuitBuilder,
         circuit_data::{CircuitConfig, CommonCircuitData, VerifierCircuitTarget},
-        proof::{ProofWithPublicInputs, ProofWithPublicInputsTarget},
+        proof::ProofWithPublicInputsTarget,
     },
 };
 use wormhole_circuit::{
     circuit::{CircuitFragment, C, D, F},
     gadgets::is_const_less_than,
 };
-use wormhole_prover::WormholeProver;
-use wormhole_verifier::WormholeVerifier;
+use wormhole_verifier::{ProofWithPublicInputs, WormholeVerifier};
 
 use crate::MAX_NUM_PROOFS_TO_AGGREGATE;
 
@@ -55,19 +54,16 @@ impl WormholeProofAggregatorTargets {
     }
 }
 
-/// A circuit that aggregates proofs from the Wormhole circuit.
-pub struct WormholeProofAggregator {
+pub struct WormholeProofAggregatorInner {
     inner_verifier: WormholeVerifier,
     num_proofs: usize,
     proofs: Vec<ProofWithPublicInputs<F, C, D>>,
 }
 
-impl Default for WormholeProofAggregator {
-    fn default() -> Self {
-        const CIRCUIT_CONFIG: CircuitConfig = CircuitConfig::standard_recursion_config();
-        let prover = WormholeProver::new(CIRCUIT_CONFIG);
-        let inner_verifier = WormholeVerifier::default();
-        let dummy_circuit = dummy_circuit(&prover.circuit_data.common);
+impl WormholeProofAggregatorInner {
+    pub fn new(config: CircuitConfig) -> Self {
+        let inner_verifier = WormholeVerifier::new(config, None);
+        let dummy_circuit = dummy_circuit(&inner_verifier.circuit_data.common);
         Self {
             inner_verifier,
             num_proofs: 10,
@@ -76,15 +72,14 @@ impl Default for WormholeProofAggregator {
                 .collect::<Vec<_>>(),
         }
     }
-}
 
-impl WormholeProofAggregator {
-    pub fn new() -> Self {
-        Self::default()
+    pub fn dummy_proof(&self) -> anyhow::Result<ProofWithPublicInputs<F, C, D>> {
+        let dummy_circuit = dummy_circuit(&self.inner_verifier.circuit_data.common);
+        dummy_proof(&dummy_circuit, HashMap::new())
     }
 }
 
-impl CircuitFragment for WormholeProofAggregator {
+impl CircuitFragment for WormholeProofAggregatorInner {
     type Targets = WormholeProofAggregatorTargets;
 
     fn circuit(

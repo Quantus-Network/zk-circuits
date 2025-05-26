@@ -12,9 +12,11 @@ plonky2 = { workspace = true, default-features = false }
 wormhole-circuit = { path = "../circuit", default-features = false }
 wormhole-prover = { path = "../prover", default-features = false }
 wormhole-verifier = { path = "../verifier", default-features = false }
-hashbrown = "0.14.5"
-
-[dev-dependencies]
+# This is the same crate as used in plonky2. Need to have it for dummy proofs to work correctly.
+hashbrown = { version = "0.14.3", default-features = false, features = [
+  "ahash",
+  "serde",
+] }
 
 [features]
 default = ["std"]
