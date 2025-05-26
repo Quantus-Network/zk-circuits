@@ -7,8 +7,7 @@ anyhow = { version = "1.0.98", default-features = false }
 plonky2 = { git = "https://github.com/Quantus-Network/plonky2", default-features = true }
 hex = { version = "0.4.3" }
 criterion = { version = "0.5.1", features = ["html_reports"] }
-rand = { version = "0.9.1" }
-
+rand = { version = "0.9.1", default-features = false }
 
 [workspace.package]
 version = "0.1.0"

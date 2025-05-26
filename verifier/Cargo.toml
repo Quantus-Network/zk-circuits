@@ -7,17 +7,18 @@ description.workspace = true
 license.workspace = true
 
 [dependencies]
-anyhow.workspace = true
-plonky2 = { workspace = true } #, features = ["no_random"] }
-wormhole-circuit = { path = "../circuit" }
+anyhow = { workspace = true, optional = true }
+plonky2 = { workspace = true, default-features = false }
+wormhole-circuit = { path = "../circuit", default-features = false } 
 
 [dev-dependencies]
-wormhole-prover = { path = "../prover" }
 criterion = { workspace = true }
-plonky2 = { workspace = true }
+wormhole-prover = { path = "../prover" }
 
 [features]
-
-[[bench]]
-name = "verifier_bench"
-harness = false
+default = ["std"]
+std = [
+    "anyhow",
+    "plonky2/std",
+    "wormhole-circuit/std"
+]
