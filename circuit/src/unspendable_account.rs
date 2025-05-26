@@ -1,3 +1,8 @@
+#[cfg(not(feature = "std"))]
+use alloc::vec::Vec;
+#[cfg(feature = "std")]
+use std::vec::Vec;
+
 use plonky2::{
     hash::{hash_types::HashOutTarget, poseidon::PoseidonHash},
     iop::{

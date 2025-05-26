@@ -7,9 +7,11 @@ description.workspace = true
 license.workspace = true
 
 [dependencies]
-anyhow = { workspace = true, optional = true }
+anyhow = { workspace = true }
 plonky2 = { workspace = true, default-features = false }
-wormhole-circuit = { path = "../circuit", default-features = false } 
+hex = { workspace = true }
+rand = { workspace = true }
+wormhole-circuit = { path = "../circuit", default-features = false }
 
 [dev-dependencies]
 criterion = { workspace = true }
@@ -18,7 +20,10 @@ wormhole-prover = { path = "../prover" }
 [features]
 default = ["std"]
 std = [
-    "anyhow",
+    "anyhow/std",
+    "hex/std",
     "plonky2/std",
+    "rand/std",
     "wormhole-circuit/std"
 ]
+no_std = []

@@ -1,3 +1,8 @@
+#[cfg(not(feature = "std"))]
+use alloc::vec::Vec;
+#[cfg(feature = "std")]
+use std::vec::Vec;
+
 use crate::utils::{bytes_to_felts, felts_to_bytes, string_to_felt};
 use crate::{
     circuit::{CircuitFragment, Digest, D, F},

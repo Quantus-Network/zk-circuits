@@ -1,3 +1,13 @@
+#[cfg(not(feature = "std"))]
+use alloc::vec::Vec;
+#[cfg(feature = "std")]
+use std::vec::Vec;
+
+#[cfg(not(feature = "std"))]
+use alloc::vec;
+#[cfg(feature = "std")]
+use std::vec;
+
 use plonky2::{
     field::types::Field,
     hash::{

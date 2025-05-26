@@ -7,16 +7,17 @@ description.workspace = true
 license.workspace = true
 
 [dependencies]
-anyhow = { workspace = true, optional = true } # std only
-plonky2 = { workspace = true, default-features = false } 
-hex = { workspace = true }
+anyhow = { workspace = true }
+plonky2 = { workspace = true }
+hex = { workspace = true, features = ["alloc"] }
+rand = { workspace = true, features = ["getrandom"] }
 
 [features]
 default = ["std"]
 std = [
-    "anyhow",
-    "plonky2/std", # assuming plonky2 follows this pattern
+    "anyhow/std",
+    "hex/std",
+    "plonky2/std",
+    "rand/std"
 ]
-
-# Optional: for runtime compatibility
 no_std = []

@@ -7,11 +7,20 @@ description.workspace = true
 license.workspace = true
 
 [dependencies]
-anyhow.workspace = true
-plonky2.workspace = true
-wormhole-circuit = { path = "../circuit" }
+anyhow = { workspace = true }
+plonky2 = { workspace = true, default-features = false }
+wormhole-circuit = { path = "../circuit", default-features = false }
+rand = { workspace = true }
 
 [features]
+default = ["std"]
+std = [
+    "anyhow/std",
+    "plonky2/std",
+    "wormhole-circuit/std",
+    "rand/std",
+]
+no_std = []
 
 [[bench]]
 name = "prover_bench"

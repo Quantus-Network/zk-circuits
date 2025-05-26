@@ -1,8 +1,24 @@
+#[cfg(test)]
+#[cfg(not(feature = "std"))]
+use alloc::vec::Vec;
+#[cfg(test)]
+#[cfg(feature = "std")]
+use std::vec::Vec;
+
+#[cfg(test)]
 use storage_proof::{default_storage_proof, DEFAULT_ROOT_HASH};
 
+#[cfg(test)]
+use crate::circuit::F;
+#[cfg(test)]
 use crate::inputs::{CircuitInputs, PrivateCircuitInputs, PublicCircuitInputs};
+#[cfg(test)]
 use crate::nullifier::Nullifier;
+#[cfg(test)]
+use crate::storage_proof::StorageProof;
+#[cfg(test)]
 use crate::substrate_account::SubstrateAccount;
+#[cfg(test)]
 use crate::unspendable_account::UnspendableAccount;
 
 pub const DEFAULT_SECRET: &str = "9aa84f99ef2de22e3070394176868df41d6a148117a36132d010529e19b018b7";

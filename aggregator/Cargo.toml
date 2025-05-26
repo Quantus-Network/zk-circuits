@@ -7,11 +7,24 @@ description.workspace = true
 license.workspace = true
 
 [dependencies]
-anyhow.workspace = true
-plonky2.workspace = true
-wormhole-circuit = { path = "../circuit" }
-wormhole-prover = { path = "../prover" }
-wormhole-verifier = { path = "../verifier" }
+anyhow = { workspace = true }
+plonky2 = { workspace = true, default-features = false }
+wormhole-circuit = { path = "../circuit", default-features = false }
+wormhole-prover = { path = "../prover", default-features = false }
+wormhole-verifier = { path = "../verifier", default-features = false }
+rand = { workspace = true }
+
+[features]
+default = ["std"]
+std = [
+    "anyhow/std",
+    "plonky2/std",
+    "wormhole-circuit/std",
+    "wormhole-prover/std",
+    "wormhole-verifier/std",
+    "rand/std",
+]
+no_std = []
 
 [dev-dependencies]
 # This is the same crate as used in plonky2. Need to have it for dummy proofs to work correctly.
@@ -19,5 +32,3 @@ hashbrown = { version = "0.14.3", default-features = false, features = [
   "ahash",
   "serde",
 ] }
-
-[features]

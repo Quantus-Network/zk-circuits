@@ -1,3 +1,8 @@
+#[cfg(not(feature = "std"))]
+use alloc::vec::Vec;
+#[cfg(feature = "std")]
+use std::vec::Vec;
+
 use crate::circuit::{CircuitFragment, Digest, D, F};
 use crate::codec::{ByteCodec, FieldElementCodec};
 use crate::inputs::CircuitInputs;

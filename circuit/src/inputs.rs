@@ -1,3 +1,8 @@
+#[cfg(not(feature = "std"))]
+use alloc::vec::Vec;
+#[cfg(feature = "std")]
+use std::vec::Vec;
+
 use anyhow::bail;
 use plonky2::plonk::proof::ProofWithPublicInputs;
 
