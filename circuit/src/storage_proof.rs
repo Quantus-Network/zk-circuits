@@ -66,7 +66,7 @@ impl LeafInputs {
         nonce: F,
         funding_account: SubstrateAccount,
         to_account: UnspendableAccount,
-        funding_amount: F,
+        funding_amount: [F; 2],
     ) -> Self {
         Self {
             nonce,

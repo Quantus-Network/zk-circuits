@@ -79,7 +79,7 @@ pub mod storage_proof {
                 F::from_canonical_u32(1),
                 Default::default(),
                 Default::default(),
-                F::from_noncanonical_u128(0),
+                [F::from_noncanonical_u64(0), F::from_noncanonical_u64(1)],
             )
         }
     }
