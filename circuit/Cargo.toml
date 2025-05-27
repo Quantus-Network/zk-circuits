@@ -10,7 +10,6 @@ license.workspace = true
 anyhow = { workspace = true }
 plonky2 = { workspace = true }
 hex = { workspace = true, features = ["alloc"] }
-rand = { workspace = true, features = ["getrandom"] }
 
 [features]
 default = ["std"]
@@ -18,6 +17,9 @@ std = [
     "anyhow/std",
     "hex/std",
     "plonky2/std",
-    "rand/std"
 ]
 no_std = []
+
+[dev-dependencies]
+criterion = { workspace = true }
+rand = { workspace = true, features = [ "thread_rng"] }

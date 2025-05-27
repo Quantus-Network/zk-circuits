@@ -10,7 +10,6 @@ license.workspace = true
 anyhow = { workspace = true }
 plonky2 = { workspace = true, default-features = false }
 wormhole-circuit = { path = "../circuit", default-features = false }
-rand = { workspace = true }
 
 [features]
 default = ["std"]
@@ -18,7 +17,6 @@ std = [
     "anyhow/std",
     "plonky2/std",
     "wormhole-circuit/std",
-    "rand/std",
 ]
 no_std = []
 
@@ -28,3 +26,4 @@ harness = false
 
 [dev-dependencies]
 criterion = { workspace = true }
+wormhole-circuit = { path = "../circuit" }

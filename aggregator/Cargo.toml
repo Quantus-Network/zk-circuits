@@ -12,7 +12,6 @@ plonky2 = { workspace = true, default-features = false }
 wormhole-circuit = { path = "../circuit", default-features = false }
 wormhole-prover = { path = "../prover", default-features = false }
 wormhole-verifier = { path = "../verifier", default-features = false }
-rand = { workspace = true }
 
 [features]
 default = ["std"]
@@ -22,7 +21,6 @@ std = [
     "wormhole-circuit/std",
     "wormhole-prover/std",
     "wormhole-verifier/std",
-    "rand/std",
 ]
 no_std = []
 

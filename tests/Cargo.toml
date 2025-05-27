@@ -1,0 +1,15 @@
+[package]
+name = "tests"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+description.workspace = true
+license.workspace = true
+
+[dependencies]
+wormhole-circuit = { path = "../circuit" }
+wormhole-prover = { path = "../prover" }
+plonky2 = { workspace = true }
+anyhow = { workspace = true }
+hex = { workspace = true }
+rand = { workspace = true, features = [ "thread_rng"]  }
