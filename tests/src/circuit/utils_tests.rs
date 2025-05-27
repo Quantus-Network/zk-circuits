@@ -1,10 +1,11 @@
-use plonky2::field::types::{Field, Field64, PrimeField64};
+use plonky2::field::types::{Field, Field64};
 use wormhole_circuit::{
-    circuit::{D, F},
+    circuit::F,
     utils::{felts_to_u128, u128_to_felts},
 };
 
 // Helper to create F from a u64 for concise test cases
+#[cfg(test)]
 fn f(val: u64) -> F {
     F::from_noncanonical_u64(val)
 }

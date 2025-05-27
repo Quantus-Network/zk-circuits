@@ -5,6 +5,7 @@ use wormhole_circuit::{
     substrate_account::{ExitAccountTargets, SubstrateAccount},
 };
 
+#[cfg(test)]
 fn run_test(exit_account: &SubstrateAccount) -> anyhow::Result<ProofWithPublicInputs<F, C, D>> {
     let (mut builder, mut pw) =
         crate::circuit::circuit_helpers::setup_test_builder_and_witness(false);

@@ -7,6 +7,7 @@ use wormhole_circuit::{
 
 use crate::circuit::test_helpers::storage_proof::{default_root_hash, default_storage_proof};
 
+#[cfg(test)]
 fn run_test(storage_proof: &StorageProof) -> anyhow::Result<ProofWithPublicInputs<F, C, D>> {
     let (mut builder, mut pw) =
         crate::circuit::circuit_helpers::setup_test_builder_and_witness(false);

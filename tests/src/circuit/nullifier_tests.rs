@@ -8,6 +8,7 @@ use wormhole_circuit::{
     nullifier::{Nullifier, NullifierInputs, NullifierTargets},
 };
 
+#[cfg(test)]
 fn run_test(
     nullifier: &Nullifier,
     inputs: NullifierInputs,

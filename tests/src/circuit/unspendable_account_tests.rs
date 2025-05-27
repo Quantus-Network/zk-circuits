@@ -7,6 +7,7 @@ use wormhole_circuit::{
     },
 };
 
+#[cfg(test)]
 const SECRETS: [&str; 5] = [
     "cd94df2e3c38a87f3e429b62af022dbe4363143811219d80037e8798b2ec9229",
     "8b680b2421968a0c1d3cff6f3408e9d780157ae725724a78c3bc0998d1ac8194",
@@ -15,6 +16,7 @@ const SECRETS: [&str; 5] = [
     "9aa84f99ef2de22e3070394176868df41d6a148117a36132d010529e19b018b7",
 ];
 
+#[cfg(test)]
 const ADDRESSES: [&str; 5] = [
     "c7334fbc8d75054ba3dd33b97db841c1031075ab9a26485fffe46bb519ccf25e",
     "f904e475a317a4f45541492d86ec79ef0b5f3ef3ff1a022db1c461f1ec7e623c",
@@ -23,6 +25,7 @@ const ADDRESSES: [&str; 5] = [
     "39fe23f1e26aa62001144e6b3250b753f5aabb4b5ecd5a86b8c4a7302744597e",
 ];
 
+#[cfg(test)]
 fn run_test(
     unspendable_account: &UnspendableAccount,
     inputs: UnspendableAccountInputs,

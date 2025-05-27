@@ -1,9 +1,6 @@
-use plonky2::field::types::Field;
 use wormhole_circuit::{
-    circuit::{CircuitFragment, C, D, F},
     inputs::{CircuitInputs, PrivateCircuitInputs, PublicCircuitInputs},
-    nullifier::{Nullifier, NullifierInputs},
-    storage_proof::StorageProof,
+    nullifier::Nullifier,
     substrate_account::SubstrateAccount,
     unspendable_account::UnspendableAccount,
 };
