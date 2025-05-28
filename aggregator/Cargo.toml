@@ -16,10 +16,10 @@ wormhole-verifier = { path = "../verifier", default-features = false }
 [features]
 default = ["std"]
 std = [
-    "anyhow/std",
-    "plonky2/std",
-    "wormhole-circuit/std",
-    "wormhole-prover/std",
-    "wormhole-verifier/std",
+  "anyhow/std",
+  "plonky2/std",
+  "wormhole-circuit/std",
+  "wormhole-prover/std",
+  "wormhole-verifier/std",
 ]
 no_std = []

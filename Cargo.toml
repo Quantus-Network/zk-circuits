@@ -4,7 +4,10 @@ resolver = "2"
 
 [workspace.dependencies]
 anyhow = { version = "1.0.98", default-features = false }
-plonky2 = { git = "https://github.com/Quantus-Network/plonky2", default-features = false, features = ["std", "no_random"] }
+plonky2 = { git = "https://github.com/Quantus-Network/plonky2", default-features = false, features = [
+  "std",
+  "no_random",
+] }
 hex = { version = "0.4.3", default-features = false, features = ["alloc"] }
 criterion = { version = "0.5.1", features = ["html_reports"] }
 rand = { version = "0.9.1", default-features = false }

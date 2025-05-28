@@ -13,9 +13,5 @@ wormhole-circuit = { path = "../circuit", default-features = false }
 
 [features]
 default = ["std"]
-std = [
-    "anyhow/std",
-    "plonky2/std",
-    "wormhole-circuit/std"
-]
+std = ["anyhow/std", "plonky2/std", "wormhole-circuit/std"]
 no_std = []
