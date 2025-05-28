@@ -19,11 +19,3 @@ std = [
     "wormhole-circuit/std",
 ]
 no_std = []
-
-[[bench]]
-name = "prover_bench"
-harness = false
-
-[dev-dependencies]
-criterion = { workspace = true }
-wormhole-circuit = { path = "../circuit" }

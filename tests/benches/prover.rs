@@ -5,9 +5,12 @@ use plonky2::plonk::circuit_data::CircuitConfig;
 use wormhole_circuit::inputs::CircuitInputs;
 use wormhole_prover::WormholeProver;
 
+use tests::test_helpers::TestInputs;
+
 const MEASUREMENT_TIME_S: u64 = 20;
+
 fn create_proof_benchmark(c: &mut Criterion) {
-    let config = CircuitConfig::standard_recursion_zk_config();
+    let config = CircuitConfig::standard_recursion_config();
     c.bench_function("prover_create_proof", |b| {
         b.iter(|| {
             let config = config.clone();

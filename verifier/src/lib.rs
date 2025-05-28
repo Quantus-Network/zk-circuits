@@ -13,16 +13,39 @@
 //! Create a verifier and verify a proof:
 //!
 //!```
-//! use wormhole_circuit::inputs::CircuitInputs;
+//! use wormhole_circuit::inputs::{CircuitInputs, PrivateCircuitInputs, PublicCircuitInputs};
+//! use wormhole_circuit::nullifier::Nullifier;
+//! use wormhole_circuit::substrate_account::SubstrateAccount;
+//! use wormhole_circuit::unspendable_account::UnspendableAccount;
 //! use wormhole_prover::WormholeProver;
 //! use wormhole_verifier::WormholeVerifier;
-//! #
-//! # fn main() -> anyhow::Result<()> {
-//! # let inputs = CircuitInputs::test_inputs();
-//! # let prover = WormholeProver::default();
-//! # let proof = prover.commit(&inputs)?.prove()?;
+//! use plonky2::plonk::circuit_data::CircuitConfig;
 //!
-//! let verifier = WormholeVerifier::default();
+//! # fn main() -> anyhow::Result<()> {
+//! // Create inputs
+//! let inputs = CircuitInputs {
+//!     private: PrivateCircuitInputs {
+//!         secret: vec![1u8; 32],
+//!         funding_nonce: 0,
+//!         funding_account: SubstrateAccount::new(&[2u8; 32])?,
+//!         storage_proof: vec![],
+//!         unspendable_account: UnspendableAccount::new(&[1u8; 32]),
+//!     },
+//!     public: PublicCircuitInputs {
+//!         funding_amount: 1000,
+//!         nullifier: Nullifier::new(&[1u8; 32], 0, &[2u8; 32]),
+//!         root_hash: [0u8; 32],
+//!         exit_account: SubstrateAccount::new(&[2u8; 32])?,
+//!     },
+//! };
+//!
+//! // Generate a proof
+//! let config = CircuitConfig::standard_recursion_config();
+//! let prover = WormholeProver::new(config.clone());
+//! let proof = prover.commit(&inputs)?.prove()?;
+//!
+//! // Verify the proof
+//! let verifier = WormholeVerifier::new(config, None);
 //! verifier.verify(proof)?;
 //! # Ok(())
 //! # }

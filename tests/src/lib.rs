@@ -4,5 +4,3 @@ pub mod circuit_helpers;
 pub mod prover;
 pub mod test_helpers;
 pub mod verifier;
-
-pub use test_helpers::*;

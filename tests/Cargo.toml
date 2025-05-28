@@ -6,6 +6,9 @@ authors.workspace = true
 description.workspace = true
 license.workspace = true
 
+[features]
+bench = []
+
 [dependencies]
 wormhole-aggregator = { path = "../aggregator" }
 wormhole-circuit = { path = "../circuit" }
@@ -15,8 +18,17 @@ plonky2 = { workspace = true }
 anyhow = { workspace = true }
 hex = { workspace = true }
 rand = { workspace = true, features = [ "thread_rng"]  }
+criterion = { workspace = true }
 # This is the same crate as used in plonky2. Need to have it for dummy proofs to work correctly.
 hashbrown = { version = "0.14.3", default-features = false, features = [
   "ahash",
   "serde",
 ] }
+
+[[bench]]
+name = "prover"
+harness = false
+
+[[bench]]
+name = "verifier"
+harness = false
