@@ -11,6 +11,9 @@ anyhow = { workspace = true }
 plonky2 = { workspace = true, default-features = false }
 wormhole-circuit = { path = "../circuit", default-features = false }
 
+[dev-dependencies]
+wormhole-prover = { path = "../prover" }
+
 [features]
 default = ["std"]
 std = ["anyhow/std", "plonky2/std", "wormhole-circuit/std"]
