@@ -1,3 +1,4 @@
+#[cfg(test)]
 pub mod circuit_helpers;
 
 #[cfg(test)]
@@ -6,7 +7,6 @@ pub mod nullifier_tests;
 pub mod storage_proof_tests;
 #[cfg(test)]
 pub mod substrate_account_tests;
-pub mod test_helpers;
 #[cfg(test)]
 pub mod unspendable_account_tests;
 #[cfg(test)]

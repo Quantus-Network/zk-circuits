@@ -1,6 +1,4 @@
-use crate::circuit::test_helpers::{
-    DEFAULT_FUNDING_ACCOUNT, DEFAULT_FUNDING_NONCE, DEFAULT_SECRET,
-};
+use crate::test_helpers::{DEFAULT_FUNDING_ACCOUNT, DEFAULT_FUNDING_NONCE, DEFAULT_SECRET};
 use plonky2::{field::types::Field, plonk::proof::ProofWithPublicInputs};
 use wormhole_circuit::{
     circuit::{CircuitFragment, C, D, F},

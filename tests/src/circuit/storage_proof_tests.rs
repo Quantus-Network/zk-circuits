@@ -5,7 +5,7 @@ use wormhole_circuit::{
     storage_proof::{StorageProof, StorageProofTargets},
 };
 
-use crate::circuit::test_helpers::storage_proof::{default_root_hash, default_storage_proof};
+use crate::test_helpers::storage_proof::{default_root_hash, default_storage_proof};
 
 #[cfg(test)]
 fn run_test(storage_proof: &StorageProof) -> anyhow::Result<ProofWithPublicInputs<F, C, D>> {

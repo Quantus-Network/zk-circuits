@@ -9,6 +9,7 @@ license.workspace = true
 [dependencies]
 wormhole-circuit = { path = "../circuit" }
 wormhole-prover = { path = "../prover" }
+wormhole-verifier = { path = "../verifier" }
 plonky2 = { workspace = true }
 anyhow = { workspace = true }
 hex = { workspace = true }

@@ -1,3 +1,5 @@
 pub mod circuit;
+pub mod test_helpers;
+pub mod verifier;
 
-pub use circuit::*;
+pub use test_helpers::*;
