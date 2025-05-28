@@ -1,7 +1,4 @@
 #[cfg(test)]
-pub mod circuit_helpers;
-
-#[cfg(test)]
 pub mod nullifier_tests;
 #[cfg(test)]
 pub mod storage_proof_tests;

@@ -9,13 +9,12 @@ use crate::test_helpers::storage_proof::{default_root_hash, default_storage_proo
 
 #[cfg(test)]
 fn run_test(storage_proof: &StorageProof) -> anyhow::Result<ProofWithPublicInputs<F, C, D>> {
-    let (mut builder, mut pw) =
-        crate::circuit::circuit_helpers::setup_test_builder_and_witness(false);
+    let (mut builder, mut pw) = crate::circuit_helpers::setup_test_builder_and_witness(false);
     let targets = StorageProofTargets::new(&mut builder);
     StorageProof::circuit(&targets, &mut builder);
 
     storage_proof.fill_targets(&mut pw, targets, ()).unwrap();
-    crate::circuit::circuit_helpers::build_and_prove_test(builder, pw)
+    crate::circuit_helpers::build_and_prove_test(builder, pw)
 }
 
 #[test]

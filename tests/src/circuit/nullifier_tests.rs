@@ -11,13 +11,12 @@ fn run_test(
     nullifier: &Nullifier,
     inputs: NullifierInputs,
 ) -> anyhow::Result<ProofWithPublicInputs<F, C, D>> {
-    let (mut builder, mut pw) =
-        crate::circuit::circuit_helpers::setup_test_builder_and_witness(false);
+    let (mut builder, mut pw) = crate::circuit_helpers::setup_test_builder_and_witness(false);
     let targets = NullifierTargets::new(&mut builder);
     Nullifier::circuit(&targets, &mut builder);
 
     nullifier.fill_targets(&mut pw, targets, inputs)?;
-    crate::circuit::circuit_helpers::build_and_prove_test(builder, pw)
+    crate::circuit_helpers::build_and_prove_test(builder, pw)
 }
 
 pub trait TestInputs {

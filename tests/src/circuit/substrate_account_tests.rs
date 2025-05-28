@@ -7,13 +7,12 @@ use wormhole_circuit::{
 
 #[cfg(test)]
 fn run_test(exit_account: &SubstrateAccount) -> anyhow::Result<ProofWithPublicInputs<F, C, D>> {
-    let (mut builder, mut pw) =
-        crate::circuit::circuit_helpers::setup_test_builder_and_witness(false);
+    let (mut builder, mut pw) = crate::circuit_helpers::setup_test_builder_and_witness(false);
     let targets = ExitAccountTargets::new(&mut builder);
     SubstrateAccount::circuit(&targets, &mut builder);
 
     exit_account.fill_targets(&mut pw, targets, ()).unwrap();
-    crate::circuit::circuit_helpers::build_and_prove_test(builder, pw)
+    crate::circuit_helpers::build_and_prove_test(builder, pw)
 }
 
 #[test]
