@@ -10,7 +10,6 @@ plonky2 = { git = "https://github.com/Quantus-Network/plonky2", default-features
 ] }
 hex = { version = "0.4.3", default-features = false, features = ["alloc"] }
 criterion = { version = "0.5.1", features = ["html_reports"] }
-rand = { version = "0.9.1", default-features = false }
 
 [workspace.package]
 version = "0.1.0"

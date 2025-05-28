@@ -15,7 +15,3 @@ hex = { workspace = true, features = ["alloc"] }
 default = ["std"]
 std = ["anyhow/std", "hex/std", "plonky2/std"]
 no_std = []
-
-[dev-dependencies]
-criterion = { workspace = true }
-rand = { workspace = true, features = ["thread_rng"] }
