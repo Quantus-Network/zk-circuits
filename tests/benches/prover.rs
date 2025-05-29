@@ -2,10 +2,10 @@ use std::time::Duration;
 
 use criterion::{criterion_group, criterion_main, Criterion};
 use plonky2::plonk::circuit_data::CircuitConfig;
+use tests::test_helpers::storage_proof::TestInputs;
 use wormhole_circuit::inputs::CircuitInputs;
 use wormhole_prover::WormholeProver;
 
-use tests::test_helpers::TestInputs;
 
 const MEASUREMENT_TIME_S: u64 = 20;
 
