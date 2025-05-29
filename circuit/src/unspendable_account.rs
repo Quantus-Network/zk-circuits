@@ -138,10 +138,7 @@ impl FieldElementCodec for UnspendableAccount {
         // Deserialize preimage
         let secret = elements[offset..offset + secret_size].to_vec();
 
-        Ok(Self {
-            account_id,
-            secret,
-        })
+        Ok(Self { account_id, secret })
     }
 }
 
@@ -206,4 +203,3 @@ impl Default for UnspendableAccount {
         Self::new(&preimage)
     }
 }
-

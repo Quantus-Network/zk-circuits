@@ -2,9 +2,7 @@ use plonky2::{field::types::Field, plonk::proof::ProofWithPublicInputs};
 use wormhole_circuit::{
     circuit::{CircuitFragment, C, D, F},
     codec::FieldElementCodec,
-    unspendable_account::{
-        UnspendableAccount, UnspendableAccountTargets,
-    },
+    unspendable_account::{UnspendableAccount, UnspendableAccountTargets},
 };
 
 #[cfg(test)]
@@ -92,7 +90,7 @@ fn unspendable_account_codec() {
             F::from_noncanonical_u64(6),
             F::from_noncanonical_u64(7),
             F::from_noncanonical_u64(8),
-        ]
+        ],
     };
 
     // Encode the account as field elements and compare.

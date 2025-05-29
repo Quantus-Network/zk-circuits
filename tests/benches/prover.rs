@@ -6,7 +6,6 @@ use tests::test_helpers::storage_proof::TestInputs;
 use wormhole_circuit::inputs::CircuitInputs;
 use wormhole_prover::WormholeProver;
 
-
 const MEASUREMENT_TIME_S: u64 = 20;
 
 fn create_proof_benchmark(c: &mut Criterion) {

@@ -1,16 +1,14 @@
 use crate::test_helpers::{DEFAULT_FUNDING_ACCOUNT, DEFAULT_FUNDING_NONCE, DEFAULT_SECRET};
 use plonky2::{field::types::Field, plonk::proof::ProofWithPublicInputs};
+use wormhole_circuit::utils::bytes_to_felts;
 use wormhole_circuit::{
     circuit::{CircuitFragment, C, D, F},
     codec::FieldElementCodec,
     nullifier::{Nullifier, NullifierTargets},
 };
-use wormhole_circuit::utils::bytes_to_felts;
 
 #[cfg(test)]
-fn run_test(
-    nullifier: &Nullifier,
-) -> anyhow::Result<ProofWithPublicInputs<F, C, D>> {
+fn run_test(nullifier: &Nullifier) -> anyhow::Result<ProofWithPublicInputs<F, C, D>> {
     let (mut builder, mut pw) = crate::circuit_helpers::setup_test_builder_and_witness(false);
     let targets = NullifierTargets::new(&mut builder);
     Nullifier::circuit(&targets, &mut builder);

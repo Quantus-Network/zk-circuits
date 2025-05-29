@@ -90,9 +90,9 @@ impl TryFrom<ProofWithPublicInputs<F, C, D>> for PublicCircuitInputs {
             DEFAULT_FUNDING_NONCE,
             DEFAULT_FUNDING_ACCOUNT,
         );
-        let funding_amount = felts_to_u128(
-            <[F; 2]>::try_from(&public_inputs[FUNDING_AMOUNT_START_INDEX..FUNDING_AMOUNT_END_INDEX])?,
-        );
+        let funding_amount = felts_to_u128(<[F; 2]>::try_from(
+            &public_inputs[FUNDING_AMOUNT_START_INDEX..FUNDING_AMOUNT_END_INDEX],
+        )?);
         let root_hash: [u8; 32] =
             felts_to_bytes(&public_inputs[ROOT_HASH_START_INDEX..ROOT_HASH_END_INDEX])
                 .try_into()

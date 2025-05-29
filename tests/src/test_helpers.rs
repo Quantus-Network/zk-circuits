@@ -1,15 +1,14 @@
+use crate::test_helpers::storage_proof::{default_storage_proof, TestInputs, DEFAULT_ROOT_HASH};
 use wormhole_circuit::{
     inputs::{CircuitInputs, PrivateCircuitInputs, PublicCircuitInputs},
     nullifier::Nullifier,
     substrate_account::SubstrateAccount,
     unspendable_account::UnspendableAccount,
 };
-use crate::test_helpers::storage_proof::{default_storage_proof, TestInputs, DEFAULT_ROOT_HASH};
 
 pub const DEFAULT_SECRET: &str = "9aa84f99ef2de22e3070394176868df41d6a148117a36132d010529e19b018b7";
 pub const DEFAULT_FUNDING_NONCE: u32 = 0;
 pub const DEFAULT_FUNDING_ACCOUNT: &[u8] = &[10u8; 32];
-
 
 impl TestInputs for CircuitInputs {
     fn test_inputs() -> Self {
@@ -70,7 +69,11 @@ pub mod storage_proof {
 
     impl TestInputs for StorageProof {
         fn test_inputs() -> Self {
-            StorageProof::new(&default_storage_proof(), default_root_hash(), DEFAULT_FUNDING_AMOUNT)
+            StorageProof::new(
+                &default_storage_proof(),
+                default_root_hash(),
+                DEFAULT_FUNDING_AMOUNT,
+            )
         }
     }
 

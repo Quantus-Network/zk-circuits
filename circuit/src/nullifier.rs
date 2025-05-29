@@ -3,6 +3,7 @@ use alloc::vec::Vec;
 #[cfg(feature = "std")]
 use std::vec::Vec;
 
+use crate::codec::ByteCodec;
 use crate::utils::{bytes_to_felts, felts_to_bytes, string_to_felt, Digest};
 use crate::{
     circuit::{CircuitFragment, D, F},
@@ -17,7 +18,6 @@ use plonky2::{
     },
     plonk::{circuit_builder::CircuitBuilder, config::Hasher},
 };
-use crate::codec::ByteCodec;
 
 pub const NULLIFIER_SALT: &str = "~nullif~";
 pub const SECRET_NUM_TARGETS: usize = 4;

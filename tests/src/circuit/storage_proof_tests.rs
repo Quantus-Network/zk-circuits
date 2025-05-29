@@ -5,7 +5,9 @@ use wormhole_circuit::{
     storage_proof::{StorageProof, StorageProofTargets},
 };
 
-use crate::test_helpers::storage_proof::{default_root_hash, default_storage_proof, DEFAULT_FUNDING_AMOUNT};
+use crate::test_helpers::storage_proof::{
+    default_root_hash, default_storage_proof, DEFAULT_FUNDING_AMOUNT,
+};
 
 #[cfg(test)]
 fn run_test(storage_proof: &StorageProof) -> anyhow::Result<ProofWithPublicInputs<F, C, D>> {
@@ -19,14 +21,22 @@ fn run_test(storage_proof: &StorageProof) -> anyhow::Result<ProofWithPublicInput
 
 #[test]
 fn build_and_verify_proof() {
-    let storage_proof = StorageProof::new(&default_storage_proof(), default_root_hash(), DEFAULT_FUNDING_AMOUNT);
+    let storage_proof = StorageProof::new(
+        &default_storage_proof(),
+        default_root_hash(),
+        DEFAULT_FUNDING_AMOUNT,
+    );
     run_test(&storage_proof).unwrap();
 }
 
 #[test]
 #[should_panic(expected = "set twice with different values")]
 fn invalid_root_hash_fails() {
-    let mut proof = StorageProof::new(&default_storage_proof(), default_root_hash(), DEFAULT_FUNDING_AMOUNT);
+    let mut proof = StorageProof::new(
+        &default_storage_proof(),
+        default_root_hash(),
+        DEFAULT_FUNDING_AMOUNT,
+    );
     proof.root_hash = [0u8; 32];
     run_test(&proof).unwrap();
 }
