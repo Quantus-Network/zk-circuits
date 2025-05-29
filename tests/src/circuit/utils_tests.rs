@@ -55,10 +55,10 @@ fn test_felts_to_u128_to_felts_round_trip() {
     ];
 
     for (high, low) in test_cases {
-        let felts = vec![high, low];
+        let felts = [high, low];
 
         // Vec<F> -> u128
-        let num = felts_to_u128(felts.clone());
+        let num = felts_to_u128(felts);
 
         // u128 -> Vec<F>
         let round_trip_felts = u128_to_felts(num);
@@ -85,7 +85,7 @@ fn test_edge_cases() {
     // Test zero
     let num = 0u128;
     let felts = u128_to_felts(num);
-    assert_eq!(felts, vec![f(0), f(0)]);
+    assert_eq!(felts, [f(0), f(0)]);
     let result = felts_to_u128(felts);
     assert_eq!(result, 0);
 }

@@ -6,16 +6,16 @@ use std::vec::Vec;
 use crate::circuit::F;
 use plonky2::field::types::{Field, PrimeField64};
 
-pub fn u128_to_felts(num: u128) -> Vec<F> {
-    let mut amount_felts: Vec<F> = Vec::with_capacity(2);
+pub const FELTS_PER_U128: usize = 2;
+pub type Digest = [F; 4];
+
+pub fn u128_to_felts(num: u128) -> [F; FELTS_PER_U128] {
     let amount_high = F::from_noncanonical_u64((num >> 64) as u64);
     let amount_low = F::from_noncanonical_u64(num as u64);
-    amount_felts.push(amount_high);
-    amount_felts.push(amount_low);
-    amount_felts
+    [amount_high, amount_low]
 }
 
-pub fn felts_to_u128(felts: Vec<F>) -> u128 {
+pub fn felts_to_u128(felts: [F; 2]) -> u128 {
     let amount_high: u128 = felts[0].0 as u128;
     let amount_low: u128 = felts[1].0 as u128;
     (amount_high << 64) | amount_low

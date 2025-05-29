@@ -5,7 +5,7 @@ use wormhole_circuit::{
     storage_proof::{StorageProof, StorageProofTargets},
 };
 
-use crate::test_helpers::storage_proof::{default_root_hash, default_storage_proof};
+use crate::test_helpers::storage_proof::{default_root_hash, default_storage_proof, DEFAULT_FUNDING_AMOUNT};
 
 #[cfg(test)]
 fn run_test(storage_proof: &StorageProof) -> anyhow::Result<ProofWithPublicInputs<F, C, D>> {
@@ -13,20 +13,20 @@ fn run_test(storage_proof: &StorageProof) -> anyhow::Result<ProofWithPublicInput
     let targets = StorageProofTargets::new(&mut builder);
     StorageProof::circuit(&targets, &mut builder);
 
-    storage_proof.fill_targets(&mut pw, targets, ()).unwrap();
+    storage_proof.fill_targets(&mut pw, targets).unwrap();
     crate::circuit_helpers::build_and_prove_test(builder, pw)
 }
 
 #[test]
 fn build_and_verify_proof() {
-    let storage_proof = StorageProof::new(&default_storage_proof(), default_root_hash());
+    let storage_proof = StorageProof::new(&default_storage_proof(), default_root_hash(), DEFAULT_FUNDING_AMOUNT);
     run_test(&storage_proof).unwrap();
 }
 
 #[test]
 #[should_panic(expected = "set twice with different values")]
 fn invalid_root_hash_fails() {
-    let mut proof = StorageProof::new(&default_storage_proof(), default_root_hash());
+    let mut proof = StorageProof::new(&default_storage_proof(), default_root_hash(), DEFAULT_FUNDING_AMOUNT);
     proof.root_hash = [0u8; 32];
     run_test(&proof).unwrap();
 }
@@ -38,7 +38,7 @@ fn tampered_proof_fails() {
 
     // Flip the first byte in the first node hash.
     tampered_proof[0].1[0] ^= 0xFF;
-    let proof = StorageProof::new(&tampered_proof, default_root_hash());
+    let proof = StorageProof::new(&tampered_proof, default_root_hash(), DEFAULT_FUNDING_AMOUNT);
 
     run_test(&proof).unwrap();
 }
@@ -65,7 +65,7 @@ fn fuzz_tampered_proof() {
         tampered_proof[node_index].1[byte_index] ^= rand::random_range(1..=255);
 
         // Create the proof and inputs
-        let proof = StorageProof::new(&tampered_proof, default_root_hash());
+        let proof = StorageProof::new(&tampered_proof, default_root_hash(), DEFAULT_FUNDING_AMOUNT);
 
         // Catch panic from run_test
         let result = panic::catch_unwind(|| {

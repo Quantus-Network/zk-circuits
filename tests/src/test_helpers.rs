@@ -4,19 +4,17 @@ use wormhole_circuit::{
     substrate_account::SubstrateAccount,
     unspendable_account::UnspendableAccount,
 };
+use crate::test_helpers::storage_proof::{default_storage_proof, TestInputs, DEFAULT_ROOT_HASH};
 
 pub const DEFAULT_SECRET: &str = "9aa84f99ef2de22e3070394176868df41d6a148117a36132d010529e19b018b7";
 pub const DEFAULT_FUNDING_NONCE: u32 = 0;
 pub const DEFAULT_FUNDING_ACCOUNT: &[u8] = &[10u8; 32];
 
-pub trait TestInputs {
-    fn test_inputs() -> Self;
-}
 
 impl TestInputs for CircuitInputs {
     fn test_inputs() -> Self {
         let secret = hex::decode(DEFAULT_SECRET.trim()).unwrap();
-        let root_hash: [u8; 32] = hex::decode(storage_proof::DEFAULT_ROOT_HASH.trim())
+        let root_hash: [u8; 32] = hex::decode(DEFAULT_ROOT_HASH.trim())
             .unwrap()
             .try_into()
             .unwrap();
@@ -25,7 +23,7 @@ impl TestInputs for CircuitInputs {
         let nullifier = Nullifier::new(&secret, DEFAULT_FUNDING_NONCE, DEFAULT_FUNDING_ACCOUNT);
         let unspendable_account = UnspendableAccount::new(&secret);
         let exit_account = SubstrateAccount::new(&[254u8; 32]).unwrap();
-
+        let storage_proof = default_storage_proof();
         Self {
             public: PublicCircuitInputs {
                 funding_amount: 0,
@@ -35,7 +33,7 @@ impl TestInputs for CircuitInputs {
             },
             private: PrivateCircuitInputs {
                 secret,
-                storage_proof: storage_proof::default_storage_proof(),
+                storage_proof,
                 funding_nonce: 0,
                 funding_account,
                 unspendable_account,
@@ -47,6 +45,8 @@ impl TestInputs for CircuitInputs {
 pub mod storage_proof {
     use wormhole_circuit::storage_proof::StorageProof;
 
+    #[allow(dead_code)]
+    pub const DEFAULT_FUNDING_AMOUNT: u128 = 1000;
     pub const DEFAULT_ROOT_HASH: &str =
         "77eb9d80cd12acfd902b459eb3b8876f05f31ef6a17ed5fdb060ee0e86dd8139";
     pub const DEFAULT_STORAGE_PROOF: [(&str, &str); 3] = [
@@ -70,7 +70,7 @@ pub mod storage_proof {
 
     impl TestInputs for StorageProof {
         fn test_inputs() -> Self {
-            StorageProof::new(&default_storage_proof(), default_root_hash())
+            StorageProof::new(&default_storage_proof(), default_root_hash(), DEFAULT_FUNDING_AMOUNT)
         }
     }
 
@@ -86,5 +86,26 @@ pub mod storage_proof {
 
     pub fn default_root_hash() -> [u8; 32] {
         hex::decode(DEFAULT_ROOT_HASH).unwrap().try_into().unwrap()
+    }
+}
+
+pub mod nullifier {
+    use wormhole_circuit::nullifier::Nullifier;
+
+    use super::{DEFAULT_FUNDING_ACCOUNT, DEFAULT_FUNDING_NONCE, DEFAULT_SECRET};
+
+    pub trait TestInputs {
+        fn test_inputs() -> Self;
+    }
+
+    impl TestInputs for Nullifier {
+        fn test_inputs() -> Self {
+            let secret = hex::decode(DEFAULT_SECRET).unwrap();
+            Self::new(
+                secret.as_slice(),
+                DEFAULT_FUNDING_NONCE,
+                DEFAULT_FUNDING_ACCOUNT,
+            )
+        }
     }
 }

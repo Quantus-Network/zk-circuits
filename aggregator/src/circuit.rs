@@ -1,3 +1,5 @@
+use hashbrown::HashMap;
+use plonky2::recursion::dummy_circuit::{dummy_circuit, dummy_proof};
 use plonky2::{
     field::types::Field,
     iop::{
@@ -14,6 +16,7 @@ use wormhole_circuit::{
     circuit::{CircuitFragment, C, D, F},
     gadgets::is_const_less_than,
 };
+use wormhole_prover::WormholeProver;
 use wormhole_verifier::WormholeVerifier;
 
 use crate::MAX_NUM_PROOFS_TO_AGGREGATE;
@@ -52,26 +55,26 @@ impl WormholeProofAggregatorTargets {
     }
 }
 
-pub struct WormholeProofAggregatorInputs {
-    pub proofs: Vec<ProofWithPublicInputs<F, C, D>>,
-    pub num_proofs: usize,
-}
-
-impl WormholeProofAggregatorInputs {
-    pub fn new(proofs: Vec<ProofWithPublicInputs<F, C, D>>, num_proofs: usize) -> Self {
-        Self { proofs, num_proofs }
-    }
-}
-
 /// A circuit that aggregates proofs from the Wormhole circuit.
 pub struct WormholeProofAggregator {
     inner_verifier: WormholeVerifier,
+    num_proofs: usize,
+    proofs: Vec<ProofWithPublicInputs<F, C, D>>,
 }
 
 impl Default for WormholeProofAggregator {
     fn default() -> Self {
+        const CIRCUIT_CONFIG: CircuitConfig = CircuitConfig::standard_recursion_config();
+        let prover = WormholeProver::new(CIRCUIT_CONFIG);
         let inner_verifier = WormholeVerifier::default();
-        Self { inner_verifier }
+        let dummy_circuit = dummy_circuit(&prover.circuit_data.common);
+        Self {
+            inner_verifier,
+            num_proofs: 10,
+            proofs: (0..10)
+                .map(|_| dummy_proof(&dummy_circuit, HashMap::new()).unwrap())
+                .collect::<Vec<_>>(),
+        }
     }
 }
 
@@ -82,7 +85,6 @@ impl WormholeProofAggregator {
 }
 
 impl CircuitFragment for WormholeProofAggregator {
-    type PrivateInputs = WormholeProofAggregatorInputs;
     type Targets = WormholeProofAggregatorTargets;
 
     fn circuit(
@@ -113,13 +115,9 @@ impl CircuitFragment for WormholeProofAggregator {
         &self,
         pw: &mut PartialWitness<F>,
         targets: Self::Targets,
-        inputs: Self::PrivateInputs,
     ) -> anyhow::Result<()> {
-        pw.set_target(
-            targets.num_proofs,
-            F::from_canonical_usize(inputs.num_proofs),
-        )?;
-        for (proof_target, proof) in targets.proofs.iter().zip(inputs.proofs.iter()) {
+        pw.set_target(targets.num_proofs, F::from_canonical_usize(self.num_proofs))?;
+        for (proof_target, proof) in targets.proofs.iter().zip(self.proofs.iter()) {
             pw.set_proof_with_pis_target(proof_target, proof)?;
         }
 

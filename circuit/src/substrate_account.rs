@@ -3,10 +3,9 @@ use alloc::vec::Vec;
 #[cfg(feature = "std")]
 use std::vec::Vec;
 
-use crate::circuit::{CircuitFragment, Digest, D, F};
+use crate::circuit::{CircuitFragment, D, F};
 use crate::codec::{ByteCodec, FieldElementCodec};
-use crate::inputs::CircuitInputs;
-use crate::utils::{bytes_to_felts, felts_to_bytes};
+use crate::utils::{bytes_to_felts, felts_to_bytes, Digest};
 use plonky2::{
     hash::hash_types::HashOutTarget,
     iop::witness::{PartialWitness, WitnessWrite},
@@ -43,19 +42,14 @@ impl FieldElementCodec for SubstrateAccount {
     fn from_field_elements(elements: &[F]) -> anyhow::Result<Self> {
         if elements.len() != 4 {
             return Err(anyhow::anyhow!(
-                "Expected 4 field elements for ExitAccount address, got: {}",
+                "Expected 4 field elements for SubstrateAccount, got: {}",
                 elements.len()
             ));
         }
-
-        let address = elements.try_into()?;
-        Ok(Self(address))
-    }
-}
-
-impl From<&CircuitInputs> for SubstrateAccount {
-    fn from(inputs: &CircuitInputs) -> Self {
-        inputs.public.exit_account
+        let account_id: [F; 4] = elements
+            .try_into()
+            .map_err(|_| anyhow::anyhow!("Failed to convert slice to [GoldilocksField; 4]"))?;
+        Ok(Self(account_id))
     }
 }
 
@@ -73,7 +67,6 @@ impl ExitAccountTargets {
 }
 
 impl CircuitFragment for SubstrateAccount {
-    type PrivateInputs = ();
     type Targets = ExitAccountTargets;
 
     /// Builds a dummy circuit to include the exit account as a public input.
@@ -83,7 +76,6 @@ impl CircuitFragment for SubstrateAccount {
         &self,
         pw: &mut PartialWitness<F>,
         targets: Self::Targets,
-        _inputs: Self::PrivateInputs,
     ) -> anyhow::Result<()> {
         pw.set_hash_target(targets.address, self.0.into())
     }

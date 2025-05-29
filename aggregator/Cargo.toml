@@ -12,6 +12,9 @@ plonky2 = { workspace = true, default-features = false }
 wormhole-circuit = { path = "../circuit", default-features = false }
 wormhole-prover = { path = "../prover", default-features = false }
 wormhole-verifier = { path = "../verifier", default-features = false }
+hashbrown = "0.14.5"
+
+[dev-dependencies]
 
 [features]
 default = ["std"]

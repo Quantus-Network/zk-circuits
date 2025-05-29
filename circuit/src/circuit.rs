@@ -5,27 +5,22 @@ use crate::nullifier::{Nullifier, NullifierTargets};
 use crate::storage_proof::{StorageProof, StorageProofTargets};
 use crate::substrate_account::{ExitAccountTargets, SubstrateAccount};
 use crate::unspendable_account::{UnspendableAccount, UnspendableAccountTargets};
-use plonky2::plonk::circuit_data::CircuitData;
 use plonky2::{
     field::goldilocks_field::GoldilocksField,
     iop::witness::PartialWitness,
     plonk::{
         circuit_builder::CircuitBuilder,
-        circuit_data::{CircuitConfig, ProverCircuitData, VerifierCircuitData},
+        circuit_data::{CircuitConfig, CircuitData, ProverCircuitData, VerifierCircuitData},
         config::PoseidonGoldilocksConfig,
     },
 };
 
 // Plonky2 setup parameters.
 pub const D: usize = 2; // D=2 provides 100-bits of security
-pub type Digest = [F; 4];
 pub type C = PoseidonGoldilocksConfig;
 pub type F = GoldilocksField;
 
 pub trait CircuitFragment {
-    /// Private inputs to the circuit. These are not stored within the circuit structs themselves
-    /// and thus needs to be supplied via this type.
-    type PrivateInputs;
     /// The targets that the circuit operates on. These are constrained in the circuit definition
     /// and filled with [`Self::fill_targets`].
     type Targets;
@@ -38,7 +33,6 @@ pub trait CircuitFragment {
         &self,
         pw: &mut PartialWitness<F>,
         targets: Self::Targets,
-        inputs: Self::PrivateInputs,
     ) -> anyhow::Result<()>;
 }
 
@@ -77,7 +71,7 @@ impl WormholeCircuit {
     pub fn new(config: CircuitConfig) -> Self {
         let mut builder = CircuitBuilder::<F, D>::new(config);
 
-        // Setup targets.
+        // Setup targets
         let targets = CircuitTargets::new(&mut builder);
 
         // Setup circuits.

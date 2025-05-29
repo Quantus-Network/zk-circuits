@@ -1,7 +1,7 @@
-use crate::test_helpers::TestInputs;
 use plonky2::plonk::circuit_data::CircuitConfig;
 use wormhole_circuit::inputs::{CircuitInputs, PublicCircuitInputs};
 use wormhole_prover::WormholeProver;
+use crate::test_helpers::storage_proof::TestInputs;
 
 #[cfg(test)]
 const CIRCUIT_CONFIG: CircuitConfig = CircuitConfig::standard_recursion_config();

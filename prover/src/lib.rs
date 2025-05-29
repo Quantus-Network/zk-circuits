@@ -53,14 +53,10 @@ use plonky2::{
 };
 
 use wormhole_circuit::circuit::{WormholeCircuit, C, D, F};
-use wormhole_circuit::codec::ByteCodec;
+use wormhole_circuit::storage_proof::StorageProof;
 use wormhole_circuit::{
     circuit::{CircuitFragment, CircuitTargets},
     inputs::CircuitInputs,
-    nullifier::{Nullifier, NullifierInputs},
-    storage_proof::StorageProof,
-    substrate_account::SubstrateAccount,
-    unspendable_account::{UnspendableAccount, UnspendableAccountInputs},
 };
 
 #[derive(Debug)]
@@ -111,32 +107,21 @@ impl WormholeProver {
         let Some(targets) = self.targets.take() else {
             bail!("prover has already commited to inputs");
         };
-        let nullifier = Nullifier::from(circuit_inputs);
-        let unspendable_account = UnspendableAccount::from(circuit_inputs);
         let storage_proof = StorageProof::from(circuit_inputs);
-        let exit_account = SubstrateAccount::from(circuit_inputs);
 
-        let nullifier_inputs = NullifierInputs::new(
-            &circuit_inputs.private.secret,
-            circuit_inputs.private.funding_nonce,
-            &circuit_inputs.private.funding_account.to_bytes(),
-        );
-        let unspendable_account_inputs =
-            UnspendableAccountInputs::new(&circuit_inputs.private.secret);
-
-        nullifier.fill_targets(
-            &mut self.partial_witness,
-            targets.nullifier,
-            nullifier_inputs,
-        )?;
-        unspendable_account.fill_targets(
-            &mut self.partial_witness,
-            targets.unspendable_account,
-            unspendable_account_inputs,
-        )?;
-
-        storage_proof.fill_targets(&mut self.partial_witness, targets.storage_proof, ())?;
-        exit_account.fill_targets(&mut self.partial_witness, targets.exit_account, ())?;
+        circuit_inputs
+            .public
+            .nullifier
+            .fill_targets(&mut self.partial_witness, targets.nullifier)?;
+        circuit_inputs
+            .private
+            .unspendable_account
+            .fill_targets(&mut self.partial_witness, targets.unspendable_account)?;
+        storage_proof.fill_targets(&mut self.partial_witness, targets.storage_proof)?;
+        circuit_inputs
+            .public
+            .exit_account
+            .fill_targets(&mut self.partial_witness, targets.exit_account)?;
 
         Ok(self)
     }

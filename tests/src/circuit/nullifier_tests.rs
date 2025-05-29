@@ -3,19 +3,19 @@ use plonky2::{field::types::Field, plonk::proof::ProofWithPublicInputs};
 use wormhole_circuit::{
     circuit::{CircuitFragment, C, D, F},
     codec::FieldElementCodec,
-    nullifier::{Nullifier, NullifierInputs, NullifierTargets},
+    nullifier::{Nullifier, NullifierTargets},
 };
+use wormhole_circuit::utils::bytes_to_felts;
 
 #[cfg(test)]
 fn run_test(
     nullifier: &Nullifier,
-    inputs: NullifierInputs,
 ) -> anyhow::Result<ProofWithPublicInputs<F, C, D>> {
     let (mut builder, mut pw) = crate::circuit_helpers::setup_test_builder_and_witness(false);
     let targets = NullifierTargets::new(&mut builder);
     Nullifier::circuit(&targets, &mut builder);
 
-    nullifier.fill_targets(&mut pw, targets, inputs)?;
+    nullifier.fill_targets(&mut pw, targets)?;
     crate::circuit_helpers::build_and_prove_test(builder, pw)
 }
 
@@ -30,35 +30,22 @@ impl TestInputs for Nullifier {
     }
 }
 
-impl TestInputs for NullifierInputs {
-    fn test_inputs() -> Self {
-        let secret = hex::decode(DEFAULT_SECRET).unwrap();
-        Self::new(&secret, DEFAULT_FUNDING_NONCE, DEFAULT_FUNDING_ACCOUNT)
-    }
-}
-
 #[test]
 fn build_and_verify_nullifier_proof() {
     let nullifier = Nullifier::test_inputs();
-    let inputs = NullifierInputs::test_inputs();
-    run_test(&nullifier, inputs).unwrap();
+    run_test(&nullifier).unwrap();
 }
 
 #[test]
 fn invalid_secret_fails_proof() {
-    let valid_nullifier = Nullifier::test_inputs();
+    let mut valid_nullifier = Nullifier::test_inputs();
 
     // Flip the first byte of the preimage.
     let mut invalid_bytes = hex::decode(DEFAULT_SECRET).unwrap();
     invalid_bytes[0] ^= 0xFF;
+    valid_nullifier.secret = bytes_to_felts(&invalid_bytes);
 
-    let bad_inputs = NullifierInputs::new(
-        &invalid_bytes,
-        DEFAULT_FUNDING_NONCE,
-        DEFAULT_FUNDING_ACCOUNT,
-    );
-
-    let res = run_test(&valid_nullifier, bad_inputs);
+    let res = run_test(&valid_nullifier);
     assert!(res.is_err());
 }
 
@@ -78,7 +65,7 @@ fn nullifier_codec() {
 
     // Encode the account as field elements and compare.
     let field_elements = nullifier.to_field_elements();
-    assert_eq!(field_elements.len(), 4);
+    assert_eq!(field_elements.len(), 13);
 
     // Decode the field elements back into a Nullifier
     let recovered_nullifier = Nullifier::from_field_elements(&field_elements).unwrap();
@@ -93,7 +80,7 @@ fn codec_invalid_length() {
     assert!(recovered_nullifier_result.is_err());
     assert_eq!(
         recovered_nullifier_result.unwrap_err().to_string(),
-        "Expected 4 field elements for Nullifier, got: 2"
+        "Expected 13 field elements for Nullifier, got: 2"
     );
 }
 
@@ -105,6 +92,6 @@ fn codec_empty_elements() {
     assert!(recovered_nullifier_result.is_err());
     assert_eq!(
         recovered_nullifier_result.unwrap_err().to_string(),
-        "Expected 4 field elements for Nullifier, got: 0"
+        "Expected 13 field elements for Nullifier, got: 0"
     );
 }

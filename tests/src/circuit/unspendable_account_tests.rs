@@ -3,7 +3,7 @@ use wormhole_circuit::{
     circuit::{CircuitFragment, C, D, F},
     codec::FieldElementCodec,
     unspendable_account::{
-        UnspendableAccount, UnspendableAccountInputs, UnspendableAccountTargets,
+        UnspendableAccount, UnspendableAccountTargets,
     },
 };
 
@@ -28,21 +28,19 @@ const ADDRESSES: [&str; 5] = [
 #[cfg(test)]
 fn run_test(
     unspendable_account: &UnspendableAccount,
-    inputs: UnspendableAccountInputs,
 ) -> anyhow::Result<ProofWithPublicInputs<F, C, D>> {
     let (mut builder, mut pw) = crate::circuit_helpers::setup_test_builder_and_witness(false);
     let targets = UnspendableAccountTargets::new(&mut builder);
     UnspendableAccount::circuit(&targets, &mut builder);
 
-    unspendable_account.fill_targets(&mut pw, targets, inputs)?;
+    unspendable_account.fill_targets(&mut pw, targets)?;
     crate::circuit_helpers::build_and_prove_test(builder, pw)
 }
 
 #[test]
 fn build_and_verify_unspendable_account_proof() {
     let unspendable_account = UnspendableAccount::default();
-    let inputs = UnspendableAccountInputs::default();
-    run_test(&unspendable_account, inputs).unwrap();
+    run_test(&unspendable_account).unwrap();
 }
 
 #[test]
@@ -51,11 +49,10 @@ fn preimage_matches_right_address() {
         let decoded_secret = hex::decode(secret).unwrap();
         let decoded_address = hex::decode(address).unwrap();
         let unspendable_account = UnspendableAccount::new(&decoded_secret);
-        let inputs = UnspendableAccountInputs::new(&decoded_secret);
 
         let address = wormhole_circuit::utils::bytes_to_felts(&decoded_address);
         assert_eq!(unspendable_account.account_id.to_vec(), address);
-        let result = run_test(&unspendable_account, inputs);
+        let result = run_test(&unspendable_account);
         assert!(result.is_ok());
     }
 }
@@ -70,15 +67,13 @@ fn preimage_does_not_match_wrong_address() {
     let wrong_hash = wormhole_circuit::utils::bytes_to_felts(&hex::decode(wrong_address).unwrap());
     unspendable_account.account_id = wrong_hash.try_into().unwrap();
 
-    let inputs = UnspendableAccountInputs::new(&decoded_secret);
-
-    let result = run_test(&unspendable_account, inputs);
+    let result = run_test(&unspendable_account);
     assert!(result.is_err());
 }
 
 #[test]
 fn all_zero_preimage_is_valid_and_hashes() {
-    let preimage_bytes = vec![0u8; 64];
+    let preimage_bytes = vec![0u8; 32];
     let account = UnspendableAccount::new(&preimage_bytes);
     assert!(!account.account_id.to_vec().iter().all(Field::is_zero));
 }
@@ -92,15 +87,25 @@ fn unspendable_account_codec() {
             F::from_noncanonical_u64(3),
             F::from_noncanonical_u64(4),
         ],
+        secret: vec![
+            F::from_noncanonical_u64(5),
+            F::from_noncanonical_u64(6),
+            F::from_noncanonical_u64(7),
+            F::from_noncanonical_u64(8),
+        ]
     };
 
     // Encode the account as field elements and compare.
     let field_elements = account.to_field_elements();
-    assert_eq!(field_elements.len(), 4);
+    assert_eq!(field_elements.len(), 8);
     assert_eq!(field_elements[0], F::from_noncanonical_u64(1));
     assert_eq!(field_elements[1], F::from_noncanonical_u64(2));
     assert_eq!(field_elements[2], F::from_noncanonical_u64(3));
     assert_eq!(field_elements[3], F::from_noncanonical_u64(4));
+    assert_eq!(field_elements[4], F::from_noncanonical_u64(5));
+    assert_eq!(field_elements[5], F::from_noncanonical_u64(6));
+    assert_eq!(field_elements[6], F::from_noncanonical_u64(7));
+    assert_eq!(field_elements[7], F::from_noncanonical_u64(8));
 
     // Decode the field elements back into an UnspendableAccount
     let recovered_account = UnspendableAccount::from_field_elements(&field_elements).unwrap();

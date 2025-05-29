@@ -11,7 +11,7 @@ fn run_test(exit_account: &SubstrateAccount) -> anyhow::Result<ProofWithPublicIn
     let targets = ExitAccountTargets::new(&mut builder);
     SubstrateAccount::circuit(&targets, &mut builder);
 
-    exit_account.fill_targets(&mut pw, targets, ()).unwrap();
+    exit_account.fill_targets(&mut pw, targets)?;
     crate::circuit_helpers::build_and_prove_test(builder, pw)
 }
 
@@ -73,7 +73,7 @@ fn test_exit_account_insufficient_elements() {
     );
     assert_eq!(
         result.unwrap_err().to_string(),
-        "Expected 4 field elements for ExitAccount address, got: 3"
+        "Expected 4 field elements for SubstrateAccount, got: 3"
     );
 }
 
@@ -131,7 +131,7 @@ fn codec_invalid_length() {
     assert!(recovered_account_result.is_err());
     assert_eq!(
         recovered_account_result.unwrap_err().to_string(),
-        "Expected 4 field elements for ExitAccount address, got: 2"
+        "Expected 4 field elements for SubstrateAccount, got: 2"
     );
 
     let long_elements = vec![
@@ -146,7 +146,7 @@ fn codec_invalid_length() {
     assert!(recovered_account_result.is_err());
     assert_eq!(
         recovered_account_result.unwrap_err().to_string(),
-        "Expected 4 field elements for ExitAccount address, got: 5"
+        "Expected 4 field elements for SubstrateAccount, got: 5"
     );
 }
 
@@ -157,7 +157,7 @@ fn codec_empty_elements() {
     assert!(recovered_account_result.is_err());
     assert_eq!(
         recovered_account_result.unwrap_err().to_string(),
-        "Expected 4 field elements for ExitAccount address, got: 0"
+        "Expected 4 field elements for SubstrateAccount, got: 0"
     );
 }
 

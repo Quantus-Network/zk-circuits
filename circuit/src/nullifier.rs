@@ -3,12 +3,11 @@ use alloc::vec::Vec;
 #[cfg(feature = "std")]
 use std::vec::Vec;
 
-use crate::utils::{bytes_to_felts, felts_to_bytes, string_to_felt};
+use crate::utils::{bytes_to_felts, felts_to_bytes, string_to_felt, Digest};
 use crate::{
-    circuit::{CircuitFragment, Digest, D, F},
+    circuit::{CircuitFragment, D, F},
     codec::FieldElementCodec,
 };
-use crate::{codec::ByteCodec, inputs::CircuitInputs};
 use plonky2::field::types::Field;
 use plonky2::{
     hash::{hash_types::HashOutTarget, poseidon::PoseidonHash},
@@ -18,6 +17,7 @@ use plonky2::{
     },
     plonk::{circuit_builder::CircuitBuilder, config::Hasher},
 };
+use crate::codec::ByteCodec;
 
 pub const NULLIFIER_SALT: &str = "~nullif~";
 pub const SECRET_NUM_TARGETS: usize = 4;
@@ -25,10 +25,15 @@ pub const NONCE_NUM_TARGETS: usize = 1;
 pub const FUNDING_ACCOUNT_NUM_TARGETS: usize = 4;
 pub const PREIMAGE_NUM_TARGETS: usize =
     SECRET_NUM_TARGETS + NONCE_NUM_TARGETS + FUNDING_ACCOUNT_NUM_TARGETS;
+pub const NULLIFIER_SIZE_FELTS: usize = 4 + 4 + 1 + 4;
 
-#[derive(Debug, PartialEq, Eq, Clone, Copy)]
+#[derive(Debug, PartialEq, Eq, Clone)]
 pub struct Nullifier {
-    hash: Digest,
+    // FIXME: Should not be public, remove once hash is precomputed in tests.
+    pub hash: Digest,
+    pub secret: Vec<F>,
+    funding_nonce: F,
+    funding_account: Vec<F>,
 }
 
 impl Nullifier {
@@ -39,51 +44,140 @@ impl Nullifier {
         let funding_nonce = F::from_canonical_u32(funding_nonce);
         let funding_account = bytes_to_felts(funding_account);
         preimage.push(salt);
-        preimage.extend(secret);
+        preimage.extend(secret.clone());
         preimage.push(funding_nonce);
-        preimage.extend(funding_account);
+        preimage.extend(funding_account.clone());
 
         let inner_hash = PoseidonHash::hash_no_pad(&preimage).elements;
-        let hash = PoseidonHash::hash_no_pad(&inner_hash).elements;
+        let outer_hash = PoseidonHash::hash_no_pad(&inner_hash).elements;
+        let hash = Digest::from(outer_hash);
 
-        Self { hash }
+        Self {
+            hash,
+            secret,
+            funding_nonce,
+            funding_account,
+        }
     }
 }
 
 impl ByteCodec for Nullifier {
     fn to_bytes(&self) -> Vec<u8> {
-        felts_to_bytes(&self.hash)
+        let mut bytes = Vec::new();
+        bytes.extend(felts_to_bytes(&self.hash));
+        bytes.extend(felts_to_bytes(&self.secret));
+        bytes.extend(felts_to_bytes(&[self.funding_nonce]));
+        bytes.extend(felts_to_bytes(&self.funding_account));
+        bytes
     }
 
     fn from_bytes(slice: &[u8]) -> anyhow::Result<Self> {
-        let hash = bytes_to_felts(slice)
+        let f_size = size_of::<F>(); // 8 bytes
+        let hash_size = 4 * f_size; // 4 field elements
+        let secret_size = 4 * f_size; // 4 field elements
+        let nonce_size = f_size; // 1 field element
+        let funding_account_size = 4 * f_size; // 4 field elements
+        let total_size = hash_size + secret_size + nonce_size + funding_account_size;
+
+        if slice.len() != total_size {
+            return Err(anyhow::anyhow!(
+                "Expected {} bytes for Nullifier, got: {}",
+                total_size,
+                slice.len()
+            ));
+        }
+
+        let mut offset = 0;
+        // Deserialize hash
+        let hash = bytes_to_felts(&slice[offset..offset + hash_size])
             .try_into()
-            .map_err(|_| anyhow::anyhow!("failed to deserialize bytes into nullifier hash"))?;
-        Ok(Self { hash })
+            .map_err(|_| anyhow::anyhow!("Failed to deserialize nullifier hash"))?;
+        offset += hash_size;
+
+        // Deserialize secret
+        let secret = bytes_to_felts(&slice[offset..offset + secret_size]);
+        if secret.len() != 4 {
+            return Err(anyhow::anyhow!(
+                "Expected 4 field elements for secret, got: {}",
+                secret.len()
+            ));
+        }
+        offset += secret_size;
+
+        // Deserialize funding_nonce
+        let funding_nonce = bytes_to_felts(&slice[offset..offset + nonce_size])
+            .first()
+            .copied()
+            .ok_or_else(|| anyhow::anyhow!("Failed to deserialize funding_nonce"))?;
+        offset += nonce_size;
+
+        // Deserialize funding_account
+        let funding_account = bytes_to_felts(&slice[offset..offset + funding_account_size]);
+        if funding_account.len() != 4 {
+            return Err(anyhow::anyhow!(
+                "Expected 4 field elements for funding_account, got: {}",
+                funding_account.len()
+            ));
+        }
+
+        Ok(Self {
+            hash,
+            secret,
+            funding_nonce,
+            funding_account,
+        })
     }
 }
 
 impl FieldElementCodec for Nullifier {
     fn to_field_elements(&self) -> Vec<F> {
-        self.hash.to_vec()
+        let mut elements = Vec::new();
+        elements.extend(self.hash.to_vec());
+        elements.extend(self.secret.clone());
+        elements.push(self.funding_nonce);
+        elements.extend(self.funding_account.clone());
+        elements
     }
 
     fn from_field_elements(elements: &[F]) -> anyhow::Result<Self> {
-        if elements.len() != 4 {
+        let hash_size = 4; // 32 bytes = 4 field elements
+        let secret_size = 4; // 32 bytes = 4 field elements
+        let nonce_size = 1; // 1 field element
+        let funding_account_size = 4; // 32 bytes = 4 field elements
+        let total_size = hash_size + secret_size + nonce_size + funding_account_size;
+
+        if elements.len() != total_size {
             return Err(anyhow::anyhow!(
-                "Expected 4 field elements for Nullifier, got: {}",
+                "Expected {} field elements for Nullifier, got: {}",
+                total_size,
                 elements.len()
             ));
         }
 
-        let hash = elements.try_into()?;
-        Ok(Self { hash })
-    }
-}
+        let mut offset = 0;
+        // Deserialize hash
+        let hash = elements[offset..offset + hash_size]
+            .try_into()
+            .map_err(|_| anyhow::anyhow!("Failed to deserialize nullifier hash"))?;
+        offset += hash_size;
 
-impl From<&CircuitInputs> for Nullifier {
-    fn from(inputs: &CircuitInputs) -> Self {
-        inputs.public.nullifier
+        // Deserialize secret
+        let secret = elements[offset..offset + secret_size].to_vec();
+        offset += secret_size;
+
+        // Deserialize funding_nonce
+        let funding_nonce = elements[offset];
+        offset += nonce_size;
+
+        // Deserialize funding_account
+        let funding_account = elements[offset..offset + funding_account_size].to_vec();
+
+        Ok(Self {
+            hash,
+            secret,
+            funding_nonce,
+            funding_account,
+        })
     }
 }
 
@@ -107,28 +201,7 @@ impl NullifierTargets {
     }
 }
 
-#[derive(Debug)]
-pub struct NullifierInputs {
-    pub secret: Vec<F>,
-    funding_nonce: F,
-    pub funding_account: Vec<F>,
-}
-
-impl NullifierInputs {
-    pub fn new(secret: &[u8], funding_nonce: u32, funding_account: &[u8]) -> Self {
-        let secret = bytes_to_felts(secret);
-        let funding_nonce = F::from_canonical_u32(funding_nonce);
-        let funding_account = bytes_to_felts(funding_account);
-        Self {
-            secret,
-            funding_nonce,
-            funding_account,
-        }
-    }
-}
-
 impl CircuitFragment for Nullifier {
-    type PrivateInputs = NullifierInputs;
     type Targets = NullifierTargets;
 
     /// Builds a circuit that assert that nullifier was computed with `H(H(nullifier +
@@ -162,12 +235,11 @@ impl CircuitFragment for Nullifier {
         &self,
         pw: &mut PartialWitness<F>,
         targets: Self::Targets,
-        inputs: Self::PrivateInputs,
     ) -> anyhow::Result<()> {
         pw.set_hash_target(targets.hash, self.hash.into())?;
-        pw.set_target_arr(&targets.secret, &inputs.secret)?;
-        pw.set_target(targets.funding_nonce, inputs.funding_nonce)?;
-        pw.set_target_arr(&targets.funding_account, &inputs.funding_account)?;
+        pw.set_target_arr(&targets.secret, &self.secret)?;
+        pw.set_target(targets.funding_nonce, self.funding_nonce)?;
+        pw.set_target_arr(&targets.funding_account, &self.funding_account)?;
         Ok(())
     }
 }
