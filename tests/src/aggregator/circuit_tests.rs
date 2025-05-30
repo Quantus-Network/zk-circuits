@@ -35,8 +35,6 @@ fn build_and_verify_proof() {
         let proof = prover.commit(&inputs).unwrap().prove().unwrap();
         proofs.push(proof);
     }
-
-    let num_proofs = proofs.len();
     run_test().unwrap();
 }
 
@@ -61,7 +59,6 @@ fn few_proofs_pass() {
     }
 
     // Get the number of valid proofs before appending the dummy proofs.
-    let num_proofs = proofs.len();
     proofs.extend_from_slice(&dummy_proofs);
 
     run_test().unwrap();

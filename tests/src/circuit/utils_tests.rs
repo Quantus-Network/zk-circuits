@@ -28,7 +28,7 @@ fn test_u128_to_felts_to_u128_round_trip() {
         assert_eq!(felts.len(), 2, "Expected exactly two field elements");
 
         // Vec<F> -> u128
-        let round_trip_num = felts_to_u128(felts.clone());
+        let round_trip_num = felts_to_u128(felts);
 
         // Check that the high and low parts match
         let expected_high = (num >> 64) as u64;
