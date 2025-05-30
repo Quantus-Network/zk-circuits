@@ -15,3 +15,6 @@ wormhole-circuit = { path = "../circuit", default-features = false }
 default = ["std"]
 std = ["anyhow/std", "plonky2/std", "wormhole-circuit/std"]
 no_std = []
+
+[lints]
+workspace = true

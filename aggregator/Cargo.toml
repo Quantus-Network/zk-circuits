@@ -26,3 +26,6 @@ std = [
   "wormhole-verifier/std",
 ]
 no_std = []
+
+[lints]
+workspace = true

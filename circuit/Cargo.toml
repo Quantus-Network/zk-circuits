@@ -15,3 +15,6 @@ hex = { workspace = true, features = ["alloc"] }
 default = ["std"]
 std = ["anyhow/std", "hex/std", "plonky2/std"]
 no_std = []
+
+[lints]
+workspace = true

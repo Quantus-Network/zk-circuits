@@ -17,3 +17,6 @@ edition = "2021"
 authors = ["Quantus Network"]
 description = "Wormhole circuit implementation using Plonky2"
 license = "MIT"
+
+[workspace.lints.clippy]
+uninlined_format_args = "allow"
