@@ -9,14 +9,10 @@ license.workspace = true
 [dependencies]
 anyhow = { workspace = true }
 plonky2 = { workspace = true, default-features = false }
+hashbrown = { version = "0.14.5", default-features = false }
 wormhole-circuit = { path = "../circuit", default-features = false }
 wormhole-prover = { path = "../prover", default-features = false }
 wormhole-verifier = { path = "../verifier", default-features = false }
-# This is the same crate as used in plonky2. Need to have it for dummy proofs to work correctly.
-hashbrown = { version = "0.14.3", default-features = false, features = [
-  "ahash",
-  "serde",
-] }
 
 [features]
 default = ["std"]
