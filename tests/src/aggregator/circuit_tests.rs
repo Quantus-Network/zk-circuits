@@ -3,7 +3,7 @@ use crate::test_helpers::storage_proof::TestInputs;
 use hashbrown::HashMap;
 use plonky2::plonk::circuit_data::CircuitConfig;
 use plonky2::recursion::dummy_circuit::{dummy_circuit, dummy_proof};
-use wormhole_aggregator::circuit::{WormholeProofAggregator, WormholeProofAggregatorTargets};
+use wormhole_aggregator::circuit::{WormholeProofAggregatorInner, WormholeProofAggregatorTargets};
 use wormhole_aggregator::MAX_NUM_PROOFS_TO_AGGREGATE;
 use wormhole_circuit::circuit::{CircuitFragment, C, D, F};
 use wormhole_circuit::inputs::CircuitInputs;
@@ -16,9 +16,9 @@ const CIRCUIT_CONFIG: CircuitConfig = CircuitConfig::standard_recursion_config()
 fn run_test() -> anyhow::Result<plonky2::plonk::proof::ProofWithPublicInputs<F, C, D>> {
     let (mut builder, mut pw) = setup_test_builder_and_witness(false);
     let targets = WormholeProofAggregatorTargets::new(&mut builder, CIRCUIT_CONFIG);
-    WormholeProofAggregator::circuit(&targets, &mut builder);
+    WormholeProofAggregatorInner::circuit(&targets, &mut builder);
 
-    let aggregator = WormholeProofAggregator::new();
+    let aggregator = WormholeProofAggregatorInner::new(CIRCUIT_CONFIG);
     aggregator.fill_targets(&mut pw, targets)?;
     build_and_prove_test(builder, pw)
 }

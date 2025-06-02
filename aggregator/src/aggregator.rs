@@ -20,7 +20,7 @@ pub struct WormholeProofAggregator {
     circuit_data: CircuitData<F, C, D>,
     partial_witness: PartialWitness<F>,
     targets: WormholeProofAggregatorTargets,
-    proofs_buffer: Option<Vec<ProofWithPublicInputs<F, C, D>>>,
+    pub proofs_buffer: Option<Vec<ProofWithPublicInputs<F, C, D>>>,
 }
 
 impl Default for WormholeProofAggregator {
@@ -67,23 +67,13 @@ impl WormholeProofAggregator {
     }
 
     pub fn aggregate(&mut self) -> anyhow::Result<()> {
-        let Some(mut proofs) = self.proofs_buffer.take() else {
+        let Some(proofs) = self.proofs_buffer.take() else {
             bail!("there are no proofs to aggregate")
         };
 
-        let num_proofs = proofs.len();
-
-        // TODO: Perhaps this should be done in `fill_targets` instead.
-        // Fill the rest of the buffer with dummy proofs.
-        while proofs.len() < MAX_NUM_PROOFS_TO_AGGREGATE {
-            let dummy_proof = self.inner.dummy_proof()?;
-            proofs.push(dummy_proof);
-        }
-
-        let inputs = WormholeProofAggregatorInputs { proofs, num_proofs };
-
+        self.inner.set_proofs(proofs)?;
         self.inner
-            .fill_targets(&mut self.partial_witness, self.targets.clone(), inputs)?;
+            .fill_targets(&mut self.partial_witness, self.targets.clone())?;
 
         Ok(())
     }
@@ -96,64 +86,5 @@ impl WormholeProofAggregator {
     /// Returns an error if the prover has not commited to any inputs.
     pub fn prove(self) -> anyhow::Result<ProofWithPublicInputs<F, C, D>> {
         self.circuit_data.prove(self.partial_witness)
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use wormhole_circuit::inputs::CircuitInputs;
-    use wormhole_prover::WormholeProver;
-
-    use super::*;
-
-    const CIRCUIT_CONFIG: CircuitConfig = CircuitConfig::standard_recursion_config();
-
-    #[test]
-    fn push_proof_to_buffer() {
-        // Create a proof.
-        let prover = WormholeProver::new(CIRCUIT_CONFIG);
-        let inputs = CircuitInputs::test_inputs();
-        let proof = prover.commit(&inputs).unwrap().prove().unwrap();
-
-        let mut aggregator = WormholeProofAggregator::new(CIRCUIT_CONFIG);
-        aggregator.push_proof(proof).unwrap();
-
-        let proofs_buffer = aggregator.proofs_buffer.unwrap();
-        assert_eq!(proofs_buffer.len(), 1);
-    }
-
-    #[test]
-    fn push_proof_to_full_buffer() {
-        // Create a proof.
-        let prover = WormholeProver::new(CIRCUIT_CONFIG);
-        let inputs = CircuitInputs::test_inputs();
-        let proof = prover.commit(&inputs).unwrap().prove().unwrap();
-
-        let mut aggregator = WormholeProofAggregator::new(CIRCUIT_CONFIG);
-
-        // Fill up the proof buffer.
-        for _ in 0..MAX_NUM_PROOFS_TO_AGGREGATE {
-            aggregator.push_proof(proof.clone()).unwrap();
-        }
-
-        let result = aggregator.push_proof(proof.clone());
-        assert!(result.is_err());
-
-        let proofs_buffer = aggregator.proofs_buffer.unwrap();
-        assert_eq!(proofs_buffer.len(), MAX_NUM_PROOFS_TO_AGGREGATE);
-    }
-
-    #[test]
-    fn aggregate_single_proof() {
-        // Create a proof.
-        let prover = WormholeProver::new(CIRCUIT_CONFIG);
-        let inputs = CircuitInputs::test_inputs();
-        let proof = prover.commit(&inputs).unwrap().prove().unwrap();
-
-        let mut aggregator = WormholeProofAggregator::new(CIRCUIT_CONFIG);
-        aggregator.push_proof(proof).unwrap();
-
-        aggregator.aggregate().unwrap();
-        aggregator.prove().unwrap();
     }
 }

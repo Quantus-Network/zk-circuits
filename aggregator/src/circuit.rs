@@ -1,3 +1,4 @@
+use anyhow::bail;
 use hashbrown::HashMap;
 use plonky2::recursion::dummy_circuit::{dummy_circuit, dummy_proof};
 use plonky2::{
@@ -63,19 +64,35 @@ pub struct WormholeProofAggregatorInner {
 impl WormholeProofAggregatorInner {
     pub fn new(config: CircuitConfig) -> Self {
         let inner_verifier = WormholeVerifier::new(config, None);
-        let dummy_circuit = dummy_circuit(&inner_verifier.circuit_data.common);
         Self {
             inner_verifier,
             num_proofs: 10,
-            proofs: (0..10)
-                .map(|_| dummy_proof(&dummy_circuit, HashMap::new()).unwrap())
-                .collect::<Vec<_>>(),
+            proofs: Vec::with_capacity(MAX_NUM_PROOFS_TO_AGGREGATE),
         }
     }
 
-    pub fn dummy_proof(&self) -> anyhow::Result<ProofWithPublicInputs<F, C, D>> {
+    pub fn set_proofs(
+        &mut self,
+        proofs: Vec<ProofWithPublicInputs<F, C, D>>,
+    ) -> anyhow::Result<()> {
+        let num_proofs = proofs.len();
+
+        if num_proofs > MAX_NUM_PROOFS_TO_AGGREGATE {
+            bail!("proofs to aggregate was more than the maximum allowed")
+        }
+
+        // Move proof data from the aggregater, to be used the circuit.
+        self.num_proofs = num_proofs;
+        self.proofs = proofs;
+
+        // TODO: Figure out a way to make this compatible with zk.
         let dummy_circuit = dummy_circuit(&self.inner_verifier.circuit_data.common);
-        dummy_proof(&dummy_circuit, HashMap::new())
+        let dummy_proof = dummy_proof(&dummy_circuit, HashMap::new())?;
+        for _ in 0..(MAX_NUM_PROOFS_TO_AGGREGATE - num_proofs) {
+            self.proofs.push(dummy_proof.clone());
+        }
+
+        Ok(())
     }
 }
 
