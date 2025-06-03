@@ -1,25 +1,28 @@
 [package]
-name = "tests"
+name = "benches"
 version.workspace = true
 edition.workspace = true
 authors.workspace = true
 description.workspace = true
 license.workspace = true
 
-[features]
-bench = []
-
 [dependencies]
-wormhole-aggregator = { path = "../aggregator", features = ["no_zk"] }
+criterion = { version = "0.5.1" }
+test_helpers = { path = "../tests", package = "tests" }
+plonky2 = { workspace = true, default-features = true }
+
+wormhole-aggregator = { path = "../aggregator" }
 wormhole-circuit = { path = "../circuit" }
 wormhole-prover = { path = "../prover" }
 wormhole-verifier = { path = "../verifier" }
-plonky2 = { workspace = true }
-anyhow = { workspace = true }
-hex = { workspace = true }
-rand = { version = "0.9.1", default-features = false, features = [
-  "thread_rng",
-] }
 
 [lints]
 workspace = true
+
+[[bench]]
+name = "prover"
+harness = false
+
+[[bench]]
+name = "verifier"
+harness = false
