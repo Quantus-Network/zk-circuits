@@ -13,9 +13,9 @@ use wormhole_verifier::{ProofWithPublicInputs, WormholeVerifier};
 use crate::MAX_NUM_PROOFS_TO_AGGREGATE;
 
 #[cfg(not(feature = "no_zk"))]
-pub const DUMMY_PROOF_BYTES: &[u8] = include_bytes!("../data/dummy_proof_zk.bin");
+const DUMMY_PROOF_BYTES: &[u8] = include_bytes!("../data/dummy_proof_zk.bin");
 #[cfg(feature = "no_zk")]
-pub const DUMMY_PROOF_BYTES: &[u8] = include_bytes!("../data/dummy_proof.bin");
+const DUMMY_PROOF_BYTES: &[u8] = include_bytes!("../data/dummy_proof.bin");
 
 #[derive(Debug, Clone)]
 pub struct WormholeProofAggregatorTargets {
@@ -49,7 +49,7 @@ impl WormholeProofAggregatorTargets {
 }
 
 pub struct WormholeProofAggregatorInner {
-    inner_verifier: WormholeVerifier,
+    pub inner_verifier: WormholeVerifier,
     num_proofs: usize,
     proofs: Vec<ProofWithPublicInputs<F, C, D>>,
 }

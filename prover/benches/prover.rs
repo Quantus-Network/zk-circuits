@@ -2,7 +2,7 @@ use std::time::Duration;
 
 use criterion::{criterion_group, criterion_main, Criterion};
 use plonky2::plonk::circuit_data::CircuitConfig;
-use test_helpers::test_helpers::storage_proof::TestInputs;
+use test_helpers::storage_proof::TestInputs;
 use wormhole_circuit::inputs::CircuitInputs;
 use wormhole_prover::WormholeProver;
 

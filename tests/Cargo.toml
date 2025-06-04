@@ -14,6 +14,7 @@ wormhole-aggregator = { path = "../aggregator", features = ["no_zk"] }
 wormhole-circuit = { path = "../circuit" }
 wormhole-prover = { path = "../prover" }
 wormhole-verifier = { path = "../verifier" }
+test-helpers = { path = "./test-helpers" }
 plonky2 = { workspace = true }
 anyhow = { workspace = true }
 hex = { workspace = true }

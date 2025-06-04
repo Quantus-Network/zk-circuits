@@ -1,10 +1,18 @@
 [workspace]
-members = ["aggregator", "benches", "circuit", "prover", "tests", "verifier"]
+members = [
+  "aggregator",
+  "circuit",
+  "prover",
+  "tests",
+  "tests/test-helpers",
+  "verifier",
+]
 resolver = "2"
 
 [workspace.dependencies]
 anyhow = { version = "1.0.98", default-features = false }
-plonky2 = { git = "https://github.com/Quantus-Network/plonky2", default-features = false, features = [
+criterion = "0.5.1"
+plonky2 = { git = "https://github.com/Quantus-Network/plonky2", features = [
   "std",
 ] }
 hex = { version = "0.4.3", default-features = false, features = ["alloc"] }

@@ -2,13 +2,12 @@ use std::time::Duration;
 
 use criterion::{criterion_group, criterion_main, Criterion};
 use plonky2::plonk::circuit_data::{CircuitConfig, CommonCircuitData};
-use wormhole_aggregator::{
-    aggregator::WormholeProofAggregator, circuit::DUMMY_PROOF_BYTES, MAX_NUM_PROOFS_TO_AGGREGATE,
-};
+use wormhole_aggregator::{aggregator::WormholeProofAggregator, MAX_NUM_PROOFS_TO_AGGREGATE};
 use wormhole_circuit::circuit::{C, D, F};
 use wormhole_verifier::ProofWithPublicInputs;
 
-const MEASUREMENT_TIME_S: u64 = 20;
+const MEASUREMENT_TIME_S: u64 = 100;
+const DUMMY_PROOF_BYTES: &[u8] = include_bytes!(".././data/dummy_proof_zk.bin");
 
 fn deserialize_proofs(
     common_data: &CommonCircuitData<F, D>,
@@ -21,11 +20,10 @@ fn deserialize_proofs(
 fn aggregate_proofs_benchmark(c: &mut Criterion) {
     c.bench_function("aggregator_aggregate_proofs", |b| {
         b.iter(|| {
-            // TODO: Move each bench into the crate that it is benchmarking, then enable zk.
-            let config = CircuitConfig::standard_recursion_config();
+            let config = CircuitConfig::standard_recursion_zk_config();
             let mut aggregator = WormholeProofAggregator::new(config);
 
-            let proofs = deserialize_proofs(&aggregator.circuit_data.common);
+            let proofs = deserialize_proofs(&aggregator.inner.inner_verifier.circuit_data.common);
 
             for proof in proofs.clone() {
                 aggregator.push_proof(proof).unwrap();
