@@ -11,13 +11,17 @@ criterion = { version = "0.5.1" }
 test_helpers = { path = "../tests", package = "tests" }
 plonky2 = { workspace = true, default-features = true }
 
-wormhole-aggregator = { path = "../aggregator" }
+wormhole-aggregator = { path = "../aggregator", features = ["no_zk"] }
 wormhole-circuit = { path = "../circuit" }
 wormhole-prover = { path = "../prover" }
 wormhole-verifier = { path = "../verifier" }
 
 [lints]
 workspace = true
+
+[[bench]]
+name = "aggregator"
+harness = false
 
 [[bench]]
 name = "prover"
