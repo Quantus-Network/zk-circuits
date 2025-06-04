@@ -7,7 +7,7 @@ use wormhole_circuit::circuit::{C, D, F};
 use wormhole_verifier::ProofWithPublicInputs;
 
 const MEASUREMENT_TIME_S: u64 = 100;
-const DUMMY_PROOF_BYTES: &[u8] = include_bytes!(".././data/dummy_proof_zk.bin");
+const DUMMY_PROOF_BYTES: &[u8] = include_bytes!("../data/dummy_proof_zk.bin");
 
 fn deserialize_proofs(
     common_data: &CommonCircuitData<F, D>,

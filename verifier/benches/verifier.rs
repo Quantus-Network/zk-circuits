@@ -8,7 +8,7 @@ use plonky2::util::serialization::DefaultGateSerializer;
 use wormhole_verifier::WormholeVerifier;
 
 const MEASUREMENT_TIME_S: u64 = 20;
-const DATA_PATH: &str = "../data";
+const DATA_PATH: &str = "../bench-data";
 
 fn verify_proof_benchmark(c: &mut Criterion) {
     let config = CircuitConfig::standard_recursion_zk_config();
