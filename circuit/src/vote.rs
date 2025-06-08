@@ -17,22 +17,22 @@ pub const MAX_MERKLE_DEPTH: usize = 32;
 #[derive(Debug, Clone)]
 pub struct VotePublicInputs {
     /// The proposal ID this vote is for
-    pub proposal_id: [u8; 32],
+    pub proposal_id: [F; 4],
     /// The merkle root of eligible addresses
-    pub merkle_root: [u8; 32],
+    pub merkle_root: [F; 4],
     /// The vote (0 for no, 1 for yes)
     pub vote: bool,
     /// The nullifier to prevent double voting
-    pub nullifier: [u8; 32],
+    pub nullifier: [F; 4],
 }
 
 /// Private inputs for the vote circuit
 #[derive(Debug, Clone)]
 pub struct VotePrivateInputs {
     /// The private key of the voter
-    pub private_key: [u8; 32],
+    pub private_key: [F; 4],
     /// The sibling hashes in the merkle tree path
-    pub merkle_siblings: Vec<[u8; 32]>,
+    pub merkle_siblings: Vec<[F; 4]>,
     /// The path indices (0 for left, 1 for right) for each level of the Merkle tree
     pub path_indices: Vec<bool>,
     /// The actual depth of this specific Merkle proof
@@ -43,16 +43,48 @@ pub struct VotePrivateInputs {
 #[derive(Clone, Debug)]
 pub struct VoteTargets {
     // Public Input Targets
-    pub proposal_id_targets: HashOutTarget,
-    pub expected_merkle_root_targets: HashOutTarget,
-    pub vote_target: BoolTarget,
-    pub expected_nullifier_targets: HashOutTarget,
+    pub proposal_id: HashOutTarget,
+    pub expected_merkle_root: HashOutTarget,
+    pub vote: BoolTarget,
+    pub expected_nullifier: HashOutTarget,
 
     // Private Input Targets
-    pub private_key_targets: HashOutTarget,
-    pub merkle_siblings_targets: Vec<HashOutTarget>,
-    pub path_indices_targets: Vec<BoolTarget>,
-    pub actual_merkle_depth_target: Target,
+    pub private_key: HashOutTarget,
+    pub merkle_siblings: Vec<HashOutTarget>,
+    pub path_indices: Vec<BoolTarget>,
+    pub actual_merkle_depth: Target,
+}
+
+impl VoteTargets {
+    pub fn new(builder: &mut CircuitBuilder<F, D>) -> Self {
+        // Public Input Targets
+        let proposal_id = builder.add_virtual_hash_public_input();
+        let expected_merkle_root = builder.add_virtual_hash_public_input();
+        let vote = builder.add_virtual_bool_target_safe(); // Not public by default
+        builder.register_public_input(vote.target); // Explicitly make it public
+        let expected_nullifier = builder.add_virtual_hash_public_input();
+
+        // Private Input Targets
+        let private_key = builder.add_virtual_hash();
+        let merkle_siblings: Vec<_> = (0..MAX_MERKLE_DEPTH)
+            .map(|_| builder.add_virtual_hash())
+            .collect();
+        let path_indices: Vec<_> = (0..MAX_MERKLE_DEPTH)
+            .map(|_| builder.add_virtual_bool_target_safe())
+            .collect();
+        let actual_merkle_depth = builder.add_virtual_target();
+
+        Self {
+            proposal_id,
+            expected_merkle_root,
+            vote,
+            expected_nullifier,
+            private_key,
+            merkle_siblings,
+            path_indices,
+            actual_merkle_depth,
+        }
+    }
 }
 
 /// Data for the vote circuit, used for witness generation.
@@ -78,17 +110,17 @@ impl CircuitFragment for VoteCircuitData {
         // --- 1. Merkle Proof Verification ---
         let leaf_hash_targets = builder
             .hash_n_to_hash_no_pad::<plonky2::hash::poseidon::PoseidonHash>(
-                targets.private_key_targets.elements.to_vec(),
+                targets.private_key.elements.to_vec(),
             );
         let mut current_computed_hash_targets = leaf_hash_targets;
 
         let n_log = (usize::BITS - (MAX_MERKLE_DEPTH - 1).leading_zeros()) as usize;
         for i in 0..MAX_MERKLE_DEPTH {
             let is_active_level =
-                is_const_less_than(builder, i, targets.actual_merkle_depth_target, n_log);
+                is_const_less_than(builder, i, targets.actual_merkle_depth, n_log);
 
-            let sibling_hash_targets = targets.merkle_siblings_targets[i];
-            let path_index_bool_target = targets.path_indices_targets[i];
+            let sibling_hash_targets = targets.merkle_siblings[i];
+            let path_index_bool_target = targets.path_indices[i];
 
             let mut combined_elements_for_hash = Vec::with_capacity(8);
             let mut potential_left_elements = Vec::with_capacity(4);
@@ -126,29 +158,19 @@ impl CircuitFragment for VoteCircuitData {
             }
         }
 
-        for k in 0..4 {
-            builder.connect(
-                current_computed_hash_targets.elements[k],
-                targets.expected_merkle_root_targets.elements[k],
-            );
-        }
+        builder.connect_hashes(current_computed_hash_targets, targets.expected_merkle_root);
 
         // --- 2. Nullifier Generation & Verification ---
         let mut nullifier_input_elements = Vec::with_capacity(8);
         nullifier_input_elements.extend_from_slice(&leaf_hash_targets.elements);
-        nullifier_input_elements.extend_from_slice(&targets.proposal_id_targets.elements);
+        nullifier_input_elements.extend_from_slice(&targets.proposal_id.elements);
 
         let computed_nullifier_targets = builder
             .hash_n_to_hash_no_pad::<plonky2::hash::poseidon::PoseidonHash>(
                 nullifier_input_elements,
             );
 
-        for k in 0..4 {
-            builder.connect(
-                computed_nullifier_targets.elements[k],
-                targets.expected_nullifier_targets.elements[k],
-            );
-        }
+        builder.connect_hashes(computed_nullifier_targets, targets.expected_nullifier);
 
         // --- 3. Vote Validation ---
         // targets.vote_target is BoolTarget, which implies it is 0 or 1.
@@ -160,169 +182,113 @@ impl CircuitFragment for VoteCircuitData {
         pw: &mut PartialWitness<F>,
         targets: Self::Targets,
     ) -> anyhow::Result<()> {
-        // Helper to set HashOutTarget from [u8; 32]
-        fn set_hash_target_witness(
+        // Helper to set HashOutTarget from [F; 4]
+        fn set_hash_target_witness_from_felts(
             pw: &mut PartialWitness<F>,
             target: HashOutTarget,
-            val: &[u8; 32],
+            val: &[F; 4],
         ) -> anyhow::Result<()> {
-            let felt_vals: [F; 4] = val
-                .chunks(8)
-                .map(|chunk| F::from_canonical_u64(u64::from_le_bytes(chunk.try_into().unwrap())))
-                .collect::<Vec<F>>()
-                .try_into()
-                .unwrap();
-            pw.set_hash_target(
-                target,
-                HashOut {
-                    elements: felt_vals,
-                },
-            )?;
+            pw.set_hash_target(target, HashOut { elements: *val })?;
             Ok(())
         }
 
         // Set public input witnesses
-        set_hash_target_witness(
+        set_hash_target_witness_from_felts(
             pw,
-            targets.proposal_id_targets,
+            targets.proposal_id,
             &self.public_inputs.proposal_id,
         )?;
-        set_hash_target_witness(
+        set_hash_target_witness_from_felts(
             pw,
-            targets.expected_merkle_root_targets,
+            targets.expected_merkle_root,
             &self.public_inputs.merkle_root,
         )?;
-        pw.set_bool_target(targets.vote_target, self.public_inputs.vote)?;
-        set_hash_target_witness(
+        pw.set_bool_target(targets.vote, self.public_inputs.vote)?;
+        set_hash_target_witness_from_felts(
             pw,
-            targets.expected_nullifier_targets,
+            targets.expected_nullifier,
             &self.public_inputs.nullifier,
         )?;
 
         // Set private input witnesses
-        set_hash_target_witness(
+        set_hash_target_witness_from_felts(
             pw,
-            targets.private_key_targets,
+            targets.private_key,
             &self.private_inputs.private_key,
         )?;
         pw.set_target(
-            targets.actual_merkle_depth_target,
+            targets.actual_merkle_depth,
             F::from_canonical_usize(self.private_inputs.actual_merkle_depth),
         )?;
 
         for i in 0..MAX_MERKLE_DEPTH {
             if i < self.private_inputs.actual_merkle_depth {
-                set_hash_target_witness(
+                set_hash_target_witness_from_felts(
                     pw,
-                    targets.merkle_siblings_targets[i],
+                    targets.merkle_siblings[i],
                     &self.private_inputs.merkle_siblings[i],
                 )?;
-                pw.set_bool_target(
-                    targets.path_indices_targets[i],
-                    self.private_inputs.path_indices[i],
-                )?;
+                pw.set_bool_target(targets.path_indices[i], self.private_inputs.path_indices[i])?;
             } else {
-                set_hash_target_witness(pw, targets.merkle_siblings_targets[i], &[0u8; 32])?;
-                pw.set_bool_target(targets.path_indices_targets[i], false)?;
+                let zero_felts = [F::ZERO; 4];
+                set_hash_target_witness_from_felts(pw, targets.merkle_siblings[i], &zero_felts)?;
+                pw.set_bool_target(targets.path_indices[i], false)?;
             }
         }
         Ok(())
     }
 }
 
-impl VoteTargets {
-    pub fn new(builder: &mut CircuitBuilder<F, D>) -> Self {
-        // Public Input Targets
-        let proposal_id_targets = builder.add_virtual_hash_public_input();
-        let expected_merkle_root_targets = builder.add_virtual_hash_public_input();
-        let vote_target = builder.add_virtual_bool_target_safe(); // Not public by default
-        builder.register_public_input(vote_target.target); // Explicitly make it public
-        let expected_nullifier_targets = builder.add_virtual_hash_public_input();
-
-        // Private Input Targets
-        let private_key_targets = builder.add_virtual_hash();
-        let merkle_siblings_targets: Vec<_> = (0..MAX_MERKLE_DEPTH)
-            .map(|_| builder.add_virtual_hash())
-            .collect();
-        let path_indices_targets: Vec<_> = (0..MAX_MERKLE_DEPTH)
-            .map(|_| builder.add_virtual_bool_target_safe())
-            .collect();
-        let actual_merkle_depth_target = builder.add_virtual_target();
-
-        Self {
-            proposal_id_targets,
-            expected_merkle_root_targets,
-            vote_target,
-            expected_nullifier_targets,
-            private_key_targets,
-            merkle_siblings_targets,
-            path_indices_targets,
-            actual_merkle_depth_target,
-        }
-    }
-
-    /// Collects all public input targets in the order they were registered.
-    pub fn all_public_inputs(&self) -> Vec<Target> {
-        let mut pi = Vec::new();
-        pi.extend(self.proposal_id_targets.elements);
-        pi.extend(self.expected_merkle_root_targets.elements);
-        pi.push(self.vote_target.target);
-        pi.extend(self.expected_nullifier_targets.elements);
-        pi
-    }
-}
-
 #[cfg(test)]
 mod tests {
+    use crate::circuit::C;
+
     use super::*;
     use plonky2::{
-        field::{
-            goldilocks_field::GoldilocksField,
-            types::{Field, PrimeField64},
-        },
+        field::types::{Field, PrimeField64},
         hash::poseidon::PoseidonHash,
         iop::witness::PartialWitness,
-        plonk::{
-            circuit_data::CircuitConfig,
-            config::{Hasher, PoseidonGoldilocksConfig},
-        },
+        plonk::{circuit_data::CircuitConfig, config::Hasher},
     };
 
-    type C = PoseidonGoldilocksConfig;
-    type F = GoldilocksField;
+    fn bytes_to_felts(bytes: &[u8; 32]) -> [F; 4] {
+        let mut felts = [F::ZERO; 4];
+        for (i, chunk) in bytes.chunks(8).enumerate() {
+            felts[i] = F::from_canonical_u64(u64::from_le_bytes(chunk.try_into().unwrap()));
+        }
+        felts
+    }
+
+    fn felts_to_bytes(felts: &[F; 4]) -> [u8; 32] {
+        let mut bytes = [0u8; 32];
+        for (i, felt) in felts.iter().enumerate() {
+            bytes[i * 8..(i + 1) * 8].copy_from_slice(&felt.to_canonical_u64().to_le_bytes());
+        }
+        bytes
+    }
 
     fn poseidon_hash(data: &[u8; 32]) -> [u8; 32] {
-        let mut input = [F::ZERO; 4];
-        for (i, chunk) in data.chunks(8).enumerate() {
-            input[i] = F::from_canonical_u64(u64::from_le_bytes(chunk.try_into().unwrap()));
-        }
-        let out = PoseidonHash::hash_no_pad(&input).elements;
-        let mut res = [0u8; 32];
-        for (i, x) in out.iter().enumerate().take(4) {
-            res[i * 8..(i + 1) * 8].copy_from_slice(&x.to_canonical_u64().to_le_bytes());
-        }
-        res
-    }
-    fn poseidon_hash2(a: &[u8; 32], b: &[u8; 32]) -> [u8; 32] {
-        let mut input = [F::ZERO; 8];
-        for (i, chunk) in a.chunks(8).enumerate() {
-            input[i] = F::from_canonical_u64(u64::from_le_bytes(chunk.try_into().unwrap()));
-        }
-        for (i, chunk) in b.chunks(8).enumerate() {
-            input[4 + i] = F::from_canonical_u64(u64::from_le_bytes(chunk.try_into().unwrap()));
-        }
-        let out = PoseidonHash::hash_no_pad(&input).elements;
-        let mut res = [0u8; 32];
-        for (i, x) in out.iter().enumerate().take(4) {
-            res[i * 8..(i + 1) * 8].copy_from_slice(&x.to_canonical_u64().to_le_bytes());
-        }
-        res
+        let felts = bytes_to_felts(data);
+        let out = PoseidonHash::hash_no_pad(&felts).elements;
+        felts_to_bytes(&out)
     }
 
-    fn compute_nullifier(private_key: &[u8; 32], proposal_id: &[u8; 32]) -> [u8; 32] {
-        // nullifier = Poseidon(Poseidon(private_key), proposal_id)
-        let pk_hash = poseidon_hash(private_key);
-        poseidon_hash2(&pk_hash, proposal_id)
+    fn poseidon_hash2(a: &[u8; 32], b: &[u8; 32]) -> [u8; 32] {
+        let mut input = [F::ZERO; 8];
+        let a_felts = bytes_to_felts(a);
+        let b_felts = bytes_to_felts(b);
+        input[..4].copy_from_slice(&a_felts);
+        input[4..].copy_from_slice(&b_felts);
+        let out = PoseidonHash::hash_no_pad(&input).elements;
+        felts_to_bytes(&out)
+    }
+
+    fn compute_nullifier(private_key: &[F; 4], proposal_id: &[F; 4]) -> [F; 4] {
+        let pk_hash = PoseidonHash::hash_no_pad(private_key).elements;
+        let mut input = [F::ZERO; 8];
+        input[..4].copy_from_slice(&pk_hash);
+        input[4..].copy_from_slice(proposal_id);
+        PoseidonHash::hash_no_pad(&input).elements
     }
 
     #[test]
@@ -334,18 +300,18 @@ mod tests {
         let l1_1 = poseidon_hash2(&leaves[2], &leaves[3]);
         let root = poseidon_hash2(&l1_0, &l1_1);
 
-        let voter_private_key = private_keys_for_tree[0];
-        let merkle_siblings: Vec<[u8; 32]> = vec![leaves[1], l1_1];
+        let voter_private_key = bytes_to_felts(&private_keys_for_tree[0]);
+        let merkle_siblings: Vec<[F; 4]> = vec![bytes_to_felts(&leaves[1]), bytes_to_felts(&l1_1)];
         let path_indices: Vec<bool> = vec![false, false];
         let actual_merkle_depth = 2;
 
-        let proposal_id = [42u8; 32];
+        let proposal_id = bytes_to_felts(&[42u8; 32]);
         let vote = true;
         let nullifier = compute_nullifier(&voter_private_key, &proposal_id);
 
         let public_inputs_data = VotePublicInputs {
             proposal_id,
-            merkle_root: root,
+            merkle_root: bytes_to_felts(&root),
             vote,
             nullifier,
         };
