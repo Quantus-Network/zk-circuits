@@ -10,10 +10,15 @@ use plonky2::{
 
 use crate::circuit::{CircuitFragment, D, F};
 use crate::gadgets::is_const_less_than;
+use anyhow::bail;
 
+/// Maximum depth of the Merkle tree for eligible voters.
+/// This allows for up to 2^32 eligible voters.
 pub const MAX_MERKLE_DEPTH: usize = 32;
 
-/// Public inputs for the vote circuit
+/// Public inputs for the vote circuit.
+///
+/// These inputs are visible to all parties and are used to verify the vote's validity.
 #[derive(Debug, Clone)]
 pub struct VotePublicInputs {
     /// The proposal ID this vote is for
@@ -26,7 +31,10 @@ pub struct VotePublicInputs {
     pub nullifier: [F; 4],
 }
 
-/// Private inputs for the vote circuit
+/// Private inputs for the vote circuit.
+///
+/// These inputs are only known to the voter and are used to prove eligibility
+/// without revealing the voter's identity.
 #[derive(Debug, Clone)]
 pub struct VotePrivateInputs {
     /// The private key of the voter
@@ -88,6 +96,9 @@ impl VoteTargets {
 }
 
 /// Data for the vote circuit, used for witness generation.
+///
+/// This struct holds both public and private inputs needed to generate a proof
+/// that a vote is valid and from an eligible voter.
 #[derive(Debug, Clone)]
 pub struct VoteCircuitData {
     pub public_inputs: VotePublicInputs,
@@ -112,7 +123,7 @@ impl CircuitFragment for VoteCircuitData {
             .hash_n_to_hash_no_pad::<plonky2::hash::poseidon::PoseidonHash>(
                 targets.private_key.elements.to_vec(),
             );
-        let mut current_computed_hash_targets = leaf_hash_targets;
+        let mut current_hash_targets = leaf_hash_targets;
 
         let n_log = (usize::BITS - (MAX_MERKLE_DEPTH - 1).leading_zeros()) as usize;
         for i in 0..MAX_MERKLE_DEPTH {
@@ -122,43 +133,47 @@ impl CircuitFragment for VoteCircuitData {
             let sibling_hash_targets = targets.merkle_siblings[i];
             let path_index_bool_target = targets.path_indices[i];
 
-            let mut combined_elements_for_hash = Vec::with_capacity(8);
-            let mut potential_left_elements = Vec::with_capacity(4);
-            let mut potential_right_elements = Vec::with_capacity(4);
+            let mut combined_elements = Vec::with_capacity(8);
+            let mut left_elements = Vec::with_capacity(4);
+            let mut right_elements = Vec::with_capacity(4);
 
             for k in 0..4 {
-                let selected_left_k = builder.select(
+                let left_k = builder.select(
                     path_index_bool_target,
                     sibling_hash_targets.elements[k],
-                    current_computed_hash_targets.elements[k],
+                    current_hash_targets.elements[k],
                 );
-                potential_left_elements.push(selected_left_k);
+                left_elements.push(left_k);
 
-                let selected_right_k = builder.select(
+                let right_k = builder.select(
                     path_index_bool_target,
-                    current_computed_hash_targets.elements[k],
+                    current_hash_targets.elements[k],
                     sibling_hash_targets.elements[k],
                 );
-                potential_right_elements.push(selected_right_k);
+                right_elements.push(right_k);
             }
-            combined_elements_for_hash.extend(potential_left_elements);
-            combined_elements_for_hash.extend(potential_right_elements);
+            combined_elements.extend(&left_elements);
+            combined_elements.extend(&right_elements);
 
             let parent_hash_candidacy = builder
-                .hash_n_to_hash_no_pad::<plonky2::hash::poseidon::PoseidonHash>(
-                    combined_elements_for_hash,
-                );
+                .hash_n_to_hash_no_pad::<plonky2::hash::poseidon::PoseidonHash>(combined_elements);
 
+            let mut next_hash_elements = Vec::with_capacity(4);
             for k in 0..4 {
-                current_computed_hash_targets.elements[k] = builder.select(
+                let selected_k = builder.select(
                     is_active_level,
                     parent_hash_candidacy.elements[k],
-                    current_computed_hash_targets.elements[k],
+                    current_hash_targets.elements[k],
                 );
+                next_hash_elements.push(selected_k);
             }
+            current_hash_targets = HashOutTarget {
+                elements: next_hash_elements.try_into().unwrap(),
+            };
         }
 
-        builder.connect_hashes(current_computed_hash_targets, targets.expected_merkle_root);
+        // Final root verification - ensure the computed root matches the expected root
+        builder.connect_hashes(current_hash_targets, targets.expected_merkle_root);
 
         // --- 2. Nullifier Generation & Verification ---
         let mut nullifier_input_elements = Vec::with_capacity(8);
@@ -170,7 +185,15 @@ impl CircuitFragment for VoteCircuitData {
                 nullifier_input_elements,
             );
 
-        builder.connect_hashes(computed_nullifier_targets, targets.expected_nullifier);
+        // Ensure the computed nullifier matches the expected nullifier
+        for k in 0..4 {
+            let diff = builder.sub(
+                computed_nullifier_targets.elements[k],
+                targets.expected_nullifier.elements[k],
+            );
+            let zero = builder.zero();
+            builder.connect(diff, zero);
+        }
 
         // --- 3. Vote Validation ---
         // targets.vote_target is BoolTarget, which implies it is 0 or 1.
@@ -182,6 +205,24 @@ impl CircuitFragment for VoteCircuitData {
         pw: &mut PartialWitness<F>,
         targets: Self::Targets,
     ) -> anyhow::Result<()> {
+        // Validate merkle depth
+        if self.private_inputs.actual_merkle_depth > MAX_MERKLE_DEPTH {
+            bail!(
+                "Merkle tree depth {} exceeds maximum allowed depth {}",
+                self.private_inputs.actual_merkle_depth,
+                MAX_MERKLE_DEPTH
+            );
+        }
+
+        // Validate merkle proof length
+        if self.private_inputs.merkle_siblings.len() != self.private_inputs.path_indices.len() {
+            bail!(
+                "Merkle proof length mismatch: {} siblings vs {} path indices",
+                self.private_inputs.merkle_siblings.len(),
+                self.private_inputs.path_indices.len()
+            );
+        }
+
         // Helper to set HashOutTarget from [F; 4]
         fn set_hash_target_witness_from_felts(
             pw: &mut PartialWitness<F>,
@@ -241,12 +282,10 @@ impl CircuitFragment for VoteCircuitData {
 
 #[cfg(test)]
 mod tests {
-    use crate::circuit::C;
-
     use super::*;
+    use crate::circuit::C;
     use plonky2::{
         field::types::Field,
-        hash::hash_types::HashOut,
         hash::poseidon::PoseidonHash,
         iop::witness::PartialWitness,
         plonk::{circuit_data::CircuitConfig, config::Hasher},
@@ -268,37 +307,37 @@ mod tests {
         PoseidonHash::hash_no_pad(&input).elements
     }
 
-    #[test]
-    fn test_vote_circuit_end_to_end() -> anyhow::Result<()> {
+    fn create_test_inputs() -> VoteCircuitData {
         let private_keys_for_tree = [[1u8; 32], [2u8; 32], [3u8; 32], [4u8; 32]];
         let leaves: Vec<[F; 4]> = private_keys_for_tree
             .iter()
             .map(|bytes| PoseidonHash::hash_no_pad(&bytes_to_felts(bytes)).elements)
             .collect();
 
-        let l1_0 = PoseidonHash::two_to_one(
-            HashOut {
-                elements: leaves[0],
-            },
-            HashOut {
-                elements: leaves[1],
-            },
-        )
-        .elements;
-        let l1_1 = PoseidonHash::two_to_one(
-            HashOut {
-                elements: leaves[2],
-            },
-            HashOut {
-                elements: leaves[3],
-            },
-        )
-        .elements;
-        let root = PoseidonHash::two_to_one(HashOut { elements: l1_0 }, HashOut { elements: l1_1 })
-            .elements;
+        // Build the Merkle tree level by level
+        let mut current_level = leaves.clone();
+        let mut merkle_tree = Vec::new();
+        merkle_tree.push(current_level.clone());
 
+        while current_level.len() > 1 {
+            let mut next_level = Vec::new();
+            for i in (0..current_level.len()).step_by(2) {
+                if i + 1 < current_level.len() {
+                    let mut combined = [F::ZERO; 8];
+                    combined[..4].copy_from_slice(&current_level[i]);
+                    combined[4..].copy_from_slice(&current_level[i + 1]);
+                    next_level.push(PoseidonHash::hash_no_pad(&combined).elements);
+                } else {
+                    next_level.push(current_level[i]);
+                }
+            }
+            merkle_tree.push(next_level.clone());
+            current_level = next_level;
+        }
+
+        let root = current_level[0];
         let voter_private_key = bytes_to_felts(&private_keys_for_tree[0]);
-        let merkle_siblings: Vec<[F; 4]> = vec![leaves[1], l1_1];
+        let merkle_siblings: Vec<[F; 4]> = vec![leaves[1], merkle_tree[1][1]];
         let path_indices: Vec<bool> = vec![false, false];
         let actual_merkle_depth = 2;
 
@@ -306,43 +345,123 @@ mod tests {
         let vote = true;
         let nullifier = compute_nullifier(&voter_private_key, &proposal_id);
 
-        let public_inputs_data = VotePublicInputs {
+        let public_inputs = VotePublicInputs {
             proposal_id,
             merkle_root: root,
             vote,
             nullifier,
         };
-        let private_inputs_data = VotePrivateInputs {
+        let private_inputs = VotePrivateInputs {
             private_key: voter_private_key,
             merkle_siblings,
             path_indices,
             actual_merkle_depth,
         };
 
-        let vote_circuit_data = VoteCircuitData::new(public_inputs_data, private_inputs_data);
+        VoteCircuitData::new(public_inputs, private_inputs)
+    }
 
+    #[test]
+    fn test_vote_circuit_end_to_end() -> anyhow::Result<()> {
+        let vote_circuit_data = create_test_inputs();
         let config = CircuitConfig::standard_recursion_config();
         let mut builder = CircuitBuilder::<F, D>::new(config);
-
-        // Create targets
         let targets = VoteTargets::new(&mut builder);
-
-        // Define constraints
         VoteCircuitData::circuit(&targets, &mut builder);
-
-        // Set up witness
         let mut pw = PartialWitness::new();
         vote_circuit_data.fill_targets(&mut pw, targets.clone())?;
 
-        println!("Building circuit data...");
         let circuit_built_data = builder.build::<C>();
-
-        println!("Proving...");
         let proof = circuit_built_data.prove(pw)?;
-        println!("Verifying proof...");
-        circuit_built_data.verify(proof.clone())?;
-
-        println!("Vote circuit test passed!");
+        circuit_built_data.verify(proof)?;
         Ok(())
+    }
+
+    #[test]
+    fn test_invalid_merkle_depth() {
+        let mut inputs = create_test_inputs();
+        inputs.private_inputs.actual_merkle_depth = MAX_MERKLE_DEPTH + 1;
+        let mut builder = CircuitBuilder::<F, D>::new(CircuitConfig::standard_recursion_config());
+        let targets = VoteTargets::new(&mut builder);
+        let result = inputs.fill_targets(&mut PartialWitness::new(), targets);
+        assert!(result.is_err());
+        assert!(result
+            .unwrap_err()
+            .to_string()
+            .contains("exceeds maximum allowed depth"));
+    }
+
+    #[test]
+    fn test_merkle_proof_length_mismatch() {
+        let mut inputs = create_test_inputs();
+        inputs.private_inputs.path_indices.push(false); // Add extra path index
+        let mut builder = CircuitBuilder::<F, D>::new(CircuitConfig::standard_recursion_config());
+        let targets = VoteTargets::new(&mut builder);
+        let result = inputs.fill_targets(&mut PartialWitness::new(), targets);
+        assert!(result.is_err());
+        assert!(result.unwrap_err().to_string().contains("length mismatch"));
+    }
+
+    #[test]
+    fn test_invalid_merkle_proof() -> anyhow::Result<()> {
+        let mut inputs = create_test_inputs();
+        // Create an invalid proof by using a different actual_merkle_depth
+        inputs.private_inputs.actual_merkle_depth = 1; // Should be 2 for our test tree
+        let config = CircuitConfig::standard_recursion_config();
+        let mut builder = CircuitBuilder::<F, D>::new(config);
+        let targets = VoteTargets::new(&mut builder);
+        VoteCircuitData::circuit(&targets, &mut builder);
+        let mut pw = PartialWitness::new();
+        inputs.fill_targets(&mut pw, targets.clone())?;
+
+        let circuit_built_data = builder.build::<C>();
+        let proof_result = circuit_built_data.prove(pw);
+        assert!(
+            proof_result.is_err(),
+            "Proof generation should have failed but it succeeded"
+        );
+        Ok(())
+    }
+
+    #[test]
+    fn test_completely_invalid_proof() -> anyhow::Result<()> {
+        let mut inputs = create_test_inputs();
+        // Use completely random values that should make the proof invalid
+        inputs.private_inputs.private_key = [F::from_canonical_u64(12345); 4];
+        inputs.private_inputs.merkle_siblings = vec![
+            [F::from_canonical_u64(67890); 4],
+            [F::from_canonical_u64(11111); 4],
+        ];
+        inputs.private_inputs.path_indices = vec![true, true]; // Different path
+        inputs.private_inputs.actual_merkle_depth = 2;
+
+        let config = CircuitConfig::standard_recursion_config();
+        let mut builder = CircuitBuilder::<F, D>::new(config);
+        let targets = VoteTargets::new(&mut builder);
+        VoteCircuitData::circuit(&targets, &mut builder);
+        let mut pw = PartialWitness::new();
+        inputs.fill_targets(&mut pw, targets.clone())?;
+
+        let circuit_built_data = builder.build::<C>();
+        let proof_result = circuit_built_data.prove(pw);
+
+        assert!(
+            proof_result.is_err(),
+            "Proof generation should have failed but it succeeded"
+        );
+        Ok(())
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_simple_fail() {
+        let config = CircuitConfig::standard_recursion_config();
+        let mut builder = CircuitBuilder::<F, D>::new(config);
+        let one = builder.one();
+        let zero = builder.zero();
+        builder.connect(one, zero);
+        let data = builder.build::<C>();
+        let pw = PartialWitness::new();
+        data.prove(pw).unwrap();
     }
 }
