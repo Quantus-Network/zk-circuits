@@ -245,7 +245,8 @@ mod tests {
 
     use super::*;
     use plonky2::{
-        field::types::{Field, PrimeField64},
+        field::types::Field,
+        hash::hash_types::HashOut,
         hash::poseidon::PoseidonHash,
         iop::witness::PartialWitness,
         plonk::{circuit_data::CircuitConfig, config::Hasher},
@@ -259,30 +260,6 @@ mod tests {
         felts
     }
 
-    fn felts_to_bytes(felts: &[F; 4]) -> [u8; 32] {
-        let mut bytes = [0u8; 32];
-        for (i, felt) in felts.iter().enumerate() {
-            bytes[i * 8..(i + 1) * 8].copy_from_slice(&felt.to_canonical_u64().to_le_bytes());
-        }
-        bytes
-    }
-
-    fn poseidon_hash(data: &[u8; 32]) -> [u8; 32] {
-        let felts = bytes_to_felts(data);
-        let out = PoseidonHash::hash_no_pad(&felts).elements;
-        felts_to_bytes(&out)
-    }
-
-    fn poseidon_hash2(a: &[u8; 32], b: &[u8; 32]) -> [u8; 32] {
-        let mut input = [F::ZERO; 8];
-        let a_felts = bytes_to_felts(a);
-        let b_felts = bytes_to_felts(b);
-        input[..4].copy_from_slice(&a_felts);
-        input[4..].copy_from_slice(&b_felts);
-        let out = PoseidonHash::hash_no_pad(&input).elements;
-        felts_to_bytes(&out)
-    }
-
     fn compute_nullifier(private_key: &[F; 4], proposal_id: &[F; 4]) -> [F; 4] {
         let pk_hash = PoseidonHash::hash_no_pad(private_key).elements;
         let mut input = [F::ZERO; 8];
@@ -294,14 +271,34 @@ mod tests {
     #[test]
     fn test_vote_circuit_end_to_end() -> anyhow::Result<()> {
         let private_keys_for_tree = [[1u8; 32], [2u8; 32], [3u8; 32], [4u8; 32]];
-        let leaves: Vec<[u8; 32]> = private_keys_for_tree.iter().map(poseidon_hash).collect();
+        let leaves: Vec<[F; 4]> = private_keys_for_tree
+            .iter()
+            .map(|bytes| PoseidonHash::hash_no_pad(&bytes_to_felts(bytes)).elements)
+            .collect();
 
-        let l1_0 = poseidon_hash2(&leaves[0], &leaves[1]);
-        let l1_1 = poseidon_hash2(&leaves[2], &leaves[3]);
-        let root = poseidon_hash2(&l1_0, &l1_1);
+        let l1_0 = PoseidonHash::two_to_one(
+            HashOut {
+                elements: leaves[0],
+            },
+            HashOut {
+                elements: leaves[1],
+            },
+        )
+        .elements;
+        let l1_1 = PoseidonHash::two_to_one(
+            HashOut {
+                elements: leaves[2],
+            },
+            HashOut {
+                elements: leaves[3],
+            },
+        )
+        .elements;
+        let root = PoseidonHash::two_to_one(HashOut { elements: l1_0 }, HashOut { elements: l1_1 })
+            .elements;
 
         let voter_private_key = bytes_to_felts(&private_keys_for_tree[0]);
-        let merkle_siblings: Vec<[F; 4]> = vec![bytes_to_felts(&leaves[1]), bytes_to_felts(&l1_1)];
+        let merkle_siblings: Vec<[F; 4]> = vec![leaves[1], l1_1];
         let path_indices: Vec<bool> = vec![false, false];
         let actual_merkle_depth = 2;
 
@@ -311,7 +308,7 @@ mod tests {
 
         let public_inputs_data = VotePublicInputs {
             proposal_id,
-            merkle_root: bytes_to_felts(&root),
+            merkle_root: root,
             vote,
             nullifier,
         };
