@@ -1,0 +1,16 @@
+[package]
+name = "circuit-common"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+description.workspace = true
+license.workspace = true
+
+[dependencies]
+anyhow = { workspace = true }
+plonky2 = { workspace = true }
+
+[features]
+default = ["std"]
+std = ["anyhow/std", "plonky2/std"]
+no_std = []

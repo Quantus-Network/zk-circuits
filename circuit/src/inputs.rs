@@ -3,13 +3,13 @@ use alloc::vec::Vec;
 #[cfg(feature = "std")]
 use std::vec::Vec;
 
-use crate::circuit::{C, D, F};
 use crate::codec::FieldElementCodec;
 use crate::nullifier::Nullifier;
 use crate::substrate_account::SubstrateAccount;
 use crate::unspendable_account::UnspendableAccount;
 use crate::utils::{felts_to_bytes, felts_to_u128};
 use anyhow::bail;
+use circuit_common::circuit::{C, D, F};
 use plonky2::plonk::proof::ProofWithPublicInputs;
 
 /// The total size of the public inputs field element vector.

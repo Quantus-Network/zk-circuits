@@ -1,10 +1,10 @@
 #![cfg(test)]
 use crate::aggregator::circuit_config;
 use crate::circuit_helpers::{build_and_prove_test, setup_test_builder_and_witness};
+use circuit_common::circuit::{CircuitFragment, C, D, F};
 use test_helpers::storage_proof::TestInputs;
 use wormhole_aggregator::circuit::{WormholeProofAggregatorInner, WormholeProofAggregatorTargets};
 use wormhole_aggregator::DEFAULT_NUM_PROOFS_TO_AGGREGATE;
-use wormhole_circuit::circuit::{CircuitFragment, C, D, F};
 use wormhole_circuit::inputs::CircuitInputs;
 use wormhole_prover::WormholeProver;
 use wormhole_verifier::ProofWithPublicInputs;

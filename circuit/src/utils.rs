@@ -3,7 +3,7 @@ use alloc::vec::Vec;
 #[cfg(feature = "std")]
 use std::vec::Vec;
 
-use crate::circuit::F;
+use circuit_common::circuit::F;
 use plonky2::field::types::{Field, PrimeField64};
 
 pub const FELTS_PER_U128: usize = 2;

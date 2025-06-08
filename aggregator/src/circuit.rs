@@ -1,4 +1,5 @@
 use anyhow::bail;
+use circuit_common::circuit::{CircuitFragment, C, D, F};
 use plonky2::{
     iop::witness::{PartialWitness, WitnessWrite},
     plonk::{
@@ -7,7 +8,6 @@ use plonky2::{
         proof::ProofWithPublicInputsTarget,
     },
 };
-use wormhole_circuit::circuit::{CircuitFragment, C, D, F};
 use wormhole_verifier::{ProofWithPublicInputs, WormholeVerifier};
 
 #[cfg(not(feature = "no_zk"))]

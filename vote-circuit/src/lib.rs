@@ -8,9 +8,9 @@ use plonky2::{
     plonk::circuit_builder::CircuitBuilder,
 };
 
-use crate::circuit::{CircuitFragment, D, F};
-use crate::gadgets::is_const_less_than;
 use anyhow::bail;
+use circuit_common::circuit::{CircuitFragment, D, F};
+use circuit_common::gadgets::is_const_less_than;
 
 /// Maximum depth of the Merkle tree for eligible voters.
 /// This allows for up to 2^32 eligible voters.
@@ -186,14 +186,7 @@ impl CircuitFragment for VoteCircuitData {
             );
 
         // Ensure the computed nullifier matches the expected nullifier
-        for k in 0..4 {
-            let diff = builder.sub(
-                computed_nullifier_targets.elements[k],
-                targets.expected_nullifier.elements[k],
-            );
-            let zero = builder.zero();
-            builder.connect(diff, zero);
-        }
+        builder.connect_hashes(computed_nullifier_targets, targets.expected_nullifier);
 
         // --- 3. Vote Validation ---
         // targets.vote_target is BoolTarget, which implies it is 0 or 1.
@@ -283,7 +276,7 @@ impl CircuitFragment for VoteCircuitData {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::circuit::C;
+    use circuit_common::circuit::C;
     use plonky2::{
         field::types::Field,
         hash::poseidon::PoseidonHash,

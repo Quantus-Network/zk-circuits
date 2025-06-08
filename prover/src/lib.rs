@@ -52,12 +52,10 @@ use plonky2::{
     },
 };
 
-use wormhole_circuit::circuit::{WormholeCircuit, C, D, F};
+use circuit_common::circuit::{CircuitFragment, C, D, F};
+use wormhole_circuit::circuit::WormholeCircuit;
 use wormhole_circuit::storage_proof::StorageProof;
-use wormhole_circuit::{
-    circuit::{CircuitFragment, CircuitTargets},
-    inputs::CircuitInputs,
-};
+use wormhole_circuit::{circuit::CircuitTargets, inputs::CircuitInputs};
 
 #[derive(Debug)]
 pub struct WormholeProver {

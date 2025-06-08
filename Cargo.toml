@@ -2,10 +2,12 @@
 members = [
   "aggregator",
   "circuit",
+  "circuit-common",
   "prover",
   "tests",
   "tests/test-helpers",
   "verifier",
+  "vote-circuit",
 ]
 resolver = "2"
 

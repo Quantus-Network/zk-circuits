@@ -1,4 +1,5 @@
 use anyhow::bail;
+use circuit_common::circuit::{CircuitFragment, C, D, F};
 use plonky2::{
     iop::witness::PartialWitness,
     plonk::{
@@ -6,7 +7,6 @@ use plonky2::{
         circuit_data::{CircuitConfig, CircuitData},
     },
 };
-use wormhole_circuit::circuit::{CircuitFragment, C, D, F};
 use wormhole_verifier::ProofWithPublicInputs;
 
 use crate::circuit::{WormholeProofAggregatorInner, WormholeProofAggregatorTargets};

@@ -9,6 +9,7 @@ license.workspace = true
 [dependencies]
 anyhow = { workspace = true }
 plonky2 = { workspace = true }
+circuit-common = { path = "../circuit-common" }
 wormhole-circuit = { path = "../circuit", default-features = false }
 
 [dev-dependencies]
@@ -17,7 +18,12 @@ wormhole-prover = { path = "../prover" }
 
 [features]
 default = ["std"]
-std = ["anyhow/std", "plonky2/std", "wormhole-circuit/std"]
+std = [
+  "anyhow/std",
+  "plonky2/std",
+  "wormhole-circuit/std",
+  "circuit-common/std",
+]
 no_std = []
 no_random = ["plonky2/no_random"]
 

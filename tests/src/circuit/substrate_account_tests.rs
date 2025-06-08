@@ -1,6 +1,6 @@
+use circuit_common::circuit::{CircuitFragment, C, D, F};
 use plonky2::{field::types::Field, plonk::proof::ProofWithPublicInputs};
 use wormhole_circuit::{
-    circuit::{CircuitFragment, C, D, F},
     codec::FieldElementCodec,
     substrate_account::{ExitAccountTargets, SubstrateAccount},
 };

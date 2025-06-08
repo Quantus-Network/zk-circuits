@@ -3,9 +3,9 @@ use alloc::vec::Vec;
 #[cfg(feature = "std")]
 use std::vec::Vec;
 
-use crate::circuit::{CircuitFragment, D, F};
 use crate::codec::{ByteCodec, FieldElementCodec};
 use crate::utils::{bytes_to_felts, felts_to_bytes, Digest};
+use circuit_common::circuit::{CircuitFragment, D, F};
 use plonky2::{
     hash::hash_types::HashOutTarget,
     iop::witness::{PartialWitness, WitnessWrite},

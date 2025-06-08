@@ -18,10 +18,10 @@ use plonky2::{
     plonk::circuit_builder::CircuitBuilder,
 };
 
-use crate::circuit::{CircuitFragment, D, F};
-use crate::gadgets::is_const_less_than;
 use crate::inputs::CircuitInputs;
 use crate::utils::{bytes_to_felts, u128_to_felts};
+use circuit_common::circuit::{CircuitFragment, D, F};
+use circuit_common::gadgets::is_const_less_than;
 
 pub const MAX_PROOF_LEN: usize = 20;
 pub const PROOF_NODE_MAX_SIZE_F: usize = 73;

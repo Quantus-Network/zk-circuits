@@ -4,11 +4,9 @@ use alloc::vec::Vec;
 use std::vec::Vec;
 
 use crate::codec::ByteCodec;
+use crate::codec::FieldElementCodec;
 use crate::utils::{bytes_to_felts, felts_to_bytes, string_to_felt, Digest};
-use crate::{
-    circuit::{CircuitFragment, D, F},
-    codec::FieldElementCodec,
-};
+use circuit_common::circuit::{CircuitFragment, D, F};
 use plonky2::field::types::Field;
 use plonky2::{
     hash::{hash_types::HashOutTarget, poseidon::PoseidonHash},

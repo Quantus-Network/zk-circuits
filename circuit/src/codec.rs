@@ -3,7 +3,7 @@ use alloc::vec::Vec;
 #[cfg(feature = "std")]
 use std::vec::Vec;
 
-use crate::circuit::F;
+use circuit_common::circuit::F;
 
 pub trait FieldElementCodec: Sized {
     fn to_field_elements(&self) -> Vec<F>;

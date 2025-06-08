@@ -1,8 +1,6 @@
+use circuit_common::circuit::F;
 use plonky2::field::types::{Field, Field64};
-use wormhole_circuit::{
-    circuit::F,
-    utils::{felts_to_u128, u128_to_felts},
-};
+use wormhole_circuit::utils::{felts_to_u128, u128_to_felts};
 
 // Helper to create F from a u64 for concise test cases
 #[cfg(test)]

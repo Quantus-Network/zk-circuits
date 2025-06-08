@@ -1,7 +1,7 @@
+use circuit_common::circuit::{C, D, F};
 use plonky2::plonk::{
     circuit_builder::CircuitBuilder, circuit_data::CircuitConfig, proof::ProofWithPublicInputs,
 };
-use wormhole_circuit::circuit::{C, D, F};
 
 /// Convenience function for initializing a test circuit environment.
 pub fn setup_test_builder_and_witness(
