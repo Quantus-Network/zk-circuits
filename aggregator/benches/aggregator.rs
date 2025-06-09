@@ -1,9 +1,9 @@
 use std::time::Duration;
 
+use circuit_common::circuit::{C, D, F};
 use criterion::{criterion_group, criterion_main, Criterion};
 use plonky2::plonk::circuit_data::{CircuitConfig, CommonCircuitData};
 use wormhole_aggregator::{aggregator::WormholeProofAggregator, DEFAULT_NUM_PROOFS_TO_AGGREGATE};
-use wormhole_circuit::circuit::{C, D, F};
 use wormhole_verifier::ProofWithPublicInputs;
 
 const MEASUREMENT_TIME_S: u64 = 100;
