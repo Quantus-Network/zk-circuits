@@ -5,6 +5,7 @@ use std::vec::Vec;
 
 use crate::circuit::F;
 use plonky2::field::types::{Field, PrimeField64};
+use plonky2::hash::hash_types::HashOut;
 
 pub const FELTS_PER_U128: usize = 2;
 pub type Digest = [F; 4];
@@ -65,4 +66,8 @@ pub fn felts_to_bytes(input: &[F]) -> Vec<u8> {
     }
 
     bytes
+}
+
+pub fn felts_to_hashout(felts: &[F; 4]) -> HashOut<F> {
+    HashOut { elements: *felts }
 }

@@ -1,6 +1,6 @@
 use plonky2::{
     field::types::Field,
-    hash::hash_types::{HashOut, HashOutTarget},
+    hash::hash_types::HashOutTarget,
     iop::{
         target::{BoolTarget, Target},
         witness::{PartialWitness, WitnessWrite},
@@ -11,7 +11,9 @@ use plonky2::{
 use anyhow::bail;
 use circuit_common::circuit::{CircuitFragment, D, F};
 use circuit_common::gadgets::is_const_less_than;
-use circuit_common::utils::{Digest, PrivateKey, DIGEST_NUM_FIELD_ELEMENTS, ZERO_DIGEST};
+use circuit_common::utils::{
+    felts_to_hashout, Digest, PrivateKey, DIGEST_NUM_FIELD_ELEMENTS, ZERO_DIGEST,
+};
 
 /// Maximum depth of the Merkle tree for eligible voters.
 /// This allows for up to 2^32 eligible voters.
@@ -217,39 +219,25 @@ impl CircuitFragment for VoteCircuitData {
             );
         }
 
-        // Helper to set HashOutTarget from Digest
-        fn set_hash_target_witness_from_felts(
-            pw: &mut PartialWitness<F>,
-            target: HashOutTarget,
-            val: &Digest,
-        ) -> anyhow::Result<()> {
-            pw.set_hash_target(target, HashOut { elements: *val })?;
-            Ok(())
-        }
-
         // Set public input witnesses
-        set_hash_target_witness_from_felts(
-            pw,
+        pw.set_hash_target(
             targets.proposal_id,
-            &self.public_inputs.proposal_id,
+            felts_to_hashout(&self.public_inputs.proposal_id),
         )?;
-        set_hash_target_witness_from_felts(
-            pw,
+        pw.set_hash_target(
             targets.expected_merkle_root,
-            &self.public_inputs.merkle_root,
+            felts_to_hashout(&self.public_inputs.merkle_root),
         )?;
         pw.set_bool_target(targets.vote, self.public_inputs.vote)?;
-        set_hash_target_witness_from_felts(
-            pw,
+        pw.set_hash_target(
             targets.expected_nullifier,
-            &self.public_inputs.nullifier,
+            felts_to_hashout(&self.public_inputs.nullifier),
         )?;
 
         // Set private input witnesses
-        set_hash_target_witness_from_felts(
-            pw,
+        pw.set_hash_target(
             targets.private_key,
-            &self.private_inputs.private_key,
+            felts_to_hashout(&self.private_inputs.private_key),
         )?;
         pw.set_target(
             targets.actual_merkle_depth,
@@ -258,14 +246,13 @@ impl CircuitFragment for VoteCircuitData {
 
         for i in 0..MAX_MERKLE_DEPTH {
             if i < self.private_inputs.actual_merkle_depth {
-                set_hash_target_witness_from_felts(
-                    pw,
+                pw.set_hash_target(
                     targets.merkle_siblings[i],
-                    &self.private_inputs.merkle_siblings[i],
+                    felts_to_hashout(&self.private_inputs.merkle_siblings[i]),
                 )?;
                 pw.set_bool_target(targets.path_indices[i], self.private_inputs.path_indices[i])?;
             } else {
-                set_hash_target_witness_from_felts(pw, targets.merkle_siblings[i], &ZERO_DIGEST)?;
+                pw.set_hash_target(targets.merkle_siblings[i], felts_to_hashout(&ZERO_DIGEST))?;
                 pw.set_bool_target(targets.path_indices[i], false)?;
             }
         }
