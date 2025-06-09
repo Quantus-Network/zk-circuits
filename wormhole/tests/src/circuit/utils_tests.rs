@@ -1,6 +1,6 @@
+use plonky2::field::types::{Field, Field64};
 use zk_circuits_common::circuit::F;
 use zk_circuits_common::utils::{felts_to_u128, u128_to_felts};
-use plonky2::field::types::{Field, Field64};
 
 // Helper to create F from a u64 for concise test cases
 #[cfg(test)]

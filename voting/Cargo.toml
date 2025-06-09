@@ -13,5 +13,5 @@ zk-circuits-common = { path = "../common" }
 
 [features]
 default = ["std"]
-std = ["anyhow/std", "plonky2/std",  "zk-circuits-common/std"]
-no_std = [ "zk-circuits-common/no_std"]
+std = ["anyhow/std", "plonky2/std", "zk-circuits-common/std"]
+no_std = ["zk-circuits-common/no_std"]

@@ -1,7 +1,7 @@
-use zk_circuits_common::circuit::{CircuitFragment, C, D, F};
 use plonky2::plonk::proof::ProofWithPublicInputs;
 use std::panic;
 use wormhole_circuit::storage_proof::{StorageProof, StorageProofTargets};
+use zk_circuits_common::circuit::{CircuitFragment, C, D, F};
 
 use test_helpers::storage_proof::{
     default_root_hash, default_storage_proof, DEFAULT_FUNDING_AMOUNT,

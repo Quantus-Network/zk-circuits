@@ -11,7 +11,9 @@ use plonky2::{
 use anyhow::bail;
 use zk_circuits_common::circuit::{CircuitFragment, D, F};
 use zk_circuits_common::gadgets::is_const_less_than;
-use zk_circuits_common::utils::{felts_to_hashout, Digest, PrivateKey, DIGEST_NUM_FIELD_ELEMENTS, ZERO_DIGEST};
+use zk_circuits_common::utils::{
+    felts_to_hashout, Digest, PrivateKey, DIGEST_NUM_FIELD_ELEMENTS, ZERO_DIGEST,
+};
 
 /// Maximum depth of the Merkle tree for eligible voters.
 /// This allows for up to 2^32 eligible voters.
@@ -261,13 +263,13 @@ impl CircuitFragment for VoteCircuitData {
 #[cfg(test)]
 mod voting_tests {
     use super::*;
-    use zk_circuits_common::{circuit::C, utils::bytes_to_felts};
     use plonky2::{
         field::types::Field,
         hash::poseidon::PoseidonHash,
         iop::witness::PartialWitness,
         plonk::{circuit_data::CircuitConfig, config::Hasher},
     };
+    use zk_circuits_common::{circuit::C, utils::bytes_to_felts};
 
     fn compute_nullifier(private_key: &PrivateKey, proposal_id: &Digest) -> Digest {
         let pk_hash = PoseidonHash::hash_no_pad(private_key).elements;

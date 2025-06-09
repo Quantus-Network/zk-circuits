@@ -5,11 +5,11 @@ use crate::nullifier::{Nullifier, NullifierTargets};
 use crate::storage_proof::{StorageProof, StorageProofTargets};
 use crate::substrate_account::{ExitAccountTargets, SubstrateAccount};
 use crate::unspendable_account::{UnspendableAccount, UnspendableAccountTargets};
-use zk_circuits_common::circuit::{CircuitFragment, C, D, F};
 use plonky2::plonk::{
     circuit_builder::CircuitBuilder,
     circuit_data::{CircuitConfig, CircuitData, ProverCircuitData, VerifierCircuitData},
 };
+use zk_circuits_common::circuit::{CircuitFragment, C, D, F};
 
 #[derive(Debug, Clone)]
 pub struct CircuitTargets {

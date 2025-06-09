@@ -5,8 +5,6 @@ use std::vec::Vec;
 
 use crate::codec::ByteCodec;
 use crate::codec::FieldElementCodec;
-use zk_circuits_common::circuit::{CircuitFragment, D, F};
-use zk_circuits_common::utils::{bytes_to_felts, felts_to_bytes, string_to_felt, Digest};
 use plonky2::field::types::Field;
 use plonky2::{
     hash::{hash_types::HashOutTarget, poseidon::PoseidonHash},
@@ -16,6 +14,8 @@ use plonky2::{
     },
     plonk::{circuit_builder::CircuitBuilder, config::Hasher},
 };
+use zk_circuits_common::circuit::{CircuitFragment, D, F};
+use zk_circuits_common::utils::{bytes_to_felts, felts_to_bytes, string_to_felt, Digest};
 
 pub const NULLIFIER_SALT: &str = "~nullif~";
 pub const SECRET_NUM_TARGETS: usize = 4;

@@ -1,10 +1,10 @@
 use std::time::Duration;
 
-use zk_circuits_common::circuit::{C, D, F};
 use criterion::{criterion_group, criterion_main, Criterion};
 use plonky2::plonk::circuit_data::{CircuitConfig, CommonCircuitData};
 use wormhole_aggregator::{aggregator::WormholeProofAggregator, DEFAULT_NUM_PROOFS_TO_AGGREGATE};
 use wormhole_verifier::ProofWithPublicInputs;
+use zk_circuits_common::circuit::{C, D, F};
 
 const MEASUREMENT_TIME_S: u64 = 100;
 const DUMMY_PROOF_BYTES: &[u8] = include_bytes!("../data/dummy_proof_zk.bin");

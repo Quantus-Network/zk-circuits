@@ -1,5 +1,4 @@
 use anyhow::bail;
-use zk_circuits_common::circuit::{CircuitFragment, C, D, F};
 use plonky2::{
     iop::witness::{PartialWitness, WitnessWrite},
     plonk::{
@@ -9,6 +8,7 @@ use plonky2::{
     },
 };
 use wormhole_verifier::{ProofWithPublicInputs, WormholeVerifier};
+use zk_circuits_common::circuit::{CircuitFragment, C, D, F};
 
 #[cfg(not(feature = "no_zk"))]
 const DUMMY_PROOF_BYTES: &[u8] = include_bytes!("../data/dummy_proof_zk.bin");

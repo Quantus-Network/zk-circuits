@@ -1,11 +1,11 @@
-use zk_circuits_common::circuit::{CircuitFragment, C, D, F};
-use zk_circuits_common::utils::bytes_to_felts;
 use plonky2::{field::types::Field, plonk::proof::ProofWithPublicInputs};
 use test_helpers::{DEFAULT_FUNDING_ACCOUNT, DEFAULT_FUNDING_NONCE, DEFAULT_SECRET};
 use wormhole_circuit::{
     codec::FieldElementCodec,
     nullifier::{Nullifier, NullifierTargets},
 };
+use zk_circuits_common::circuit::{CircuitFragment, C, D, F};
+use zk_circuits_common::utils::bytes_to_felts;
 
 #[cfg(test)]
 fn run_test(nullifier: &Nullifier) -> anyhow::Result<ProofWithPublicInputs<F, C, D>> {
