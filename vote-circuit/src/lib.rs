@@ -11,7 +11,7 @@ use plonky2::{
 use anyhow::bail;
 use circuit_common::circuit::{CircuitFragment, D, F};
 use circuit_common::gadgets::is_const_less_than;
-use circuit_common::utils::ZERO_DIGEST;
+use circuit_common::utils::{Digest, PrivateKey, ZERO_DIGEST};
 
 /// Maximum depth of the Merkle tree for eligible voters.
 /// This allows for up to 2^32 eligible voters.
@@ -23,13 +23,13 @@ pub const MAX_MERKLE_DEPTH: usize = 32;
 #[derive(Debug, Clone)]
 pub struct VotePublicInputs {
     /// The proposal ID this vote is for
-    pub proposal_id: [F; 4],
+    pub proposal_id: Digest,
     /// The merkle root of eligible addresses
-    pub merkle_root: [F; 4],
+    pub merkle_root: Digest,
     /// The vote (0 for no, 1 for yes)
     pub vote: bool,
     /// The nullifier to prevent double voting
-    pub nullifier: [F; 4],
+    pub nullifier: Digest,
 }
 
 /// Private inputs for the vote circuit.
@@ -39,9 +39,9 @@ pub struct VotePublicInputs {
 #[derive(Debug, Clone)]
 pub struct VotePrivateInputs {
     /// The private key of the voter
-    pub private_key: [F; 4],
+    pub private_key: PrivateKey,
     /// The sibling hashes in the merkle tree path
-    pub merkle_siblings: Vec<[F; 4]>,
+    pub merkle_siblings: Vec<Digest>,
     /// The path indices (0 for left, 1 for right) for each level of the Merkle tree
     pub path_indices: Vec<bool>,
     /// The actual depth of this specific Merkle proof
@@ -217,11 +217,11 @@ impl CircuitFragment for VoteCircuitData {
             );
         }
 
-        // Helper to set HashOutTarget from [F; 4]
+        // Helper to set HashOutTarget from Digest
         fn set_hash_target_witness_from_felts(
             pw: &mut PartialWitness<F>,
             target: HashOutTarget,
-            val: &[F; 4],
+            val: &Digest,
         ) -> anyhow::Result<()> {
             pw.set_hash_target(target, HashOut { elements: *val })?;
             Ok(())
@@ -284,7 +284,7 @@ mod tests {
         plonk::{circuit_data::CircuitConfig, config::Hasher},
     };
 
-    fn compute_nullifier(private_key: &[F; 4], proposal_id: &[F; 4]) -> [F; 4] {
+    fn compute_nullifier(private_key: &PrivateKey, proposal_id: &Digest) -> Digest {
         let pk_hash = PoseidonHash::hash_no_pad(private_key).elements;
         let mut input = [F::ZERO; 8];
         input[..4].copy_from_slice(&pk_hash);
@@ -294,7 +294,7 @@ mod tests {
 
     fn create_test_inputs() -> VoteCircuitData {
         let private_keys_for_tree = [[1u8; 32], [2u8; 32], [3u8; 32], [4u8; 32]];
-        let leaves: Vec<[F; 4]> = private_keys_for_tree
+        let leaves: Vec<Digest> = private_keys_for_tree
             .iter()
             .map(|bytes| PoseidonHash::hash_no_pad(&bytes_to_felts(bytes)).elements)
             .collect();
@@ -321,14 +321,14 @@ mod tests {
         }
 
         let root = current_level[0];
-        let voter_private_key: [F; 4] = bytes_to_felts(&private_keys_for_tree[0])
+        let voter_private_key: PrivateKey = bytes_to_felts(&private_keys_for_tree[0])
             .try_into()
             .unwrap();
-        let merkle_siblings: Vec<[F; 4]> = vec![leaves[1], merkle_tree[1][1]];
+        let merkle_siblings: Vec<Digest> = vec![leaves[1], merkle_tree[1][1]];
         let path_indices: Vec<bool> = vec![false, false];
         let actual_merkle_depth = 2;
 
-        let proposal_id: [F; 4] = bytes_to_felts(&[42u8; 32]).try_into().unwrap();
+        let proposal_id: Digest = bytes_to_felts(&[42u8; 32]).try_into().unwrap();
         let vote = true;
         let nullifier = compute_nullifier(&voter_private_key, &proposal_id);
 
