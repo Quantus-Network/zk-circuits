@@ -1,5 +1,5 @@
 [package]
-name = "voting"
+name = "voting-circuit"
 version.workspace = true
 edition.workspace = true
 authors.workspace = true
@@ -9,9 +9,9 @@ license.workspace = true
 [dependencies]
 anyhow = { workspace = true }
 plonky2 = { workspace = true }
-common = { path = "../common" }
+zk-circuits-common = { path = "../common" }
 
 [features]
 default = ["std"]
-std = ["anyhow/std", "plonky2/std", "common/std"]
-no_std = ["common/no_std"]
+std = ["anyhow/std", "plonky2/std",  "zk-circuits-common/std"]
+no_std = [ "zk-circuits-common/no_std"]

@@ -14,9 +14,9 @@ use plonky2::{
 };
 
 use crate::inputs::CircuitInputs;
-use common::circuit::{CircuitFragment, D, F};
-use common::gadgets::is_const_less_than;
-use common::utils::{bytes_to_felts, u128_to_felts, ZERO_DIGEST};
+use zk_circuits_common::circuit::{CircuitFragment, D, F};
+use zk_circuits_common::gadgets::is_const_less_than;
+use zk_circuits_common::utils::{bytes_to_felts, u128_to_felts, ZERO_DIGEST};
 
 pub const MAX_PROOF_LEN: usize = 20;
 pub const PROOF_NODE_MAX_SIZE_F: usize = 73;

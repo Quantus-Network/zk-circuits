@@ -11,7 +11,7 @@ bench = []
 
 [dependencies]
 wormhole-aggregator = { path = "../aggregator", features = ["no_zk"] }
-common = { path = "../../common" }
+zk-circuits-common = { path = "../../common" }
 wormhole-circuit = { path = "../circuit" }
 wormhole-prover = { path = "../prover" }
 wormhole-verifier = { path = "../verifier" }

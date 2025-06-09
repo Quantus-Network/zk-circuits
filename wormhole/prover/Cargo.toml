@@ -10,7 +10,7 @@ license.workspace = true
 anyhow = { workspace = true }
 plonky2 = { workspace = true }
 wormhole-circuit = { path = "../circuit" }
-common = { path = "../../common" }
+zk-circuits-common = { path = "../../common" }
 
 [dev-dependencies]
 criterion = { workspace = true }
@@ -22,7 +22,7 @@ std = [
   "anyhow/std",
   "plonky2/std",
   "wormhole-circuit/std",
-  "common/std",
+  "zk-circuits-common/std",
 ]
 no_std = []
 

@@ -11,7 +11,7 @@ anyhow = { workspace = true }
 plonky2 = { workspace = true }
 wormhole-prover = { path = "../prover", default-features = false }
 wormhole-verifier = { path = "../verifier", default-features = false }
-common = { path = "../../common" }
+zk-circuits-common = { path = "../../common" }
 
 [dev-dependencies]
 criterion = { workspace = true }
@@ -23,7 +23,7 @@ std = [
   "plonky2/std",
   "wormhole-prover/std",
   "wormhole-verifier/std",
-  "common/std",
+  "zk-circuits-common/std",
 ]
 no_std = []
 no_zk = []

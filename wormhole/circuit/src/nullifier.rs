@@ -5,8 +5,8 @@ use std::vec::Vec;
 
 use crate::codec::ByteCodec;
 use crate::codec::FieldElementCodec;
-use common::circuit::{CircuitFragment, D, F};
-use common::utils::{bytes_to_felts, felts_to_bytes, string_to_felt, Digest};
+use zk_circuits_common::circuit::{CircuitFragment, D, F};
+use zk_circuits_common::utils::{bytes_to_felts, felts_to_bytes, string_to_felt, Digest};
 use plonky2::field::types::Field;
 use plonky2::{
     hash::{hash_types::HashOutTarget, poseidon::PoseidonHash},

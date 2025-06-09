@@ -52,7 +52,7 @@ use plonky2::{
     },
 };
 
-use common::circuit::{CircuitFragment, C, D, F};
+use zk_circuits_common::circuit::{CircuitFragment, C, D, F};
 use wormhole_circuit::circuit::WormholeCircuit;
 use wormhole_circuit::storage_proof::StorageProof;
 use wormhole_circuit::{circuit::CircuitTargets, inputs::CircuitInputs};

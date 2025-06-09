@@ -8,8 +8,8 @@ use crate::nullifier::Nullifier;
 use crate::substrate_account::SubstrateAccount;
 use crate::unspendable_account::UnspendableAccount;
 use anyhow::bail;
-use common::circuit::{C, D, F};
-use common::utils::{felts_to_bytes, felts_to_u128};
+use zk_circuits_common::circuit::{C, D, F};
+use zk_circuits_common::utils::{felts_to_bytes, felts_to_u128};
 use plonky2::plonk::proof::ProofWithPublicInputs;
 
 /// The total size of the public inputs field element vector.

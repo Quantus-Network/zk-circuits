@@ -52,7 +52,7 @@
 //! ```
 use plonky2::plonk::circuit_data::{CircuitConfig, VerifierCircuitData};
 
-use common::circuit::{C, D, F};
+use zk_circuits_common::circuit::{C, D, F};
 use wormhole_circuit::circuit::WormholeCircuit;
 
 pub use plonky2::plonk::proof::ProofWithPublicInputs;

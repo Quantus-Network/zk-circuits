@@ -1,5 +1,5 @@
-use common::circuit::{CircuitFragment, C, D, F};
-use common::utils::ZERO_DIGEST;
+use zk_circuits_common::circuit::{CircuitFragment, C, D, F};
+use zk_circuits_common::utils::ZERO_DIGEST;
 use plonky2::{field::types::Field, plonk::proof::ProofWithPublicInputs};
 use wormhole_circuit::{
     codec::FieldElementCodec,

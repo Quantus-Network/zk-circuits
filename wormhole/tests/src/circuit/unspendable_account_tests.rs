@@ -1,4 +1,4 @@
-use common::circuit::{CircuitFragment, C, D, F};
+use zk_circuits_common::circuit::{CircuitFragment, C, D, F};
 use plonky2::{field::types::Field, plonk::proof::ProofWithPublicInputs};
 use wormhole_circuit::{
     codec::FieldElementCodec,
@@ -48,7 +48,7 @@ fn preimage_matches_right_address() {
         let decoded_address = hex::decode(address).unwrap();
         let unspendable_account = UnspendableAccount::new(&decoded_secret);
 
-        let address = common::utils::bytes_to_felts(&decoded_address);
+        let address = zk_circuits_common::utils::bytes_to_felts(&decoded_address);
         assert_eq!(unspendable_account.account_id.to_vec(), address);
         let result = run_test(&unspendable_account);
         assert!(result.is_ok());
@@ -62,7 +62,7 @@ fn preimage_does_not_match_wrong_address() {
     let mut unspendable_account = UnspendableAccount::new(&decoded_secret);
 
     // Override the correct hash with the wrong one.
-    let wrong_hash = common::utils::bytes_to_felts(&hex::decode(wrong_address).unwrap());
+    let wrong_hash = zk_circuits_common::utils::bytes_to_felts(&hex::decode(wrong_address).unwrap());
     unspendable_account.account_id = wrong_hash.try_into().unwrap();
 
     let result = run_test(&unspendable_account);

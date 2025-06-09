@@ -1,5 +1,5 @@
 use anyhow::bail;
-use common::circuit::{CircuitFragment, C, D, F};
+use zk_circuits_common::circuit::{CircuitFragment, C, D, F};
 use plonky2::{
     iop::witness::PartialWitness,
     plonk::{

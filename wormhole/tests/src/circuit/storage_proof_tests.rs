@@ -1,4 +1,4 @@
-use common::circuit::{CircuitFragment, C, D, F};
+use zk_circuits_common::circuit::{CircuitFragment, C, D, F};
 use plonky2::plonk::proof::ProofWithPublicInputs;
 use std::panic;
 use wormhole_circuit::storage_proof::{StorageProof, StorageProofTargets};

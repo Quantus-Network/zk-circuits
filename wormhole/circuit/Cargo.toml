@@ -10,12 +10,12 @@ license.workspace = true
 anyhow = { workspace = true }
 plonky2 = { workspace = true }
 hex = { workspace = true, features = ["alloc"] }
-common = { path = "../../common" }
+zk-circuits-common = { path = "../../common" }
 
 [features]
 default = ["std"]
-std = ["anyhow/std", "hex/std", "plonky2/std", "common/std"]
-no_std = ["common/no_std"]
+std = ["anyhow/std", "hex/std", "plonky2/std",  "zk-circuits-common/std"]
+no_std = [ "zk-circuits-common/no_std"]
 
 [lints]
 workspace = true

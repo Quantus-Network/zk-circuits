@@ -1,4 +1,4 @@
-use common::circuit::{C, D, F};
+use zk_circuits_common::circuit::{C, D, F};
 use plonky2::plonk::{
     circuit_builder::CircuitBuilder, circuit_data::CircuitConfig, proof::ProofWithPublicInputs,
 };
