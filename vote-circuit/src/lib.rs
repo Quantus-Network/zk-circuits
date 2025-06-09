@@ -11,7 +11,7 @@ use plonky2::{
 use anyhow::bail;
 use circuit_common::circuit::{CircuitFragment, D, F};
 use circuit_common::gadgets::is_const_less_than;
-use circuit_common::utils::{Digest, PrivateKey, ZERO_DIGEST};
+use circuit_common::utils::{Digest, PrivateKey, DIGEST_NUM_FIELD_ELEMENTS, ZERO_DIGEST};
 
 /// Maximum depth of the Merkle tree for eligible voters.
 /// This allows for up to 2^32 eligible voters.
@@ -134,11 +134,11 @@ impl CircuitFragment for VoteCircuitData {
             let sibling_hash_targets = targets.merkle_siblings[i];
             let path_index_bool_target = targets.path_indices[i];
 
-            let mut combined_elements = Vec::with_capacity(8);
-            let mut left_elements = Vec::with_capacity(4);
-            let mut right_elements = Vec::with_capacity(4);
+            let mut combined_elements = Vec::with_capacity(2 * DIGEST_NUM_FIELD_ELEMENTS);
+            let mut left_elements = Vec::with_capacity(DIGEST_NUM_FIELD_ELEMENTS);
+            let mut right_elements = Vec::with_capacity(DIGEST_NUM_FIELD_ELEMENTS);
 
-            for k in 0..4 {
+            for k in 0..DIGEST_NUM_FIELD_ELEMENTS {
                 let left_k = builder.select(
                     path_index_bool_target,
                     sibling_hash_targets.elements[k],
@@ -159,8 +159,8 @@ impl CircuitFragment for VoteCircuitData {
             let parent_hash_candidacy = builder
                 .hash_n_to_hash_no_pad::<plonky2::hash::poseidon::PoseidonHash>(combined_elements);
 
-            let mut next_hash_elements = Vec::with_capacity(4);
-            for k in 0..4 {
+            let mut next_hash_elements = Vec::with_capacity(DIGEST_NUM_FIELD_ELEMENTS);
+            for k in 0..DIGEST_NUM_FIELD_ELEMENTS {
                 let selected_k = builder.select(
                     is_active_level,
                     parent_hash_candidacy.elements[k],
@@ -177,7 +177,7 @@ impl CircuitFragment for VoteCircuitData {
         builder.connect_hashes(current_hash_targets, targets.expected_merkle_root);
 
         // --- 2. Nullifier Generation & Verification ---
-        let mut nullifier_input_elements = Vec::with_capacity(8);
+        let mut nullifier_input_elements = Vec::with_capacity(2 * DIGEST_NUM_FIELD_ELEMENTS);
         nullifier_input_elements.extend_from_slice(&leaf_hash_targets.elements);
         nullifier_input_elements.extend_from_slice(&targets.proposal_id.elements);
 

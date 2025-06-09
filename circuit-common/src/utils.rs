@@ -9,6 +9,7 @@ use plonky2::field::types::{Field, PrimeField64};
 pub const FELTS_PER_U128: usize = 2;
 pub type Digest = [F; 4];
 pub type PrivateKey = [F; 4];
+pub const DIGEST_NUM_FIELD_ELEMENTS: usize = 4;
 
 pub const ZERO_DIGEST: Digest = [F::ZERO; 4];
 
