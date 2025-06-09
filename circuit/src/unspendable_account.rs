@@ -13,9 +13,9 @@ use plonky2::{
 };
 
 use crate::codec::ByteCodec;
-use crate::utils::{bytes_to_felts, felts_to_bytes, string_to_felt};
-use crate::{codec::FieldElementCodec, utils::Digest};
+use crate::codec::FieldElementCodec;
 use circuit_common::circuit::{CircuitFragment, D, F};
+use circuit_common::utils::{bytes_to_felts, felts_to_bytes, string_to_felt, Digest};
 
 pub const SECRET_NUM_TARGETS: usize = 4;
 pub const PREIMAGE_NUM_TARGETS: usize = 5;

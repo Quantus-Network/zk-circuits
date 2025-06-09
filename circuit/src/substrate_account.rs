@@ -4,8 +4,8 @@ use alloc::vec::Vec;
 use std::vec::Vec;
 
 use crate::codec::{ByteCodec, FieldElementCodec};
-use crate::utils::{bytes_to_felts, felts_to_bytes, Digest};
 use circuit_common::circuit::{CircuitFragment, D, F};
+use circuit_common::utils::{bytes_to_felts, felts_to_bytes, Digest};
 use plonky2::{
     hash::hash_types::HashOutTarget,
     iop::witness::{PartialWitness, WitnessWrite},

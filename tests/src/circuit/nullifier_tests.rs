@@ -1,7 +1,7 @@
 use circuit_common::circuit::{CircuitFragment, C, D, F};
+use circuit_common::utils::bytes_to_felts;
 use plonky2::{field::types::Field, plonk::proof::ProofWithPublicInputs};
 use test_helpers::{DEFAULT_FUNDING_ACCOUNT, DEFAULT_FUNDING_NONCE, DEFAULT_SECRET};
-use wormhole_circuit::utils::bytes_to_felts;
 use wormhole_circuit::{
     codec::FieldElementCodec,
     nullifier::{Nullifier, NullifierTargets},

@@ -276,21 +276,13 @@ impl CircuitFragment for VoteCircuitData {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use circuit_common::circuit::C;
+    use circuit_common::{circuit::C, utils::bytes_to_felts};
     use plonky2::{
         field::types::Field,
         hash::poseidon::PoseidonHash,
         iop::witness::PartialWitness,
         plonk::{circuit_data::CircuitConfig, config::Hasher},
     };
-
-    fn bytes_to_felts(bytes: &[u8; 32]) -> [F; 4] {
-        let mut felts = [F::ZERO; 4];
-        for (i, chunk) in bytes.chunks(8).enumerate() {
-            felts[i] = F::from_canonical_u64(u64::from_le_bytes(chunk.try_into().unwrap()));
-        }
-        felts
-    }
 
     fn compute_nullifier(private_key: &[F; 4], proposal_id: &[F; 4]) -> [F; 4] {
         let pk_hash = PoseidonHash::hash_no_pad(private_key).elements;
@@ -329,12 +321,14 @@ mod tests {
         }
 
         let root = current_level[0];
-        let voter_private_key = bytes_to_felts(&private_keys_for_tree[0]);
+        let voter_private_key: [F; 4] = bytes_to_felts(&private_keys_for_tree[0])
+            .try_into()
+            .unwrap();
         let merkle_siblings: Vec<[F; 4]> = vec![leaves[1], merkle_tree[1][1]];
         let path_indices: Vec<bool> = vec![false, false];
         let actual_merkle_depth = 2;
 
-        let proposal_id = bytes_to_felts(&[42u8; 32]);
+        let proposal_id: [F; 4] = bytes_to_felts(&[42u8; 32]).try_into().unwrap();
         let vote = true;
         let nullifier = compute_nullifier(&voter_private_key, &proposal_id);
 
