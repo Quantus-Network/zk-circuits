@@ -3,11 +3,6 @@ use alloc::vec::Vec;
 #[cfg(feature = "std")]
 use std::vec::Vec;
 
-#[cfg(not(feature = "std"))]
-use alloc::vec;
-#[cfg(feature = "std")]
-use std::vec;
-
 use plonky2::{
     field::types::Field,
     hash::{
@@ -21,7 +16,7 @@ use plonky2::{
 use crate::inputs::CircuitInputs;
 use circuit_common::circuit::{CircuitFragment, D, F};
 use circuit_common::gadgets::is_const_less_than;
-use circuit_common::utils::{bytes_to_felts, u128_to_felts};
+use circuit_common::utils::{bytes_to_felts, u128_to_felts, ZERO_DIGEST};
 
 pub const MAX_PROOF_LEN: usize = 20;
 pub const PROOF_NODE_MAX_SIZE_F: usize = 73;
@@ -163,7 +158,7 @@ impl CircuitFragment for StorageProof {
             }
         }
 
-        let empty_hash = vec![F::ZERO; 4];
+        let empty_hash = ZERO_DIGEST.to_vec();
         for i in 0..MAX_PROOF_LEN {
             let hash = self.hashes.get(i).unwrap_or(&empty_hash);
             pw.set_hash_target(targets.hashes[i], HashOut::from_partial(&hash[..4]))?;

@@ -11,6 +11,7 @@ use plonky2::{
 use anyhow::bail;
 use circuit_common::circuit::{CircuitFragment, D, F};
 use circuit_common::gadgets::is_const_less_than;
+use circuit_common::utils::ZERO_DIGEST;
 
 /// Maximum depth of the Merkle tree for eligible voters.
 /// This allows for up to 2^32 eligible voters.
@@ -264,8 +265,7 @@ impl CircuitFragment for VoteCircuitData {
                 )?;
                 pw.set_bool_target(targets.path_indices[i], self.private_inputs.path_indices[i])?;
             } else {
-                let zero_felts = [F::ZERO; 4];
-                set_hash_target_witness_from_felts(pw, targets.merkle_siblings[i], &zero_felts)?;
+                set_hash_target_witness_from_felts(pw, targets.merkle_siblings[i], &ZERO_DIGEST)?;
                 pw.set_bool_target(targets.path_indices[i], false)?;
             }
         }

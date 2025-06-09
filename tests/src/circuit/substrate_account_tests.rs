@@ -1,4 +1,5 @@
 use circuit_common::circuit::{CircuitFragment, C, D, F};
+use circuit_common::utils::ZERO_DIGEST;
 use plonky2::{field::types::Field, plonk::proof::ProofWithPublicInputs};
 use wormhole_circuit::{
     codec::FieldElementCodec,
@@ -38,7 +39,7 @@ fn test_exit_account_zero_address() -> anyhow::Result<()> {
     assert_eq!(elements.len(), 4, "Expected 4 field elements");
     assert_eq!(
         elements,
-        vec![F::ZERO; 4],
+        ZERO_DIGEST.to_vec(),
         "Zero address should encode to zero elements"
     );
     let decoded = SubstrateAccount::from_field_elements(&elements)?;
