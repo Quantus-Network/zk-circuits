@@ -14,7 +14,7 @@ pub trait CircuitFragment {
     /// and filled with [`Self::fill_targets`].
     type Targets;
 
-    /// Builds a circuit with the operating wires being provided by `Self::Targets`.
+    /// Builds a circuit with the operating wires being provided by [`Self::Targets`].
     fn circuit(targets: &Self::Targets, builder: &mut CircuitBuilder<F, D>);
 
     /// Fills the targets in the partial witness with the provided inputs.
