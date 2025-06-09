@@ -1,4 +1,4 @@
-# Wormhole Circuit
+# ZK Circuits
 
 ## Prerequisites
 
@@ -31,8 +31,8 @@ nix --experimental-features 'nix-command flakes' develop
 Clone the repository:
 
 ```sh
-git clone https://github.com/Resonance-Network/wormhole-prover
-cd wormhole-prover
+git clone https://github.com/Resonance-Network/zk-circuits
+cd zk-circuits
 ```
 
 ## Testing

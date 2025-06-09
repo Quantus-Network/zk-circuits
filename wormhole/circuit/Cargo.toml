@@ -1,0 +1,21 @@
+[package]
+name = "wormhole-circuit"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+description.workspace = true
+license.workspace = true
+
+[dependencies]
+anyhow = { workspace = true }
+plonky2 = { workspace = true }
+hex = { workspace = true, features = ["alloc"] }
+common = { path = "../../common" }
+
+[features]
+default = ["std"]
+std = ["anyhow/std", "hex/std", "plonky2/std", "common/std"]
+no_std = ["common/no_std"]
+
+[lints]
+workspace = true

@@ -1,0 +1,34 @@
+[package]
+name = "wormhole-prover"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+description.workspace = true
+license.workspace = true
+
+[dependencies]
+anyhow = { workspace = true }
+plonky2 = { workspace = true }
+wormhole-circuit = { path = "../circuit" }
+common = { path = "../../common" }
+
+[dev-dependencies]
+criterion = { workspace = true }
+test-helpers = { path = "../tests/test-helpers" }
+
+[features]
+default = ["std"]
+std = [
+  "anyhow/std",
+  "plonky2/std",
+  "wormhole-circuit/std",
+  "common/std",
+]
+no_std = []
+
+[lints]
+workspace = true
+
+[[bench]]
+name = "prover"
+harness = false

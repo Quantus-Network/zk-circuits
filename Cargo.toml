@@ -1,13 +1,13 @@
 [workspace]
 members = [
-  "aggregator",
-  "circuit",
-  "circuit-common",
-  "prover",
-  "tests",
-  "tests/test-helpers",
-  "verifier",
-  "vote-circuit",
+  "common",
+  "wormhole/aggregator",
+  "wormhole/circuit",
+  "wormhole/prover",
+  "wormhole/tests",
+  "wormhole/tests/test-helpers",
+  "wormhole/verifier",
+  "voting",
 ]
 resolver = "2"
 
