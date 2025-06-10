@@ -57,7 +57,7 @@ pub struct PrivateCircuitInputs {
     ///
     /// Each element is a tuple where the items are the left and right splits of a proof node split
     /// in half at the expected childs hash index.
-    pub storage_proof: Vec<(Vec<u8>, Vec<u8>)>,
+    pub storage_proof: (Vec<Vec<u8>>, Vec<u8>),
     pub funding_nonce: u32,
     pub funding_account: SubstrateAccount,
     /// The unspendable account hash.

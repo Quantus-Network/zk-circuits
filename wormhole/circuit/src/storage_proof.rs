@@ -1,5 +1,6 @@
 #[cfg(not(feature = "std"))]
 use alloc::vec::Vec;
+use anyhow::bail;
 #[cfg(feature = "std")]
 use std::vec::Vec;
 
@@ -22,13 +23,14 @@ pub const MAX_PROOF_LEN: usize = 20;
 pub const PROOF_NODE_MAX_SIZE_F: usize = 73;
 pub const PROOF_NODE_MAX_SIZE_B: usize = 256;
 pub const FELTS_PER_AMOUNT: usize = 2;
+
 #[derive(Debug, Clone)]
 pub struct StorageProofTargets {
     pub funding_amount: [Target; 2],
     pub root_hash: HashOutTarget,
     pub proof_len: Target,
     pub proof_data: Vec<Vec<Target>>,
-    pub hashes: Vec<HashOutTarget>,
+    pub indices: Vec<Target>,
 }
 
 impl StorageProofTargets {
@@ -39,8 +41,8 @@ impl StorageProofTargets {
             .map(|_| builder.add_virtual_targets(PROOF_NODE_MAX_SIZE_F))
             .collect();
 
-        let hashes: Vec<_> = (0..MAX_PROOF_LEN)
-            .map(|_| builder.add_virtual_hash())
+        let indices: Vec<_> = (0..MAX_PROOF_LEN)
+            .map(|_| builder.add_virtual_target())
             .collect();
 
         Self {
@@ -48,7 +50,7 @@ impl StorageProofTargets {
             root_hash: builder.add_virtual_hash_public_input(),
             proof_len: builder.add_virtual_target(),
             proof_data,
-            hashes,
+            indices,
         }
     }
 }
@@ -58,34 +60,25 @@ impl StorageProofTargets {
 pub struct StorageProof {
     funding_amount: [F; FELTS_PER_AMOUNT],
     pub proof: Vec<Vec<F>>,
-    hashes: Vec<Vec<F>>,
+    indices: Vec<F>,
     pub root_hash: [u8; 32],
 }
 
 impl StorageProof {
-    /// The input is a storage proof as a tuple where each part is split at the index where the child node's
-    /// hash, if any, appears within this proof node; and a root hash.
-    pub fn new(proof: &[(Vec<u8>, Vec<u8>)], root_hash: [u8; 32], funding_amount: u128) -> Self {
-        // First construct the proof and the hash array
-        let mut constructed_proof = Vec::with_capacity(proof.len());
-        let mut hashes = Vec::with_capacity(proof.len());
-        for (left, right) in proof {
-            let mut proof_node = Vec::with_capacity(PROOF_NODE_MAX_SIZE_B);
-            proof_node.extend_from_slice(left);
-            proof_node.extend_from_slice(right);
-
-            // We make sure to convert to field elements after an eventual hash has been appended.
-            let proof_node_f = bytes_to_felts(&proof_node);
-            let hash = bytes_to_felts(right)[..4].to_vec();
-
-            constructed_proof.push(proof_node_f);
-            hashes.push(hash);
-        }
+    pub fn new(
+        proof: &[Vec<u8>],
+        indices: &[u8],
+        root_hash: [u8; 32],
+        funding_amount: u128,
+    ) -> Self {
+        // TODO: Check that these are the same length.
+        let proof = proof.iter().map(|node| bytes_to_felts(&node)).collect();
+        let indices = indices.iter().map(|&i| F::from_canonical_u8(i)).collect();
 
         StorageProof {
             funding_amount: u128_to_felts(funding_amount),
-            proof: constructed_proof,
-            hashes,
+            proof,
+            indices,
             root_hash,
         }
     }
@@ -93,8 +86,14 @@ impl StorageProof {
 
 impl From<&CircuitInputs> for StorageProof {
     fn from(inputs: &CircuitInputs) -> Self {
+        // The storage proof contains both the proof itself and also the indices where to look for
+        // hashes.
+        let proof = &inputs.private.storage_proof.0;
+        let indices = &inputs.private.storage_proof.1;
+
         Self::new(
-            &inputs.private.storage_proof,
+            &proof,
+            &indices,
             inputs.public.root_hash,
             inputs.public.funding_amount,
         )
@@ -110,7 +109,7 @@ impl CircuitFragment for StorageProof {
             root_hash,
             proof_len,
             ref proof_data,
-            ref hashes,
+            ref indices,
             ref funding_amount,
         }: &Self::Targets,
         builder: &mut CircuitBuilder<F, D>,
@@ -133,7 +132,25 @@ impl CircuitFragment for StorageProof {
             }
 
             // Update `prev_hash` to the hash of the child that's stored within this node.
-            prev_hash = hashes[i];
+            // We first find the hash using the commited index.
+            let mut found_hash = vec![
+                builder.zero(),
+                builder.zero(),
+                builder.zero(),
+                builder.zero(),
+            ];
+            let expected_hash_index = indices[i];
+            for (j, _felt) in node.iter().enumerate() {
+                let felt_index = builder.constant(F::from_canonical_usize(j));
+                let is_start_of_hash = builder.is_equal(felt_index, expected_hash_index);
+
+                // If this is the start of the hash, set the next 4 fetls of `found_hash`.
+                for (hash_i, felt) in found_hash.iter_mut().enumerate() {
+                    *felt = builder.select(is_start_of_hash, node[j + hash_i], *felt);
+                }
+            }
+
+            prev_hash = HashOutTarget::from_vec(found_hash);
         }
     }
 
@@ -158,6 +175,7 @@ impl CircuitFragment for StorageProof {
             }
         }
 
+        // TODO: Set indices.
         let empty_hash = ZERO_DIGEST.to_vec();
         for i in 0..MAX_PROOF_LEN {
             let hash = self.hashes.get(i).unwrap_or(&empty_hash);
