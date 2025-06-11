@@ -1,6 +1,5 @@
 #[cfg(not(feature = "std"))]
 use alloc::vec::Vec;
-use anyhow::bail;
 #[cfg(feature = "std")]
 use std::vec::Vec;
 
@@ -17,7 +16,7 @@ use plonky2::{
 use crate::inputs::CircuitInputs;
 use zk_circuits_common::circuit::{CircuitFragment, D, F};
 use zk_circuits_common::gadgets::is_const_less_than;
-use zk_circuits_common::utils::{bytes_to_felts, u128_to_felts, ZERO_DIGEST};
+use zk_circuits_common::utils::{bytes_to_felts, u128_to_felts};
 
 pub const MAX_PROOF_LEN: usize = 20;
 pub const PROOF_NODE_MAX_SIZE_F: usize = 73;
@@ -72,7 +71,7 @@ impl StorageProof {
         funding_amount: u128,
     ) -> Self {
         // TODO: Check that these are the same length.
-        let proof = proof.iter().map(|node| bytes_to_felts(&node)).collect();
+        let proof = proof.iter().map(|node| bytes_to_felts(node)).collect();
         let indices = indices.iter().map(|&i| F::from_canonical_u8(i)).collect();
 
         StorageProof {
@@ -92,8 +91,8 @@ impl From<&CircuitInputs> for StorageProof {
         let indices = &inputs.private.storage_proof.1;
 
         Self::new(
-            &proof,
-            &indices,
+            proof,
+            indices,
             inputs.public.root_hash,
             inputs.public.funding_amount,
         )
@@ -150,6 +149,10 @@ impl CircuitFragment for StorageProof {
                 }
             }
 
+            // Lastly, we do an additional check if this is the leaf node - that the hash of its
+            // inputs is contained within the node.
+            // TODO: Leaf check.
+
             prev_hash = HashOutTarget::from_vec(found_hash);
         }
     }
@@ -175,13 +178,12 @@ impl CircuitFragment for StorageProof {
             }
         }
 
-        // TODO: Set indices.
-        let empty_hash = ZERO_DIGEST.to_vec();
         for i in 0..MAX_PROOF_LEN {
-            let hash = self.hashes.get(i).unwrap_or(&empty_hash);
-            pw.set_hash_target(targets.hashes[i], HashOut::from_partial(&hash[..4]))?;
+            let &felt = self.indices.get(i).unwrap_or(&F::ZERO);
+            pw.set_target(targets.indices[i], felt)?;
         }
-        // TODO: just a placeholder until we complete leaf hash
+
+        // FIXME: just a placeholder until we complete leaf hash
         pw.set_target(targets.funding_amount[0], F::ZERO)?;
         pw.set_target(targets.funding_amount[1], F::ZERO)?;
         Ok(())

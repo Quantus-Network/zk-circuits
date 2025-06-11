@@ -48,6 +48,8 @@ pub mod storage_proof {
     pub const DEFAULT_FUNDING_AMOUNT: u128 = 1000;
     pub const DEFAULT_ROOT_HASH: &str =
         "77eb9d80cd12acfd902b459eb3b8876f05f31ef6a17ed5fdb060ee0e86dd8139";
+
+    // TODO: Get new inputs.
     pub const DEFAULT_STORAGE_PROOF: [(&str, &str); 3] = [
         (
             "802cb08072547dce8ca905abf49c9c644951ff048087cc6f4b497fcc6c24e5592da3bc6a80c9f21db91c755ab0e99f00c73c93eb1742e9d8ba3facffa6e5fda8718006e05e80e4faa006b3beae9cb837950c42a2ab760843d05d224dc437b1add4627ddf6b4580",
