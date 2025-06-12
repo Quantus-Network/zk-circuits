@@ -1,6 +1,6 @@
 #[cfg(not(feature = "std"))]
 use alloc::vec::Vec;
-use poseidon_resonance::{PoseidonHasher, MIN_FIELD_ELEMENT_PREIMAGE_LEN};
+use poseidon_resonance::MIN_FIELD_ELEMENT_PREIMAGE_LEN;
 #[cfg(feature = "std")]
 use std::vec::Vec;
 
