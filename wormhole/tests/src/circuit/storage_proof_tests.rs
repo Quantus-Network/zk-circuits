@@ -1,11 +1,9 @@
 use plonky2::plonk::proof::ProofWithPublicInputs;
 use std::panic;
-use wormhole_circuit::storage_proof::{StorageProof, StorageProofTargets};
+use wormhole_circuit::storage_proof::{ProcessedStorageProof, StorageProof, StorageProofTargets};
 use zk_circuits_common::circuit::{CircuitFragment, C, D, F};
 
-use test_helpers::storage_proof::{
-    default_root_hash, default_storage_proof, DEFAULT_FUNDING_AMOUNT,
-};
+use test_helpers::storage_proof::{default_root_hash, TestInputs, DEFAULT_FUNDING_AMOUNT};
 
 #[cfg(test)]
 fn run_test(storage_proof: &StorageProof) -> anyhow::Result<ProofWithPublicInputs<F, C, D>> {
@@ -20,7 +18,7 @@ fn run_test(storage_proof: &StorageProof) -> anyhow::Result<ProofWithPublicInput
 #[test]
 fn build_and_verify_proof() {
     let storage_proof = StorageProof::new(
-        &default_storage_proof(),
+        &ProcessedStorageProof::test_inputs(),
         default_root_hash(),
         DEFAULT_FUNDING_AMOUNT,
     );
@@ -31,7 +29,7 @@ fn build_and_verify_proof() {
 #[should_panic(expected = "set twice with different values")]
 fn invalid_root_hash_fails() {
     let mut proof = StorageProof::new(
-        &default_storage_proof(),
+        &ProcessedStorageProof::test_inputs(),
         default_root_hash(),
         DEFAULT_FUNDING_AMOUNT,
     );
@@ -42,10 +40,10 @@ fn invalid_root_hash_fails() {
 #[test]
 #[should_panic(expected = "set twice with different values")]
 fn tampered_proof_fails() {
-    let mut tampered_proof = default_storage_proof();
+    let mut tampered_proof = ProcessedStorageProof::test_inputs();
 
     // Flip the first byte in the first node hash.
-    tampered_proof[0].1[0] ^= 0xFF;
+    tampered_proof.proof[0][0] ^= 0xFF;
     let proof = StorageProof::new(&tampered_proof, default_root_hash(), DEFAULT_FUNDING_AMOUNT);
 
     run_test(&proof).unwrap();
@@ -61,16 +59,16 @@ fn fuzz_tampered_proof() {
 
     for i in 0..FUZZ_ITERATIONS {
         // Clone the original storage proof
-        let mut tampered_proof = default_storage_proof();
+        let mut tampered_proof = ProcessedStorageProof::test_inputs();
 
         // Randomly select a node in the proof to tamper
-        let node_index = rand::random_range(0..tampered_proof.len());
+        let node_index = rand::random_range(0..tampered_proof.proof.len());
 
         // Randomly select a byte to flip
-        let byte_index = rand::random_range(0..tampered_proof[node_index].1.len());
+        let byte_index = rand::random_range(0..tampered_proof.proof[node_index].len());
 
         // Flip random bits in the selected byte (e.g., XOR with a random value)
-        tampered_proof[node_index].1[byte_index] ^= rand::random_range(1..=255);
+        tampered_proof.proof[node_index][byte_index] ^= rand::random_range(1..=255);
 
         // Create the proof and inputs
         let proof = StorageProof::new(&tampered_proof, default_root_hash(), DEFAULT_FUNDING_AMOUNT);

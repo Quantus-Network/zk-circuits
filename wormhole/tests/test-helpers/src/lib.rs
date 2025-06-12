@@ -1,7 +1,8 @@
-use crate::storage_proof::{DEFAULT_ROOT_HASH, TestInputs, default_storage_proof};
+use crate::storage_proof::{DEFAULT_ROOT_HASH, TestInputs};
 use wormhole_circuit::{
     inputs::{CircuitInputs, PrivateCircuitInputs, PublicCircuitInputs},
     nullifier::Nullifier,
+    storage_proof::ProcessedStorageProof,
     substrate_account::SubstrateAccount,
     unspendable_account::UnspendableAccount,
 };
@@ -22,7 +23,7 @@ impl TestInputs for CircuitInputs {
         let nullifier = Nullifier::new(&secret, DEFAULT_FUNDING_NONCE, DEFAULT_FUNDING_ACCOUNT);
         let unspendable_account = UnspendableAccount::new(&secret);
         let exit_account = SubstrateAccount::new(&[254u8; 32]).unwrap();
-        let storage_proof = default_storage_proof();
+        let storage_proof = ProcessedStorageProof::test_inputs();
         Self {
             public: PublicCircuitInputs {
                 funding_amount: 0,
@@ -42,22 +43,33 @@ impl TestInputs for CircuitInputs {
 }
 
 pub mod storage_proof {
-    use wormhole_circuit::storage_proof::StorageProof;
+    use wormhole_circuit::storage_proof::{ProcessedStorageProof, StorageProof};
 
     #[allow(dead_code)]
     pub const DEFAULT_FUNDING_AMOUNT: u128 = 1000;
     pub const DEFAULT_ROOT_HASH: &str =
         "77eb9d80cd12acfd902b459eb3b8876f05f31ef6a17ed5fdb060ee0e86dd8139";
 
-    pub const DEFAULT_STORAGE_PROOF: [&str; 5] = [
-        "0000000000000020bfb500000000000020000000000000005512948e1970a2a12f7997d1577b42ed5f8fbdb4cb7628ca6d57531e5c528b7d2000000000000000edd59ebeff677ecfe1c8fafc95727021bae23b668b10d78f0543c6e864f2043520000000000000006cc67a176173197066bb41e0a821f5f722c2cf289cdbfb9de84d96051f758a3520000000000000001c8698032657950b1195fad5beac86f2111e366545a6601fe04617c4ce3cba4c20000000000000007d94ffd4c023b5a7d2066b32e18a5f3a8674f11f285082830ee3ec2a428d26542000000000000000e6bab3a9d2604f0d6c40b56677b32da888c908080f584a7839df7ee455dd071820000000000000006c607e8932a22c07fc47015df09500659b39f99ca0bf70d63b43792b0d0b64542000000000000000afa80e2cf5f01ebffe4ff45cc7f4bb71b832841d8c09628a046acd851911b036200000000000000029d8efc9ae1c8e89e7690ab091aac5acf5df43523a4dde9ce2fc740b957e7ad2200000000000000039a2abe179ce3629e2ec92f1b90307f55f235c6234710d16204afe0edf952d452000000000000000aa5945549d1edf8590c7e3eec578af18bd58d174d237c3c70079fd83e200722920000000000000009b41a71b2d085cd3aa3664dc7b1c0dcb5ed4a237a08659af75b9b464efbd0554",
-        "00000000000000200410000000000000200000000000000074ec2625fc6e2bd5267e2c93a982399632cfb42bc12e7b266e62bc368960a24120000000000000005cafbcda37d33f77f102307bdd12c70aa342e14a57133c26904102921cd98bdf",
-        "1e00000000000020261276cc9d1f8598ea4b6a74b15c2f00320000000000000020000000000000007e62fa9f0ceadb450d57334a8270a3382462748a22a60cf37227a096f986d02220000000000000005dad18320f0d4f59a3b5766ad0df16416a59a1fb9ee26ecb1f26d4fc4489ab58200000000000000008818a991d0d2ff2d5c0d73da52d5934ae05c9f64b8e82bbdbea729afd529bde",
-        "0000000000000020840000000000000020000000000000006aa4913b675da55a48a0efbee744955fe92165a6231086a7709c6e75078e568620000000000000002e10cad1f4881bc5eb128d4ea5521481f80620f5a933ea84460bbd8b221a3ed6",
-        "5e0000000000003000857e7ea49e785c4e3e1f77a710cfc2a9c5e38745047f31603f79b5a7c2d3ef6aef4dbf8dbe318fcb5610d474f374b70000000000000000",
+    // TODO: Storage proof input struct.
+    pub const DEFAULT_STORAGE_PROOF: [&str; 6] = [
+        "0000000000000020bfb500000000000020000000000000005512948e1970a2a12f7997d1577b42ed5f8fbdb4cb7628ca6d57531e5c528b7d2000000000000000edd59ebeff677ecfe1c8fafc95727021bae23b668b10d78f0543c6e864f204352000000000000000cafc2a6ae592be93ca8b62f4cf36d32f17a467ecb57fc03d298126dfde77965620000000000000001c8698032657950b1195fad5beac86f2111e366545a6601fe04617c4ce3cba4c20000000000000007d94ffd4c023b5a7d2066b32e18a5f3a8674f11f285082830ee3ec2a428d26542000000000000000e6bab3a9d2604f0d6c40b56677b32da888c908080f584a7839df7ee455dd0718200000000000000068fc6d502fa55a60efd7db04e9825cfca130233128d3ed1b73f19256f3df4ed02000000000000000afa80e2cf5f01ebffe4ff45cc7f4bb71b832841d8c09628a046acd851911b036200000000000000029d8efc9ae1c8e89e7690ab091aac5acf5df43523a4dde9ce2fc740b957e7ad220000000000000007c6a0b692213240cc03919a8fcdd1da30c407ff65ad5e9b94a23212d4bc63d7a2000000000000000aa5945549d1edf8590c7e3eec578af18bd58d174d237c3c70079fd83e200722920000000000000009a6d212131aa8b5c49ca84d598428d3cabac7267f08b0a9a57cc992c3ccfb8cf",
+        "0000000000000020041000000000000020000000000000008871e77928e982db70e3ad0011ab05734d04dfae40e862cb3686e1a052d6608f20000000000000005cafbcda37d33f77f102307bdd12c70aa342e14a57133c26904102921cd98bdf",
+        "1e00000000000020261276cc9d1f8598ea4b6a74b15c2f0032000000000000002000000000000000dad1ff4cc5f6765876675693861740b0710129a45edb4acf1fceb694db0c30d920000000000000005dad18320f0d4f59a3b5766ad0df16416a59a1fb9ee26ecb1f26d4fc4489ab5820000000000000005043ad59b21df3d6397127bc624909848dd62f59d4e35f9130c608d522090fe9",
+        "0000000000000020840000000000000020000000000000003d5dfc7cfcd82d6b6f1ebe081b04ef7abf5fe42f30c9a043126a31ccb1b92aab2000000000000000764f75e8cf0d89026c7cdeb6fb52c7ee4ce93ddd7482e50183b5ed1e79ab0c56",
+        "1e00000000000020857e7ea49e785c4e3e1f77a710cfc2000404000000000000200000000000000084287ede78cc23165cc753e73dbf709f0546b7518292fe89a9bc3d215b6a539720000000000000009bdcf0a2f6f45ba875d1d4dfc15c4e09ab02b739da2d72b5741708276a684e3a",
+        "3f000000000000300a489352a9979bafa22e19baf9d110b76cfbef6ff0b6a8580609db307c3cf3a70000000000000000",
     ];
+    pub const DEFAULT_STORAGE_PROOF_INDICIES: [usize; 5] = [768, 48, 240, 48, 80];
 
-    // TODO: Proof hash indices.
+    impl TestInputs for ProcessedStorageProof {
+        fn test_inputs() -> Self {
+            let proof = DEFAULT_STORAGE_PROOF
+                .map(|node| hex::decode(node).unwrap())
+                .to_vec();
+            let indices = DEFAULT_STORAGE_PROOF_INDICIES.to_vec();
+            Self { proof, indices }
+        }
+    }
 
     pub trait TestInputs {
         fn test_inputs() -> Self;
@@ -66,17 +78,11 @@ pub mod storage_proof {
     impl TestInputs for StorageProof {
         fn test_inputs() -> Self {
             StorageProof::new(
-                &default_storage_proof(),
+                &ProcessedStorageProof::test_inputs(),
                 default_root_hash(),
                 DEFAULT_FUNDING_AMOUNT,
             )
         }
-    }
-
-    pub fn default_storage_proof() -> Vec<Vec<u8>> {
-        DEFAULT_STORAGE_PROOF
-            .map(|node| hex::decode(node).unwrap())
-            .to_vec()
     }
 
     pub fn default_root_hash() -> [u8; 32] {

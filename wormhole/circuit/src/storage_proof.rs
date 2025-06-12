@@ -7,16 +7,20 @@ use plonky2::{
     field::types::Field,
     hash::{
         hash_types::{HashOut, HashOutTarget},
+        hashing::hash_n_to_hash_no_pad,
         poseidon::PoseidonHash,
     },
     iop::{target::Target, witness::WitnessWrite},
-    plonk::circuit_builder::CircuitBuilder,
+    plonk::{circuit_builder::CircuitBuilder, config::Hasher},
 };
 
 use crate::inputs::CircuitInputs;
-use zk_circuits_common::circuit::{CircuitFragment, D, F};
 use zk_circuits_common::gadgets::is_const_less_than;
 use zk_circuits_common::utils::{bytes_to_felts, u128_to_felts};
+use zk_circuits_common::{
+    circuit::{CircuitFragment, D, F},
+    utils::BYTES_PER_ELEMENT,
+};
 
 pub const MAX_PROOF_LEN: usize = 20;
 pub const PROOF_NODE_MAX_SIZE_F: usize = 73;
@@ -54,6 +58,13 @@ impl StorageProofTargets {
     }
 }
 
+/// A storgae proof along with an array of indices where the hash child ndoes is places.
+#[derive(Debug, Clone)]
+pub struct ProcessedStorageProof {
+    pub proof: Vec<Vec<u8>>,
+    pub indices: Vec<usize>,
+}
+
 #[derive(Debug)]
 #[allow(dead_code)]
 pub struct StorageProof {
@@ -65,14 +76,32 @@ pub struct StorageProof {
 
 impl StorageProof {
     pub fn new(
-        proof: &[Vec<u8>],
-        indices: &[u8],
+        processed_proof: &ProcessedStorageProof,
         root_hash: [u8; 32],
         funding_amount: u128,
     ) -> Self {
         // TODO: Check that these are the same length.
-        let proof = proof.iter().map(|node| bytes_to_felts(node)).collect();
-        let indices = indices.iter().map(|&i| F::from_canonical_u8(i)).collect();
+        let proof: Vec<Vec<F>> = processed_proof
+            .proof
+            .iter()
+            .map(|node| bytes_to_felts(node))
+            .collect();
+
+        println!("{:?}", proof);
+
+        let indices = processed_proof
+            .indices
+            .iter()
+            .map(|&i| {
+                let i = i / BYTES_PER_ELEMENT;
+                F::from_canonical_usize(i)
+            })
+            .collect();
+
+        println!("{:?}", bytes_to_felts(&root_hash));
+        for node in &proof {
+            println!("{:?}", PoseidonHash::hash_no_pad(node));
+        }
 
         StorageProof {
             funding_amount: u128_to_felts(funding_amount),
@@ -85,14 +114,8 @@ impl StorageProof {
 
 impl From<&CircuitInputs> for StorageProof {
     fn from(inputs: &CircuitInputs) -> Self {
-        // The storage proof contains both the proof itself and also the indices where to look for
-        // hashes.
-        let proof = &inputs.private.storage_proof.0;
-        let indices = &inputs.private.storage_proof.1;
-
         Self::new(
-            proof,
-            indices,
+            &inputs.private.storage_proof,
             inputs.public.root_hash,
             inputs.public.funding_amount,
         )
@@ -139,11 +162,11 @@ impl CircuitFragment for StorageProof {
                 builder.zero(),
             ];
             let expected_hash_index = indices[i];
-            for (j, _felt) in node.iter().enumerate() {
+            for (j, _felt) in node.iter().enumerate().take(PROOF_NODE_MAX_SIZE_F - 3) {
                 let felt_index = builder.constant(F::from_canonical_usize(j));
                 let is_start_of_hash = builder.is_equal(felt_index, expected_hash_index);
 
-                // If this is the start of the hash, set the next 4 fetls of `found_hash`.
+                // If this is the start of the hash, set the next 4 felts of `found_hash`.
                 for (hash_i, felt) in found_hash.iter_mut().enumerate() {
                     *felt = builder.select(is_start_of_hash, node[j + hash_i], *felt);
                 }
