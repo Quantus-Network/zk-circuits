@@ -93,18 +93,20 @@ impl StorageProof {
             .indices
             .iter()
             .map(|&i| {
-                let i = i / BYTES_PER_ELEMENT;
+                // Divide by 16 to get the field element index instead of the hex index.
+                let i = i / (BYTES_PER_ELEMENT * 2);
                 F::from_canonical_usize(i)
             })
             .collect();
 
+        println!("indices: {:?}", indices);
         println!("{:?}", bytes_to_felts(&root_hash));
         for node in proof.iter_mut() {
             if node.len() < MIN_FIELD_ELEMENT_PREIMAGE_LEN {
                 node.resize(MIN_FIELD_ELEMENT_PREIMAGE_LEN, F::ZERO);
             }
 
-            let hash = PoseidonHash::hash_no_pad(&node);
+            let hash = PoseidonHash::hash_no_pad(node);
             println!("{:?}", hash);
         }
 
