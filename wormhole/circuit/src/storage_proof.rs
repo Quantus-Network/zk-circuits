@@ -1,5 +1,6 @@
 #[cfg(not(feature = "std"))]
 use alloc::vec::Vec;
+use poseidon_resonance::{PoseidonHasher, MIN_FIELD_ELEMENT_PREIMAGE_LEN};
 #[cfg(feature = "std")]
 use std::vec::Vec;
 
@@ -7,7 +8,6 @@ use plonky2::{
     field::types::Field,
     hash::{
         hash_types::{HashOut, HashOutTarget},
-        hashing::hash_n_to_hash_no_pad,
         poseidon::PoseidonHash,
     },
     iop::{target::Target, witness::WitnessWrite},
@@ -81,7 +81,7 @@ impl StorageProof {
         funding_amount: u128,
     ) -> Self {
         // TODO: Check that these are the same length.
-        let proof: Vec<Vec<F>> = processed_proof
+        let mut proof: Vec<Vec<F>> = processed_proof
             .proof
             .iter()
             .map(|node| bytes_to_felts(node))
@@ -99,8 +99,13 @@ impl StorageProof {
             .collect();
 
         println!("{:?}", bytes_to_felts(&root_hash));
-        for node in &proof {
-            println!("{:?}", PoseidonHash::hash_no_pad(node));
+        for node in proof.iter_mut() {
+            if node.len() < MIN_FIELD_ELEMENT_PREIMAGE_LEN {
+                node.resize(MIN_FIELD_ELEMENT_PREIMAGE_LEN, F::ZERO);
+            }
+
+            let hash = PoseidonHash::hash_no_pad(&node);
+            println!("{:?}", hash);
         }
 
         StorageProof {
