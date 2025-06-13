@@ -60,6 +60,8 @@ pub mod storage_proof {
     ];
     pub const DEFAULT_STORAGE_PROOF_INDICIES: [usize; 5] = [768, 48, 240, 48, 240];
 
+    // FIXME: Generate new inputs, including leaf inputs.
+
     impl TestInputs for ProcessedStorageProof {
         fn test_inputs() -> Self {
             let proof = DEFAULT_STORAGE_PROOF
@@ -76,11 +78,7 @@ pub mod storage_proof {
 
     impl TestInputs for StorageProof {
         fn test_inputs() -> Self {
-            StorageProof::new(
-                &ProcessedStorageProof::test_inputs(),
-                default_root_hash(),
-                DEFAULT_FUNDING_AMOUNT,
-            )
+            StorageProof::new(&ProcessedStorageProof::test_inputs(), default_root_hash())
         }
     }
 

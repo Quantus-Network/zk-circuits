@@ -15,13 +15,16 @@ use plonky2::{
     plonk::{circuit_builder::CircuitBuilder, config::Hasher},
 };
 
-use crate::inputs::CircuitInputs;
-use zk_circuits_common::gadgets::is_const_less_than;
-use zk_circuits_common::utils::{bytes_to_felts, u128_to_felts};
+use crate::{
+    inputs::CircuitInputs,
+    storage_proof::leaf::{LeafInputs, LeafTargets},
+};
+use zk_circuits_common::utils::bytes_to_felts;
 use zk_circuits_common::{
     circuit::{CircuitFragment, D, F},
     utils::BYTES_PER_ELEMENT,
 };
+use zk_circuits_common::{gadgets::is_const_less_than, utils::felts_to_hashout};
 
 pub mod leaf;
 
@@ -36,6 +39,7 @@ pub struct StorageProofTargets {
     pub proof_len: Target,
     pub proof_data: Vec<Vec<Target>>,
     pub indices: Vec<Target>,
+    pub leaf_inputs: LeafTargets,
 }
 
 impl StorageProofTargets {
@@ -55,6 +59,7 @@ impl StorageProofTargets {
             proof_len: builder.add_virtual_target(),
             proof_data,
             indices,
+            leaf_inputs: LeafTargets::new(builder),
         }
     }
 }
@@ -83,17 +88,17 @@ impl ProcessedStorageProof {
 #[derive(Debug)]
 #[allow(dead_code)]
 pub struct StorageProof {
-    funding_amount: [F; FELTS_PER_AMOUNT],
     pub proof: Vec<Vec<F>>,
-    indices: Vec<F>,
+    pub indices: Vec<F>,
     pub root_hash: [u8; 32],
+    pub leaf_inputs: LeafInputs,
 }
 
 impl StorageProof {
     pub fn new(
         processed_proof: &ProcessedStorageProof,
         root_hash: [u8; 32],
-        funding_amount: u128,
+        leaf_inputs: LeafInputs,
     ) -> Self {
         // TODO: Check that these are the same length.
         let mut proof: Vec<Vec<F>> = processed_proof
@@ -126,10 +131,10 @@ impl StorageProof {
         }
 
         StorageProof {
-            funding_amount: u128_to_felts(funding_amount),
             proof,
             indices,
             root_hash,
+            leaf_inputs,
         }
     }
 }
@@ -139,7 +144,7 @@ impl From<&CircuitInputs> for StorageProof {
         Self::new(
             &inputs.private.storage_proof,
             inputs.public.root_hash,
-            inputs.public.funding_amount,
+            LeafInputs::from(inputs),
         )
     }
 }
@@ -154,19 +159,31 @@ impl CircuitFragment for StorageProof {
             proof_len,
             ref proof_data,
             ref indices,
+            ref leaf_inputs,
         }: &Self::Targets,
         builder: &mut CircuitBuilder<F, D>,
     ) {
         // Setup constraints.
+
+        // Calculate the leaf inputs hash.
+        let leaf_inputs_hash =
+            builder.hash_n_to_hash_no_pad::<PoseidonHash>(leaf_inputs.collect_to_vec());
+
         // The first node should be the root node so we initialize `prev_hash` to the provided `root_hash`.
         let mut prev_hash = root_hash;
         let n_log = (usize::BITS - (MAX_PROOF_LEN - 1).leading_zeros()) as usize;
         for i in 0..MAX_PROOF_LEN {
             let node = &proof_data[i];
 
+            // Chech if this is a valid proof node or a dummy one.
             let is_proof_node = is_const_less_than(builder, i, proof_len, n_log);
-            let computed_hash = builder.hash_n_to_hash_no_pad::<PoseidonHash>(node.clone());
 
+            // Check if this is a leaf node.
+            let i_t = builder.constant(F::from_canonical_usize(i));
+            let is_leaf_node = builder.is_equal(i_t, proof_len);
+
+            // Compute the hash of this node and compare it against the previous hash.
+            let computed_hash = builder.hash_n_to_hash_no_pad::<PoseidonHash>(node.clone());
             for y in 0..4 {
                 let diff = builder.sub(computed_hash.elements[y], prev_hash.elements[y]);
                 let result = builder.mul(diff, is_proof_node.target);
@@ -193,11 +210,17 @@ impl CircuitFragment for StorageProof {
                 }
             }
 
-            // Lastly, we do an additional check if this is the leaf node - that the hash of its
-            // inputs is contained within the node.
-            // TODO: Leaf check.
-
             prev_hash = HashOutTarget::from_vec(found_hash);
+
+            // Lastly, we do an additional check if this is the leaf node - that the hash of its
+            // inputs is contained within the node. Note: we only compare the last 3 felts since
+            // the stored leaf inputs hash does not contain the first byte.
+            for y in 1..4 {
+                let diff = builder.sub(leaf_inputs_hash.elements[y], prev_hash.elements[y]);
+                let result = builder.mul(diff, is_leaf_node.target);
+                let zero = builder.zero();
+                builder.connect(result, zero);
+            }
         }
     }
 
@@ -226,6 +249,18 @@ impl CircuitFragment for StorageProof {
             let &felt = self.indices.get(i).unwrap_or(&F::ZERO);
             pw.set_target(targets.indices[i], felt)?;
         }
+
+        // Set leaf input targets.
+        let funding_account = felts_to_hashout(&self.leaf_inputs.funding_account.0);
+        let to_account = felts_to_hashout(&self.leaf_inputs.to_account.0);
+
+        pw.set_target(targets.leaf_inputs.nonce, self.leaf_inputs.nonce)?;
+        pw.set_hash_target(targets.leaf_inputs.funding_account, funding_account)?;
+        pw.set_hash_target(targets.leaf_inputs.to_account, to_account)?;
+        pw.set_target_arr(
+            &targets.leaf_inputs.funding_amount,
+            &self.leaf_inputs.funding_amount,
+        )?;
 
         Ok(())
     }
