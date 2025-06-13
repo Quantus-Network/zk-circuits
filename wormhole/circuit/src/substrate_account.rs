@@ -13,7 +13,7 @@ use zk_circuits_common::circuit::{CircuitFragment, D, F};
 use zk_circuits_common::utils::{bytes_to_felts, felts_to_bytes, Digest};
 
 #[derive(Debug, Default, Eq, PartialEq, Clone, Copy)]
-pub struct SubstrateAccount(Digest);
+pub struct SubstrateAccount(pub Digest);
 
 impl SubstrateAccount {
     pub fn new(address: &[u8]) -> anyhow::Result<Self> {

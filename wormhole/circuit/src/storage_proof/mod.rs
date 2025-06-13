@@ -23,6 +23,8 @@ use zk_circuits_common::{
     utils::BYTES_PER_ELEMENT,
 };
 
+pub mod leaf;
+
 pub const MAX_PROOF_LEN: usize = 20;
 pub const PROOF_NODE_MAX_SIZE_F: usize = 73;
 pub const PROOF_NODE_MAX_SIZE_B: usize = 256;
@@ -59,7 +61,7 @@ impl StorageProofTargets {
     }
 }
 
-/// A storgae proof along with an array of indices where the hash child ndoes is places.
+/// A storgae proof along with an array of indices where the hash child ndoes are placed.
 #[derive(Debug, Clone)]
 pub struct ProcessedStorageProof {
     pub proof: Vec<Vec<u8>>,
