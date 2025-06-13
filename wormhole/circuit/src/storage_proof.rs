@@ -1,5 +1,6 @@
 #[cfg(not(feature = "std"))]
 use alloc::vec::Vec;
+use anyhow::bail;
 use poseidon_resonance::MIN_FIELD_ELEMENT_PREIMAGE_LEN;
 #[cfg(feature = "std")]
 use std::vec::Vec;
@@ -63,6 +64,20 @@ impl StorageProofTargets {
 pub struct ProcessedStorageProof {
     pub proof: Vec<Vec<u8>>,
     pub indices: Vec<usize>,
+}
+
+impl ProcessedStorageProof {
+    pub fn new(proof: Vec<Vec<u8>>, indices: Vec<usize>) -> anyhow::Result<Self> {
+        if proof.len() != (indices.len() + 1) {
+            bail!(
+                "indices length must be equal to proof length - 1, actual lengths: {}, {}",
+                proof.len(),
+                indices.len()
+            );
+        }
+
+        Ok(Self { proof, indices })
+    }
 }
 
 #[derive(Debug)]

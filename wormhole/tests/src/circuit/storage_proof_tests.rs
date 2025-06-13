@@ -42,8 +42,9 @@ fn invalid_root_hash_fails() {
 fn tampered_proof_fails() {
     let mut tampered_proof = ProcessedStorageProof::test_inputs();
 
-    // Flip the first byte in the first node hash.
-    tampered_proof.proof[0][0] ^= 0xFF;
+    // Flip the first byte in the first node hash. Divide by two to get the byte index.
+    let hash_index = tampered_proof.indices[0] / 2;
+    tampered_proof.proof[0][hash_index] ^= 0xFF;
     let proof = StorageProof::new(&tampered_proof, default_root_hash(), DEFAULT_FUNDING_AMOUNT);
 
     run_test(&proof).unwrap();

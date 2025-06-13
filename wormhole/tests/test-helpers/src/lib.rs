@@ -66,7 +66,7 @@ pub mod storage_proof {
                 .map(|node| hex::decode(node).unwrap())
                 .to_vec();
             let indices = DEFAULT_STORAGE_PROOF_INDICIES.to_vec();
-            Self { proof, indices }
+            Self::new(proof, indices).unwrap()
         }
     }
 
