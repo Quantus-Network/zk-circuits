@@ -23,7 +23,7 @@ impl LeafTargets {
         let nonce = builder.add_virtual_target();
         let funding_account = builder.add_virtual_hash();
         let to_account = builder.add_virtual_hash();
-        let funding_amount = std::array::from_fn(|_| builder.add_virtual_target());
+        let funding_amount = std::array::from_fn(|_| builder.add_virtual_public_input());
 
         Self {
             nonce,

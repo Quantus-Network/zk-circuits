@@ -14,17 +14,15 @@ use zk_circuits_common::circuit::{C, D, F};
 use zk_circuits_common::utils::{felts_to_bytes, felts_to_u128};
 
 /// The total size of the public inputs field element vector.
-const PUBLIC_INPUTS_FELTS_LEN: usize = 14;
-#[allow(dead_code)]
-const NULLIFIER_START_INDEX: usize = 0;
-#[allow(dead_code)]
-const NULLIFIER_END_INDEX: usize = 4;
-const FUNDING_AMOUNT_START_INDEX: usize = 4;
-const FUNDING_AMOUNT_END_INDEX: usize = 6;
-const ROOT_HASH_START_INDEX: usize = 6;
-const ROOT_HASH_END_INDEX: usize = 10;
-const EXIT_ACCOUNT_START_INDEX: usize = 10;
-const EXIT_ACCOUNT_END_INDEX: usize = 14;
+pub const PUBLIC_INPUTS_FELTS_LEN: usize = 14;
+pub const NULLIFIER_START_INDEX: usize = 0;
+pub const NULLIFIER_END_INDEX: usize = 4;
+pub const FUNDING_AMOUNT_START_INDEX: usize = 4;
+pub const FUNDING_AMOUNT_END_INDEX: usize = 6;
+pub const ROOT_HASH_START_INDEX: usize = 6;
+pub const ROOT_HASH_END_INDEX: usize = 10;
+pub const EXIT_ACCOUNT_START_INDEX: usize = 10;
+pub const EXIT_ACCOUNT_END_INDEX: usize = 14;
 // FIXME: This should not be here.
 pub const DEFAULT_SECRET: &str = "9aa84f99ef2de22e3070394176868df41d6a148117a36132d010529e19b018b7";
 pub const DEFAULT_FUNDING_NONCE: u32 = 0;
