@@ -73,9 +73,9 @@ pub struct ProcessedStorageProof {
 
 impl ProcessedStorageProof {
     pub fn new(proof: Vec<Vec<u8>>, indices: Vec<usize>) -> anyhow::Result<Self> {
-        if proof.len() != (indices.len() + 1) {
+        if proof.len() != indices.len() {
             bail!(
-                "indices length must be equal to proof length - 1, actual lengths: {}, {}",
+                "indices length must be equal to proof length, actual lengths: {}, {}",
                 proof.len(),
                 indices.len()
             );
@@ -216,7 +216,7 @@ impl CircuitFragment for StorageProof {
                 builder.zero(),
             ];
             let expected_hash_index = indices[i];
-            for (j, _felt) in node.iter().enumerate().take(PROOF_NODE_MAX_SIZE_F - 3) {
+            for (j, _felt) in node.iter().enumerate().take(PROOF_NODE_MAX_SIZE_F - 4) {
                 let felt_index = builder.constant(F::from_canonical_usize(j));
                 let is_start_of_hash = builder.is_equal(felt_index, expected_hash_index);
 
@@ -226,17 +226,17 @@ impl CircuitFragment for StorageProof {
                 }
             }
 
-            prev_hash = HashOutTarget::from_vec(found_hash);
-
             // Lastly, we do an additional check if this is the leaf node - that the hash of its
             // inputs is contained within the node. Note: we only compare the last 3 felts since
-            // the stored leaf inputs hash does not contain the first byte.
+            // the stored leaf inputs hash does not always contain the first nibble.
             for y in 1..4 {
                 let diff = builder.sub(leaf_inputs_hash.elements[y], prev_hash.elements[y]);
                 let result = builder.mul(diff, is_leaf_node.target);
                 let zero = builder.zero();
                 builder.connect(result, zero);
             }
+
+            prev_hash = HashOutTarget::from_vec(found_hash);
         }
     }
 
