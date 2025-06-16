@@ -9,7 +9,6 @@ license.workspace = true
 [dependencies]
 anyhow = { workspace = true }
 plonky2 = { workspace = true }
-poseidon-resonance = { git = "https://github.com/Quantus-Network/poseidon-resonance" }
 hex = { workspace = true, features = ["alloc"] }
 zk-circuits-common = { path = "../../common" }
 

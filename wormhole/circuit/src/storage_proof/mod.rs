@@ -1,7 +1,6 @@
 #[cfg(not(feature = "std"))]
 use alloc::vec::Vec;
 use anyhow::bail;
-use poseidon_resonance::MIN_FIELD_ELEMENT_PREIMAGE_LEN;
 #[cfg(feature = "std")]
 use std::vec::Vec;
 
@@ -12,7 +11,7 @@ use plonky2::{
         poseidon::PoseidonHash,
     },
     iop::{target::Target, witness::WitnessWrite},
-    plonk::{circuit_builder::CircuitBuilder, config::Hasher},
+    plonk::circuit_builder::CircuitBuilder,
 };
 
 use crate::{
@@ -100,15 +99,11 @@ impl StorageProof {
         root_hash: [u8; 32],
         leaf_inputs: LeafInputs,
     ) -> Self {
-        // TODO: Check that these are the same length.
-        let mut proof: Vec<Vec<F>> = processed_proof
+        let proof: Vec<Vec<F>> = processed_proof
             .proof
             .iter()
             .map(|node| bytes_to_felts(node))
             .collect();
-
-        println!("-- StorageProof --");
-        println!("{:?}", proof);
 
         let indices = processed_proof
             .indices
@@ -119,32 +114,6 @@ impl StorageProof {
                 F::from_canonical_usize(i)
             })
             .collect();
-
-        println!("indices: {:?}", indices);
-        println!("{:?}", bytes_to_felts(&root_hash));
-        for node in proof.iter_mut() {
-            if node.len() < MIN_FIELD_ELEMENT_PREIMAGE_LEN {
-                node.resize(MIN_FIELD_ELEMENT_PREIMAGE_LEN, F::ZERO);
-            }
-
-            let node = PoseidonHash::hash_no_pad(node);
-            println!("{:?}", node);
-        }
-
-        println!("-- LeafInputs --");
-        println!("{:?}", leaf_inputs.nonce);
-        println!("{:?}", leaf_inputs.funding_account);
-        println!("{:?}", leaf_inputs.to_account);
-        println!("{:?}", leaf_inputs.funding_amount);
-
-        let mut leaf_preimage = vec![leaf_inputs.nonce];
-        leaf_preimage.extend(leaf_inputs.funding_account.0);
-        leaf_preimage.extend(leaf_inputs.to_account.0);
-        leaf_preimage.extend(leaf_inputs.funding_amount);
-        println!("{:?}", leaf_preimage);
-
-        let leaf_hash = PoseidonHash::hash_no_pad(&leaf_preimage);
-        println!("{:?}", leaf_hash);
 
         StorageProof {
             proof,
