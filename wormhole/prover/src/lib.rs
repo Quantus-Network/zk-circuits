@@ -14,6 +14,7 @@
 //! ```
 //! use wormhole_circuit::inputs::{CircuitInputs, PrivateCircuitInputs, PublicCircuitInputs};
 //! use wormhole_circuit::nullifier::Nullifier;
+//! use wormhole_circuit::storage_proof::ProcessedStorageProof;
 //! use wormhole_circuit::substrate_account::SubstrateAccount;
 //! use wormhole_circuit::unspendable_account::UnspendableAccount;
 //! use wormhole_prover::WormholeProver;
@@ -26,7 +27,7 @@
 //!         secret: vec![1u8; 32],
 //!         funding_nonce: 0,
 //!         funding_account: SubstrateAccount::new(&[2u8; 32])?,
-//!         storage_proof: vec![],
+//!         storage_proof: ProcessedStorageProof::new(vec![], vec![]).unwrap(),
 //!         unspendable_account: UnspendableAccount::new(&[1u8; 32]),
 //!     },
 //!     public: PublicCircuitInputs {
