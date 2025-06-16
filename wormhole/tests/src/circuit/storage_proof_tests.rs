@@ -1,9 +1,11 @@
 use plonky2::plonk::proof::ProofWithPublicInputs;
 use std::panic;
-use wormhole_circuit::storage_proof::{ProcessedStorageProof, StorageProof, StorageProofTargets};
+use wormhole_circuit::storage_proof::{
+    leaf::LeafInputs, ProcessedStorageProof, StorageProof, StorageProofTargets,
+};
 use zk_circuits_common::circuit::{CircuitFragment, C, D, F};
 
-use test_helpers::storage_proof::{default_root_hash, TestInputs, DEFAULT_FUNDING_AMOUNT};
+use test_helpers::storage_proof::{default_root_hash, TestInputs};
 
 #[cfg(test)]
 fn run_test(storage_proof: &StorageProof) -> anyhow::Result<ProofWithPublicInputs<F, C, D>> {
@@ -17,22 +19,14 @@ fn run_test(storage_proof: &StorageProof) -> anyhow::Result<ProofWithPublicInput
 
 #[test]
 fn build_and_verify_proof() {
-    let storage_proof = StorageProof::new(
-        &ProcessedStorageProof::test_inputs(),
-        default_root_hash(),
-        DEFAULT_FUNDING_AMOUNT,
-    );
+    let storage_proof = StorageProof::test_inputs();
     run_test(&storage_proof).unwrap();
 }
 
 #[test]
 #[should_panic(expected = "set twice with different values")]
 fn invalid_root_hash_fails() {
-    let mut proof = StorageProof::new(
-        &ProcessedStorageProof::test_inputs(),
-        default_root_hash(),
-        DEFAULT_FUNDING_AMOUNT,
-    );
+    let mut proof = StorageProof::test_inputs();
     proof.root_hash = [0u8; 32];
     run_test(&proof).unwrap();
 }
@@ -45,7 +39,11 @@ fn tampered_proof_fails() {
     // Flip the first byte in the first node hash. Divide by two to get the byte index.
     let hash_index = tampered_proof.indices[0] / 2;
     tampered_proof.proof[0][hash_index] ^= 0xFF;
-    let proof = StorageProof::new(&tampered_proof, default_root_hash(), DEFAULT_FUNDING_AMOUNT);
+    let proof = StorageProof::new(
+        &tampered_proof,
+        default_root_hash(),
+        LeafInputs::test_inputs(),
+    );
 
     run_test(&proof).unwrap();
 }
@@ -72,7 +70,11 @@ fn fuzz_tampered_proof() {
         tampered_proof.proof[node_index][byte_index] ^= rand::random_range(1..=255);
 
         // Create the proof and inputs
-        let proof = StorageProof::new(&tampered_proof, default_root_hash(), DEFAULT_FUNDING_AMOUNT);
+        let proof = StorageProof::new(
+            &tampered_proof,
+            default_root_hash(),
+            LeafInputs::test_inputs(),
+        );
 
         // Catch panic from run_test
         let result = panic::catch_unwind(|| {

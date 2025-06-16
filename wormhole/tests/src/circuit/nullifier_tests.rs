@@ -24,7 +24,7 @@ pub trait TestInputs {
 impl TestInputs for Nullifier {
     fn test_inputs() -> Self {
         let secret = hex::decode(DEFAULT_SECRET).unwrap();
-        Self::new(&secret, DEFAULT_FUNDING_NONCE, DEFAULT_FUNDING_ACCOUNT)
+        Self::new(&secret, DEFAULT_FUNDING_NONCE, &DEFAULT_FUNDING_ACCOUNT)
     }
 }
 

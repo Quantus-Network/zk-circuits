@@ -52,11 +52,13 @@ pub struct LeafInputs {
 
 impl LeafInputs {
     pub fn new(
-        nonce: F,
+        nonce: u32,
         funding_account: SubstrateAccount,
         to_account: SubstrateAccount,
-        funding_amount: [F; FELTS_PER_U128],
+        funding_amount: u128,
     ) -> Self {
+        let nonce = F::from_canonical_u32(nonce);
+        let funding_amount = u128_to_felts(funding_amount);
         Self {
             nonce,
             funding_account,
@@ -68,13 +70,11 @@ impl LeafInputs {
 
 impl From<&CircuitInputs> for LeafInputs {
     fn from(inputs: &CircuitInputs) -> Self {
-        let funding_nonce = F::from_canonical_u32(inputs.private.funding_nonce);
-        let funding_amount = u128_to_felts(inputs.public.funding_amount);
         Self::new(
-            funding_nonce,
+            inputs.private.funding_nonce,
             inputs.private.funding_account,
             inputs.public.exit_account,
-            funding_amount,
+            inputs.public.funding_amount,
         )
     }
 }

@@ -107,6 +107,7 @@ impl StorageProof {
             .map(|node| bytes_to_felts(node))
             .collect();
 
+        println!("-- StorageProof --");
         println!("{:?}", proof);
 
         let indices = processed_proof
@@ -126,9 +127,24 @@ impl StorageProof {
                 node.resize(MIN_FIELD_ELEMENT_PREIMAGE_LEN, F::ZERO);
             }
 
-            let hash = PoseidonHash::hash_no_pad(node);
-            println!("{:?}", hash);
+            let node = PoseidonHash::hash_no_pad(node);
+            println!("{:?}", node);
         }
+
+        println!("-- LeafInputs --");
+        println!("{:?}", leaf_inputs.nonce);
+        println!("{:?}", leaf_inputs.funding_account);
+        println!("{:?}", leaf_inputs.to_account);
+        println!("{:?}", leaf_inputs.funding_amount);
+
+        let mut leaf_preimage = vec![leaf_inputs.nonce];
+        leaf_preimage.extend(leaf_inputs.funding_account.0);
+        leaf_preimage.extend(leaf_inputs.to_account.0);
+        leaf_preimage.extend(leaf_inputs.funding_amount);
+        println!("{:?}", leaf_preimage);
+
+        let leaf_hash = PoseidonHash::hash_no_pad(&leaf_preimage);
+        println!("{:?}", leaf_hash);
 
         StorageProof {
             proof,

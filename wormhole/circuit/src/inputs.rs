@@ -25,6 +25,7 @@ const ROOT_HASH_START_INDEX: usize = 6;
 const ROOT_HASH_END_INDEX: usize = 10;
 const EXIT_ACCOUNT_START_INDEX: usize = 10;
 const EXIT_ACCOUNT_END_INDEX: usize = 14;
+// FIXME: This should not be here.
 pub const DEFAULT_SECRET: &str = "9aa84f99ef2de22e3070394176868df41d6a148117a36132d010529e19b018b7";
 pub const DEFAULT_FUNDING_NONCE: u32 = 0;
 pub const DEFAULT_FUNDING_ACCOUNT: &[u8] = &[10u8; 32];
