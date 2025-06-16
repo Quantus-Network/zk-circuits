@@ -1,7 +1,8 @@
-use plonky2::plonk::proof::ProofWithPublicInputs;
+use plonky2::{field::types::Field, plonk::proof::ProofWithPublicInputs};
 use std::panic;
-use wormhole_circuit::storage_proof::{
-    leaf::LeafInputs, ProcessedStorageProof, StorageProof, StorageProofTargets,
+use wormhole_circuit::{
+    storage_proof::{leaf::LeafInputs, ProcessedStorageProof, StorageProof, StorageProofTargets},
+    substrate_account::SubstrateAccount,
 };
 use zk_circuits_common::circuit::{CircuitFragment, C, D, F};
 
@@ -44,6 +45,48 @@ fn tampered_proof_fails() {
         default_root_hash(),
         LeafInputs::test_inputs(),
     );
+
+    run_test(&proof).unwrap();
+}
+
+#[test]
+#[should_panic(expected = "set twice with different values")]
+fn invalid_nonce() {
+    let proof = ProcessedStorageProof::test_inputs();
+    let mut leaf_inputs = LeafInputs::test_inputs();
+
+    // Alter the nonce.
+    leaf_inputs.nonce = F::from_canonical_u32(5);
+
+    let proof = StorageProof::new(&proof, default_root_hash(), leaf_inputs);
+
+    run_test(&proof).unwrap();
+}
+
+#[test]
+#[should_panic(expected = "set twice with different values")]
+fn invalid_exit_address() {
+    let proof = ProcessedStorageProof::test_inputs();
+    let mut leaf_inputs = LeafInputs::test_inputs();
+
+    // Alter the to account.
+    leaf_inputs.to_account = SubstrateAccount::new(&[0; 32]).unwrap();
+
+    let proof = StorageProof::new(&proof, default_root_hash(), leaf_inputs);
+
+    run_test(&proof).unwrap();
+}
+
+#[test]
+#[should_panic(expected = "set twice with different values")]
+fn invalid_funding_amount() {
+    let proof = ProcessedStorageProof::test_inputs();
+    let mut leaf_inputs = LeafInputs::test_inputs();
+
+    // Alter the funding amount.
+    leaf_inputs.funding_amount = [F::from_canonical_u64(1000), F::from_canonical_u64(0)];
+
+    let proof = StorageProof::new(&proof, default_root_hash(), leaf_inputs);
 
     run_test(&proof).unwrap();
 }
