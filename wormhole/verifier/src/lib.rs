@@ -12,9 +12,10 @@
 //!
 //! Create a verifier and verify a proof:
 //!
-//!```
+//!```no_run
 //! use wormhole_circuit::inputs::{CircuitInputs, PrivateCircuitInputs, PublicCircuitInputs};
 //! use wormhole_circuit::nullifier::Nullifier;
+//! use wormhole_circuit::storage_proof::ProcessedStorageProof;
 //! use wormhole_circuit::substrate_account::SubstrateAccount;
 //! use wormhole_circuit::unspendable_account::UnspendableAccount;
 //! use wormhole_prover::WormholeProver;
@@ -22,13 +23,13 @@
 //! use plonky2::plonk::circuit_data::CircuitConfig;
 //!
 //! # fn main() -> anyhow::Result<()> {
-//! // Create inputs
+//! // Create inputs. In practice, each input would be gathered from the real node.
 //! let inputs = CircuitInputs {
 //!     private: PrivateCircuitInputs {
 //!         secret: vec![1u8; 32],
 //!         funding_nonce: 0,
 //!         funding_account: SubstrateAccount::new(&[2u8; 32])?,
-//!         storage_proof: vec![],
+//!         storage_proof: ProcessedStorageProof::new(vec![], vec![]).unwrap(),
 //!         unspendable_account: UnspendableAccount::new(&[1u8; 32]),
 //!     },
 //!     public: PublicCircuitInputs {
@@ -39,7 +40,7 @@
 //!     },
 //! };
 //!
-//! // Generate a proof
+//! // Generate a proof.
 //! let config = CircuitConfig::standard_recursion_config();
 //! let prover = WormholeProver::new(config.clone());
 //! let proof = prover.commit(&inputs)?.prove()?;

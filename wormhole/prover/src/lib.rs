@@ -11,7 +11,7 @@
 //!
 //! # Example
 //!
-//! ```
+//! ```no_run
 //! use wormhole_circuit::inputs::{CircuitInputs, PrivateCircuitInputs, PublicCircuitInputs};
 //! use wormhole_circuit::nullifier::Nullifier;
 //! use wormhole_circuit::storage_proof::ProcessedStorageProof;
@@ -21,7 +21,7 @@
 //! use plonky2::plonk::circuit_data::CircuitConfig;
 //!
 //! # fn main() -> anyhow::Result<()> {
-//! // Create inputs
+//! // Create inputs. In practice, each input would be gathered from the real node.
 //! let inputs = CircuitInputs {
 //!     private: PrivateCircuitInputs {
 //!         secret: vec![1u8; 32],
