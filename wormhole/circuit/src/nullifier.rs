@@ -1,7 +1,6 @@
 #[cfg(not(feature = "std"))]
 use alloc::vec::Vec;
-#[cfg(feature = "std")]
-use std::vec::Vec;
+use core::mem::size_of;
 
 use crate::codec::ByteCodec;
 use crate::codec::FieldElementCodec;
@@ -181,6 +180,7 @@ impl NullifierTargets {
     }
 }
 
+#[cfg(feature = "std")]
 impl CircuitFragment for Nullifier {
     type Targets = NullifierTargets;
 

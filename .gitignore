@@ -6,4 +6,7 @@
 .envrc
 
 Cargo.lock
-circuit/.DS_Store
+**/.DS_Store
+
+# generated binary files
+circuit_data.bin

@@ -1,18 +1,14 @@
 #[cfg(not(feature = "std"))]
-use alloc::vec::Vec;
+use alloc::{vec, vec::Vec};
 use anyhow::bail;
-#[cfg(feature = "std")]
-use std::vec::Vec;
-
 use plonky2::{
     field::types::Field,
-    hash::{
-        hash_types::{HashOut, HashOutTarget},
-        poseidon::PoseidonHash,
-    },
-    iop::{target::Target, witness::WitnessWrite},
+    hash::hash_types::{HashOut, HashOutTarget},
+    iop::target::Target,
     plonk::circuit_builder::CircuitBuilder,
 };
+#[cfg(feature = "std")]
+use std::vec::Vec;
 
 use crate::{
     inputs::CircuitInputs,
@@ -23,7 +19,6 @@ use zk_circuits_common::{
     circuit::{CircuitFragment, D, F},
     utils::BYTES_PER_ELEMENT,
 };
-use zk_circuits_common::{gadgets::is_const_less_than, utils::felts_to_hashout};
 
 pub mod leaf;
 
@@ -136,6 +131,7 @@ impl TryFrom<&CircuitInputs> for StorageProof {
     }
 }
 
+#[cfg(feature = "std")]
 impl CircuitFragment for StorageProof {
     type Targets = StorageProofTargets;
 
@@ -150,7 +146,8 @@ impl CircuitFragment for StorageProof {
         }: &Self::Targets,
         builder: &mut CircuitBuilder<F, D>,
     ) {
-        // Setup constraints.
+        use plonky2::hash::poseidon::PoseidonHash;
+        use zk_circuits_common::gadgets::is_const_less_than;
 
         // Calculate the leaf inputs hash.
         let leaf_inputs_hash =
@@ -216,6 +213,9 @@ impl CircuitFragment for StorageProof {
         pw: &mut plonky2::iop::witness::PartialWitness<F>,
         targets: Self::Targets,
     ) -> anyhow::Result<()> {
+        use plonky2::iop::witness::WitnessWrite;
+        use zk_circuits_common::utils::felts_to_hashout;
+
         const EMPTY_PROOF_NODE: [F; PROOF_NODE_MAX_SIZE_F] = [F::ZERO; PROOF_NODE_MAX_SIZE_F];
 
         pw.set_hash_target(targets.root_hash, slice_to_hashout(&self.root_hash))?;
@@ -256,6 +256,7 @@ impl CircuitFragment for StorageProof {
     }
 }
 
+#[cfg(feature = "std")]
 fn slice_to_hashout(slice: &[u8]) -> HashOut<F> {
     let elements = bytes_to_felts(slice);
     HashOut {

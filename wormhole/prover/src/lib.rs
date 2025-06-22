@@ -40,11 +40,12 @@
 //!
 //! let config = CircuitConfig::standard_recursion_config();
 //! let prover = WormholeProver::new(config);
-//! let proof = prover.commit(&inputs)?.prove()?;
+//! let prover_next = prover.commit(&inputs)?;
+//! let proof = prover_next.prove()?;
 //! # Ok(())
 //! # }
 //! ```
-use anyhow::bail;
+use anyhow::{anyhow, bail};
 use plonky2::{
     iop::witness::PartialWitness,
     plonk::{
@@ -52,11 +53,15 @@ use plonky2::{
         proof::ProofWithPublicInputs,
     },
 };
+#[cfg(feature = "std")]
+use std::fs;
 
-use wormhole_circuit::{
-    circuit::CircuitTargets, inputs::CircuitInputs, substrate_account::SubstrateAccount,
-};
 use wormhole_circuit::{circuit::WormholeCircuit, nullifier::Nullifier};
+use wormhole_circuit::{
+    circuit::{circuit_data_from_bytes, CircuitTargets},
+    inputs::CircuitInputs,
+    substrate_account::SubstrateAccount,
+};
 use wormhole_circuit::{storage_proof::StorageProof, unspendable_account::UnspendableAccount};
 use zk_circuits_common::circuit::{CircuitFragment, C, D, F};
 
@@ -69,22 +74,44 @@ pub struct WormholeProver {
 
 impl Default for WormholeProver {
     fn default() -> Self {
-        let wormhole_circuit = WormholeCircuit::default();
-        let partial_witness = PartialWitness::new();
+        Self::from_file().unwrap_or_else(|_| {
+            let wormhole_circuit = WormholeCircuit::default();
+            let partial_witness = PartialWitness::new();
 
-        let targets = Some(wormhole_circuit.targets());
-        let circuit_data = wormhole_circuit.build_prover();
+            let targets = Some(wormhole_circuit.targets());
+            let circuit_data = wormhole_circuit.build_prover();
 
-        Self {
-            circuit_data,
-            partial_witness,
-            targets,
-        }
+            Self {
+                circuit_data,
+                partial_witness,
+                targets,
+            }
+        })
     }
 }
 
 impl WormholeProver {
+    /// Creates a new [`WormholeProver`] from a circuit data file.
+    pub fn from_file() -> anyhow::Result<Self> {
+        let circuit_data_bytes = fs::read("circuit_data.bin")?;
+        let loaded_data =
+            circuit_data_from_bytes(&circuit_data_bytes).map_err(|e| anyhow!(e.to_string()))?;
+
+        // To ensure the targets and circuit data are consistent, we must rebuild the
+        // circuit from scratch using the config from the loaded file.
+        let wormhole_circuit = WormholeCircuit::new(loaded_data.common.config.clone());
+        let targets = Some(wormhole_circuit.targets());
+        let circuit_data = wormhole_circuit.build_prover();
+
+        Ok(Self {
+            circuit_data,
+            partial_witness: PartialWitness::new(),
+            targets,
+        })
+    }
+
     /// Creates a new [`WormholeProver`].
+    #[cfg(feature = "std")]
     pub fn new(config: CircuitConfig) -> Self {
         let wormhole_circuit = WormholeCircuit::new(config);
         let partial_witness = PartialWitness::new();
@@ -129,9 +156,6 @@ impl WormholeProver {
     ///
     /// Returns an error if the prover has not commited to any inputs.
     pub fn prove(self) -> anyhow::Result<ProofWithPublicInputs<F, C, D>> {
-        if self.targets.is_some() {
-            bail!("prover has not commited to any inputs")
-        }
         self.circuit_data.prove(self.partial_witness)
     }
 }

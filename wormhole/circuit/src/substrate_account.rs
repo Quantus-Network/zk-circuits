@@ -2,18 +2,19 @@
 use alloc::vec::Vec;
 use core::ops::Deref;
 #[cfg(feature = "std")]
-use std::vec::Vec;
+use plonky2::iop::witness::PartialWitness;
+#[cfg(feature = "std")]
+use zk_circuits_common::circuit::CircuitFragment;
 
 use crate::{
     codec::{ByteCodec, FieldElementCodec},
     inputs::{BytesDigest, CircuitInputs},
 };
 use plonky2::{
-    hash::hash_types::HashOutTarget,
-    iop::witness::{PartialWitness, WitnessWrite},
+    hash::hash_types::HashOutTarget, iop::witness::WitnessWrite,
     plonk::circuit_builder::CircuitBuilder,
 };
-use zk_circuits_common::circuit::{CircuitFragment, D, F};
+use zk_circuits_common::circuit::{D, F};
 use zk_circuits_common::utils::{bytes_to_felts, felts_to_bytes, fixed_bytes_to_felts, Digest};
 
 #[derive(Debug, Default, Eq, PartialEq, Clone, Copy)]
@@ -93,6 +94,7 @@ impl ExitAccountTargets {
     }
 }
 
+#[cfg(feature = "std")]
 impl CircuitFragment for SubstrateAccount {
     type Targets = ExitAccountTargets;
 
