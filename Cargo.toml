@@ -3,6 +3,7 @@ members = [
   "common",
   "wormhole/aggregator",
   "wormhole/circuit",
+  "wormhole/circuit-builder",
   "wormhole/prover",
   "wormhole/tests",
   "wormhole/tests/test-helpers",

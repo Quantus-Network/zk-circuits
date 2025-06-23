@@ -1,0 +1,11 @@
+[package]
+name = "circuit-builder"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+[dependencies]
+wormhole-circuit = { path = "../circuit", default-features = false, features = [
+    "std",
+] }
+plonky2 = { workspace = true, features = ["default"] }

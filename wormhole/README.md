@@ -56,7 +56,7 @@ changes to the circuit logic.
 To build the circuit binary, run the following command from the root of the workspace:
 
 ```sh
-cargo run --release --bin circuit-builder
+cargo run --release -p circuit-builder
 ```
 
 This will create a `circuit_data.bin` file in the root of the workspace. You must re-run this command any time you make changes to the files in the `wormhole/circuit` crate to ensure the binary is up-to-date.
