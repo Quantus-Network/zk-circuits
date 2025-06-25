@@ -71,3 +71,40 @@ pub fn felts_to_bytes(input: &[F]) -> Vec<u8> {
 pub fn felts_to_hashout(felts: &[F; 4]) -> HashOut<F> {
     HashOut { elements: *felts }
 }
+
+/// Converts a given fixed field element array into its byte representation.
+/// - `N` is the size of the input field element array.
+/// - `M` is the size of the output array
+pub fn fixed_felts_to_bytes<const N: usize, const M: usize>(input: [F; N]) -> [u8; M] {
+    let mut bytes = [0u8; M];
+
+    for (i, felt) in input.iter().enumerate() {
+        let start_index = i * BYTES_PER_ELEMENT;
+        let end_index = start_index + BYTES_PER_ELEMENT;
+
+        let value = felt.to_noncanonical_u64();
+        let value_bytes = value.to_be_bytes();
+
+        bytes[start_index..end_index].copy_from_slice(&value_bytes);
+    }
+
+    bytes
+}
+
+/// Converts a given fixed field byte array into its field element representation.
+/// - `N` is the size of the input byte element array.
+/// - `M` is the size of the output array
+pub fn fixed_bytes_to_felts<const N: usize, const M: usize>(input: [u8; N]) -> [F; M] {
+    let mut field_elements = [F::ZERO; M];
+
+    for (i, chunk) in input.chunks(BYTES_PER_ELEMENT).enumerate() {
+        let mut bytes = [0u8; 8];
+        bytes[..chunk.len()].copy_from_slice(chunk);
+        // Convert the chunk to a field element.
+        let value = u64::from_le_bytes(bytes);
+        let field_element = F::from_noncanonical_u64(value);
+        field_elements[i] = field_element;
+    }
+
+    field_elements
+}

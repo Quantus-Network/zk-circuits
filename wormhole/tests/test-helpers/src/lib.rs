@@ -1,9 +1,8 @@
 use crate::storage_proof::{DEFAULT_ROOT_HASH, TestInputs};
 use wormhole_circuit::{
-    inputs::{CircuitInputs, PrivateCircuitInputs, PublicCircuitInputs},
+    inputs::{BytesDigest, CircuitInputs, PrivateCircuitInputs, PublicCircuitInputs},
     nullifier::Nullifier,
     storage_proof::ProcessedStorageProof,
-    substrate_account::SubstrateAccount,
     unspendable_account::UnspendableAccount,
 };
 
@@ -23,16 +22,19 @@ pub const DEFAULT_TO_ACCOUNT: [u8; 32] = [
 impl TestInputs for CircuitInputs {
     fn test_inputs() -> Self {
         let secret = hex::decode(DEFAULT_SECRET.trim()).unwrap();
-        let root_hash: [u8; 32] = hex::decode(DEFAULT_ROOT_HASH.trim())
+        let root_hash = hex::decode(DEFAULT_ROOT_HASH.trim())
             .unwrap()
+            .as_slice()
             .try_into()
             .unwrap();
 
-        let funding_account = SubstrateAccount::new(&DEFAULT_FUNDING_ACCOUNT).unwrap();
-        let nullifier =
-            Nullifier::new(&secret, DEFAULT_FUNDING_NONCE, &DEFAULT_FUNDING_ACCOUNT).hash;
-        let unspendable_account = UnspendableAccount::new(&secret);
-        let exit_account = SubstrateAccount::new(&DEFAULT_TO_ACCOUNT).unwrap();
+        let funding_account = BytesDigest::from(DEFAULT_FUNDING_ACCOUNT);
+        let nullifier = Nullifier::new(&secret, DEFAULT_FUNDING_NONCE, &DEFAULT_FUNDING_ACCOUNT)
+            .hash
+            .into();
+        let unspendable_account = UnspendableAccount::new(&secret).account_id.into();
+        let exit_account = BytesDigest::from(DEFAULT_TO_ACCOUNT);
+
         let storage_proof = ProcessedStorageProof::test_inputs();
         Self {
             public: PublicCircuitInputs {
@@ -54,8 +56,8 @@ impl TestInputs for CircuitInputs {
 
 pub mod storage_proof {
     use wormhole_circuit::{
+        inputs::BytesDigest,
         storage_proof::{ProcessedStorageProof, StorageProof, leaf::LeafInputs},
-        substrate_account::SubstrateAccount,
     };
 
     use crate::{
@@ -90,14 +92,15 @@ pub mod storage_proof {
 
     impl TestInputs for LeafInputs {
         fn test_inputs() -> Self {
-            let funding_account = SubstrateAccount::new(&DEFAULT_FUNDING_ACCOUNT).unwrap();
-            let to_account = SubstrateAccount::new(&DEFAULT_TO_ACCOUNT).unwrap();
+            let funding_account = BytesDigest::from(DEFAULT_FUNDING_ACCOUNT);
+            let to_account = BytesDigest::from(DEFAULT_TO_ACCOUNT);
             LeafInputs::new(
                 DEFAULT_FUNDING_NONCE,
                 funding_account,
                 to_account,
                 DEFAULT_FUNDING_AMOUNT,
             )
+            .unwrap()
         }
     }
 

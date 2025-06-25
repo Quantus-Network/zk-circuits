@@ -1,16 +1,14 @@
 #[cfg(not(feature = "std"))]
 use alloc::vec::Vec;
+use core::ops::Deref;
 #[cfg(feature = "std")]
 use std::vec::Vec;
 
-use crate::codec::FieldElementCodec;
 use crate::storage_proof::ProcessedStorageProof;
-use crate::substrate_account::SubstrateAccount;
-use crate::unspendable_account::UnspendableAccount;
-use anyhow::bail;
+use anyhow::{anyhow, bail, Context};
 use plonky2::plonk::proof::ProofWithPublicInputs;
 use zk_circuits_common::circuit::{C, D, F};
-use zk_circuits_common::utils::{felts_to_bytes, felts_to_u128, Digest};
+use zk_circuits_common::utils::{felts_to_bytes, felts_to_u128, fixed_felts_to_bytes, Digest};
 
 /// The total size of the public inputs field element vector.
 pub const PUBLIC_INPUTS_FELTS_LEN: usize = 14;
@@ -22,6 +20,58 @@ pub const ROOT_HASH_START_INDEX: usize = 6;
 pub const ROOT_HASH_END_INDEX: usize = 10;
 pub const EXIT_ACCOUNT_START_INDEX: usize = 10;
 pub const EXIT_ACCOUNT_END_INDEX: usize = 14;
+
+/// A bytes digest containing various helpful methods for converting between
+/// field element digests and byte digests.
+#[derive(Default, Debug, Clone, Copy)]
+pub struct BytesDigest([u8; 32]);
+
+impl BytesDigest {
+    fn from_felt_slice(slice: &[F]) -> anyhow::Result<Self> {
+        let bytes = felts_to_bytes(slice).try_into().map_err(|_| {
+            anyhow!(
+                "failed to deserialize bytes digest from field elements. Expected length 4, got {}",
+                slice.len()
+            )
+        })?;
+        Ok(BytesDigest(bytes))
+    }
+}
+
+impl From<[u8; 32]> for BytesDigest {
+    fn from(value: [u8; 32]) -> Self {
+        Self(value)
+    }
+}
+
+impl TryFrom<&[u8]> for BytesDigest {
+    type Error = anyhow::Error;
+
+    fn try_from(value: &[u8]) -> Result<Self, Self::Error> {
+        let bytes = value.try_into().map_err(|_| {
+            anyhow!(
+                "failed to deserialize bytes digest from byte vector. Expected length 32, got {}",
+                value.len()
+            )
+        })?;
+        Ok(Self(bytes))
+    }
+}
+
+impl From<Digest> for BytesDigest {
+    fn from(value: Digest) -> Self {
+        let bytes = fixed_felts_to_bytes(value);
+        Self(bytes)
+    }
+}
+
+impl Deref for BytesDigest {
+    type Target = [u8; 32];
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
 
 /// Inputs required to commit to the wormhole circuit.
 #[derive(Debug)]
@@ -36,11 +86,11 @@ pub struct PublicCircuitInputs {
     /// Amount to be withdrawn.
     pub funding_amount: u128,
     /// The nullifier.
-    pub nullifier: Digest,
+    pub nullifier: BytesDigest,
     /// The root hash of the storage trie.
-    pub root_hash: [u8; 32],
+    pub root_hash: BytesDigest,
     /// The address of the account to pay out to.
-    pub exit_account: SubstrateAccount,
+    pub exit_account: BytesDigest,
 }
 
 /// All of the private inputs required for the circuit.
@@ -54,9 +104,9 @@ pub struct PrivateCircuitInputs {
     /// in half at the expected childs hash index.
     pub storage_proof: ProcessedStorageProof,
     pub funding_nonce: u32,
-    pub funding_account: SubstrateAccount,
+    pub funding_account: BytesDigest,
     /// The unspendable account hash.
-    pub unspendable_account: UnspendableAccount,
+    pub unspendable_account: BytesDigest,
 }
 
 impl TryFrom<ProofWithPublicInputs<F, C, D>> for PublicCircuitInputs {
@@ -78,21 +128,25 @@ impl TryFrom<ProofWithPublicInputs<F, C, D>> for PublicCircuitInputs {
             )
         }
 
-        let nullifier =
-            Digest::try_from(&public_inputs[NULLIFIER_START_INDEX..NULLIFIER_END_INDEX])?;
-        let funding_amount = felts_to_u128(<[F; 2]>::try_from(
-            &public_inputs[FUNDING_AMOUNT_START_INDEX..FUNDING_AMOUNT_END_INDEX],
-        )?);
-        let root_hash: [u8; 32] =
-            felts_to_bytes(&public_inputs[ROOT_HASH_START_INDEX..ROOT_HASH_END_INDEX])
-                .try_into()
-                .map_err(|_| {
-                    anyhow::anyhow!("failed to deserialize root hash from public inputs")
-                })?;
+        let nullifier = BytesDigest::from_felt_slice(
+            &public_inputs[NULLIFIER_START_INDEX..NULLIFIER_END_INDEX],
+        )
+        .context("failed to deserialize nullifier hash")?;
+        let funding_amount = felts_to_u128(
+            <[F; 2]>::try_from(
+                &public_inputs[FUNDING_AMOUNT_START_INDEX..FUNDING_AMOUNT_END_INDEX],
+            )
+            .context("failed to deserialize funding amount")?,
+        );
+        let root_hash = BytesDigest::from_felt_slice(
+            &public_inputs[ROOT_HASH_START_INDEX..ROOT_HASH_END_INDEX],
+        )
+        .context("failed to deserialize root hash")?;
 
-        let exit_account = SubstrateAccount::from_field_elements(
+        let exit_account = BytesDigest::from_felt_slice(
             &public_inputs[EXIT_ACCOUNT_START_INDEX..EXIT_ACCOUNT_END_INDEX],
-        )?;
+        )
+        .context("failed to deserialize exit account")?;
 
         Ok(PublicCircuitInputs {
             funding_amount,

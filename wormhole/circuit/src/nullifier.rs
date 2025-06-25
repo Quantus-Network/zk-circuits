@@ -181,11 +181,10 @@ impl FieldElementCodec for Nullifier {
 
 impl From<&CircuitInputs> for Nullifier {
     fn from(inputs: &CircuitInputs) -> Self {
-        let funding_account = inputs.private.funding_account.to_bytes();
         Self::new(
             &inputs.private.secret,
             inputs.private.funding_nonce,
-            &funding_account,
+            inputs.private.funding_account.as_slice(),
         )
     }
 }

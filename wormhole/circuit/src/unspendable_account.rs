@@ -12,8 +12,8 @@ use plonky2::{
     plonk::{circuit_builder::CircuitBuilder, config::Hasher},
 };
 
-use crate::codec::ByteCodec;
 use crate::codec::FieldElementCodec;
+use crate::{codec::ByteCodec, inputs::CircuitInputs};
 use zk_circuits_common::circuit::{CircuitFragment, D, F};
 use zk_circuits_common::utils::{bytes_to_felts, felts_to_bytes, string_to_felt, Digest};
 
@@ -136,6 +136,12 @@ impl FieldElementCodec for UnspendableAccount {
         let secret = elements[offset..offset + secret_size].to_vec();
 
         Ok(Self { account_id, secret })
+    }
+}
+
+impl From<&CircuitInputs> for UnspendableAccount {
+    fn from(inputs: &CircuitInputs) -> Self {
+        Self::new(&inputs.private.secret)
     }
 }
 

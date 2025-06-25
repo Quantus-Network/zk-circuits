@@ -3,7 +3,8 @@ use plonky2::{
     hash::hash_types::HashOutTarget, iop::target::Target, plonk::circuit_builder::CircuitBuilder,
 };
 
-use crate::inputs::CircuitInputs;
+use crate::codec::ByteCodec;
+use crate::inputs::{BytesDigest, CircuitInputs};
 use crate::substrate_account::SubstrateAccount;
 use zk_circuits_common::circuit::{D, F};
 use zk_circuits_common::utils::{u128_to_felts, FELTS_PER_U128};
@@ -53,23 +54,27 @@ pub struct LeafInputs {
 impl LeafInputs {
     pub fn new(
         nonce: u32,
-        funding_account: SubstrateAccount,
-        to_account: SubstrateAccount,
+        funding_account: BytesDigest,
+        to_account: BytesDigest,
         funding_amount: u128,
-    ) -> Self {
+    ) -> anyhow::Result<Self> {
         let nonce = F::from_canonical_u32(nonce);
+        let funding_account = SubstrateAccount::from_bytes(funding_account.as_slice())?;
+        let to_account = SubstrateAccount::from_bytes(to_account.as_slice())?;
         let funding_amount = u128_to_felts(funding_amount);
-        Self {
+        Ok(Self {
             nonce,
             funding_account,
             to_account,
             funding_amount,
-        }
+        })
     }
 }
 
-impl From<&CircuitInputs> for LeafInputs {
-    fn from(inputs: &CircuitInputs) -> Self {
+impl TryFrom<&CircuitInputs> for LeafInputs {
+    type Error = anyhow::Error;
+
+    fn try_from(inputs: &CircuitInputs) -> Result<Self, Self::Error> {
         Self::new(
             inputs.private.funding_nonce,
             inputs.private.funding_account,
