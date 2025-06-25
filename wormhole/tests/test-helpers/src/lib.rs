@@ -29,7 +29,8 @@ impl TestInputs for CircuitInputs {
             .unwrap();
 
         let funding_account = SubstrateAccount::new(&DEFAULT_FUNDING_ACCOUNT).unwrap();
-        let nullifier = Nullifier::new(&secret, DEFAULT_FUNDING_NONCE, &DEFAULT_FUNDING_ACCOUNT);
+        let nullifier =
+            Nullifier::new(&secret, DEFAULT_FUNDING_NONCE, &DEFAULT_FUNDING_ACCOUNT).hash;
         let unspendable_account = UnspendableAccount::new(&secret);
         let exit_account = SubstrateAccount::new(&DEFAULT_TO_ACCOUNT).unwrap();
         let storage_proof = ProcessedStorageProof::test_inputs();

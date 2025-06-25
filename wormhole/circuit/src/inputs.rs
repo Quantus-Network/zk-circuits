@@ -4,14 +4,13 @@ use alloc::vec::Vec;
 use std::vec::Vec;
 
 use crate::codec::FieldElementCodec;
-use crate::nullifier::Nullifier;
 use crate::storage_proof::ProcessedStorageProof;
 use crate::substrate_account::SubstrateAccount;
 use crate::unspendable_account::UnspendableAccount;
 use anyhow::bail;
 use plonky2::plonk::proof::ProofWithPublicInputs;
 use zk_circuits_common::circuit::{C, D, F};
-use zk_circuits_common::utils::{felts_to_bytes, felts_to_u128};
+use zk_circuits_common::utils::{felts_to_bytes, felts_to_u128, Digest};
 
 /// The total size of the public inputs field element vector.
 pub const PUBLIC_INPUTS_FELTS_LEN: usize = 14;
@@ -23,10 +22,6 @@ pub const ROOT_HASH_START_INDEX: usize = 6;
 pub const ROOT_HASH_END_INDEX: usize = 10;
 pub const EXIT_ACCOUNT_START_INDEX: usize = 10;
 pub const EXIT_ACCOUNT_END_INDEX: usize = 14;
-// FIXME: This should not be here.
-pub const DEFAULT_SECRET: &str = "9aa84f99ef2de22e3070394176868df41d6a148117a36132d010529e19b018b7";
-pub const DEFAULT_FUNDING_NONCE: u32 = 0;
-pub const DEFAULT_FUNDING_ACCOUNT: &[u8] = &[10u8; 32];
 
 /// Inputs required to commit to the wormhole circuit.
 #[derive(Debug)]
@@ -41,7 +36,7 @@ pub struct PublicCircuitInputs {
     /// Amount to be withdrawn.
     pub funding_amount: u128,
     /// The nullifier.
-    pub nullifier: Nullifier,
+    pub nullifier: Digest,
     /// The root hash of the storage trie.
     pub root_hash: [u8; 32],
     /// The address of the account to pay out to.
@@ -83,13 +78,8 @@ impl TryFrom<ProofWithPublicInputs<F, C, D>> for PublicCircuitInputs {
             )
         }
 
-        // TODO: fix this
-        // let nullifier = Nullifier::from_field_elements(&public_inputs[idx0..idx1])?;
-        let nullifier = Nullifier::new(
-            DEFAULT_SECRET.as_ref(),
-            DEFAULT_FUNDING_NONCE,
-            DEFAULT_FUNDING_ACCOUNT,
-        );
+        let nullifier =
+            Digest::try_from(&public_inputs[NULLIFIER_START_INDEX..NULLIFIER_END_INDEX])?;
         let funding_amount = felts_to_u128(<[F; 2]>::try_from(
             &public_inputs[FUNDING_AMOUNT_START_INDEX..FUNDING_AMOUNT_END_INDEX],
         )?);

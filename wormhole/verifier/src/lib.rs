@@ -34,7 +34,7 @@
 //!     },
 //!     public: PublicCircuitInputs {
 //!         funding_amount: 1000,
-//!         nullifier: Nullifier::new(&[1u8; 32], 0, &[2u8; 32]),
+//!         nullifier: Nullifier::new(&[1u8; 32], 0, &[2u8; 32]).hash,
 //!         root_hash: [0u8; 32],
 //!         exit_account: SubstrateAccount::new(&[2u8; 32])?,
 //!     },

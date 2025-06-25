@@ -5,6 +5,7 @@ use std::vec::Vec;
 
 use crate::codec::ByteCodec;
 use crate::codec::FieldElementCodec;
+use crate::inputs::CircuitInputs;
 use plonky2::field::types::Field;
 use plonky2::{
     hash::{hash_types::HashOutTarget, poseidon::PoseidonHash},
@@ -27,7 +28,6 @@ pub const NULLIFIER_SIZE_FELTS: usize = 4 + 4 + 1 + 4;
 
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct Nullifier {
-    // FIXME: Should not be public, remove once hash is precomputed in tests.
     pub hash: Digest,
     pub secret: Vec<F>,
     funding_nonce: F,
@@ -176,6 +176,17 @@ impl FieldElementCodec for Nullifier {
             funding_nonce,
             funding_account,
         })
+    }
+}
+
+impl From<&CircuitInputs> for Nullifier {
+    fn from(inputs: &CircuitInputs) -> Self {
+        let funding_account = inputs.private.funding_account.to_bytes();
+        Self::new(
+            &inputs.private.secret,
+            inputs.private.funding_nonce,
+            &funding_account,
+        )
     }
 }
 

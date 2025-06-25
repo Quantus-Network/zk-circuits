@@ -32,7 +32,7 @@
 //!     },
 //!     public: PublicCircuitInputs {
 //!         funding_amount: 1000,
-//!         nullifier: Nullifier::new(&[1u8; 32], 0, &[2u8; 32]),
+//!         nullifier: Nullifier::new(&[1u8; 32], 0, &[2u8; 32]).hash,
 //!         root_hash: [0u8; 32],
 //!         exit_account: SubstrateAccount::new(&[2u8; 32])?,
 //!     },
@@ -53,9 +53,9 @@ use plonky2::{
     },
 };
 
-use wormhole_circuit::circuit::WormholeCircuit;
 use wormhole_circuit::storage_proof::StorageProof;
 use wormhole_circuit::{circuit::CircuitTargets, inputs::CircuitInputs};
+use wormhole_circuit::{circuit::WormholeCircuit, nullifier::Nullifier};
 use zk_circuits_common::circuit::{CircuitFragment, C, D, F};
 
 #[derive(Debug)]
@@ -106,12 +106,10 @@ impl WormholeProver {
         let Some(targets) = self.targets.take() else {
             bail!("prover has already commited to inputs");
         };
+        let nullifier = Nullifier::from(circuit_inputs);
         let storage_proof = StorageProof::from(circuit_inputs);
 
-        circuit_inputs
-            .public
-            .nullifier
-            .fill_targets(&mut self.partial_witness, targets.nullifier)?;
+        nullifier.fill_targets(&mut self.partial_witness, targets.nullifier)?;
         circuit_inputs
             .private
             .unspendable_account
