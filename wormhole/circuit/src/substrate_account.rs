@@ -13,10 +13,8 @@ use plonky2::{
     iop::witness::{PartialWitness, WitnessWrite},
     plonk::circuit_builder::CircuitBuilder,
 };
+use zk_circuits_common::circuit::{CircuitFragment, D, F};
 use zk_circuits_common::utils::{bytes_to_felts, felts_to_bytes, fixed_bytes_to_felts, Digest};
-use zk_circuits_common::{
-    circuit::{CircuitFragment, D, F},
-};
 
 #[derive(Debug, Default, Eq, PartialEq, Clone, Copy)]
 pub struct SubstrateAccount(pub Digest);
