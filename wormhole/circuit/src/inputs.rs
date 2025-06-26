@@ -26,18 +26,6 @@ pub const EXIT_ACCOUNT_END_INDEX: usize = 14;
 #[derive(Default, Debug, Clone, Copy)]
 pub struct BytesDigest([u8; 32]);
 
-impl BytesDigest {
-    fn from_felt_slice(slice: &[F]) -> anyhow::Result<Self> {
-        let bytes = felts_to_bytes(slice).try_into().map_err(|_| {
-            anyhow!(
-                "failed to deserialize bytes digest from field elements. Expected length 4, got {}",
-                slice.len()
-            )
-        })?;
-        Ok(BytesDigest(bytes))
-    }
-}
-
 impl From<[u8; 32]> for BytesDigest {
     fn from(value: [u8; 32]) -> Self {
         Self(value)
@@ -62,6 +50,20 @@ impl From<Digest> for BytesDigest {
     fn from(value: Digest) -> Self {
         let bytes = fixed_felts_to_bytes(value);
         Self(bytes)
+    }
+}
+
+impl TryFrom<&[F]> for BytesDigest {
+    type Error = anyhow::Error;
+
+    fn try_from(value: &[F]) -> Result<Self, Self::Error> {
+        let bytes = felts_to_bytes(value).try_into().map_err(|_| {
+            anyhow!(
+                "failed to deserialize bytes digest from field elements. Expected length 4, got {}",
+                value.len()
+            )
+        })?;
+        Ok(Self(bytes))
     }
 }
 
@@ -128,25 +130,22 @@ impl TryFrom<ProofWithPublicInputs<F, C, D>> for PublicCircuitInputs {
             )
         }
 
-        let nullifier = BytesDigest::from_felt_slice(
-            &public_inputs[NULLIFIER_START_INDEX..NULLIFIER_END_INDEX],
-        )
-        .context("failed to deserialize nullifier hash")?;
+        let nullifier =
+            BytesDigest::try_from(&public_inputs[NULLIFIER_START_INDEX..NULLIFIER_END_INDEX])
+                .context("failed to deserialize nullifier hash")?;
         let funding_amount = felts_to_u128(
             <[F; 2]>::try_from(
                 &public_inputs[FUNDING_AMOUNT_START_INDEX..FUNDING_AMOUNT_END_INDEX],
             )
             .context("failed to deserialize funding amount")?,
         );
-        let root_hash = BytesDigest::from_felt_slice(
-            &public_inputs[ROOT_HASH_START_INDEX..ROOT_HASH_END_INDEX],
-        )
-        .context("failed to deserialize root hash")?;
+        let root_hash =
+            BytesDigest::try_from(&public_inputs[ROOT_HASH_START_INDEX..ROOT_HASH_END_INDEX])
+                .context("failed to deserialize root hash")?;
 
-        let exit_account = BytesDigest::from_felt_slice(
-            &public_inputs[EXIT_ACCOUNT_START_INDEX..EXIT_ACCOUNT_END_INDEX],
-        )
-        .context("failed to deserialize exit account")?;
+        let exit_account =
+            BytesDigest::try_from(&public_inputs[EXIT_ACCOUNT_START_INDEX..EXIT_ACCOUNT_END_INDEX])
+                .context("failed to deserialize exit account")?;
 
         Ok(PublicCircuitInputs {
             funding_amount,
