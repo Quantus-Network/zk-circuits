@@ -31,19 +31,29 @@ pub struct Nullifier {
     pub hash: Digest,
     pub secret: Vec<F>,
     funding_nonce: F,
+    block_number: F,
     funding_account: Vec<F>,
 }
 
 impl Nullifier {
-    pub fn new(secret: &[u8], funding_nonce: u32, funding_account: &[u8]) -> Self {
+    pub fn new(
+        secret: &[u8],
+        funding_nonce: u32,
+        block_number: u32,
+        funding_account: &[u8],
+    ) -> Self {
         let mut preimage = Vec::new();
+
         let salt = string_to_felt(NULLIFIER_SALT);
         let secret = bytes_to_felts(secret);
         let funding_nonce = F::from_canonical_u32(funding_nonce);
+        let block_number = F::from_canonical_u32(block_number);
         let funding_account = bytes_to_felts(funding_account);
+
         preimage.push(salt);
         preimage.extend(secret.clone());
         preimage.push(funding_nonce);
+        preimage.push(block_number);
         preimage.extend(funding_account.clone());
 
         let inner_hash = PoseidonHash::hash_no_pad(&preimage).elements;
@@ -54,6 +64,7 @@ impl Nullifier {
             hash,
             secret,
             funding_nonce,
+            block_number,
             funding_account,
         }
     }
@@ -65,6 +76,7 @@ impl ByteCodec for Nullifier {
         bytes.extend(felts_to_bytes(&self.hash));
         bytes.extend(felts_to_bytes(&self.secret));
         bytes.extend(felts_to_bytes(&[self.funding_nonce]));
+        bytes.extend(felts_to_bytes(&[self.block_number]));
         bytes.extend(felts_to_bytes(&self.funding_account));
         bytes
     }
@@ -74,8 +86,10 @@ impl ByteCodec for Nullifier {
         let hash_size = 4 * f_size; // 4 field elements
         let secret_size = 4 * f_size; // 4 field elements
         let nonce_size = f_size; // 1 field element
+        let block_number_size = f_size; // 1 field element
         let funding_account_size = 4 * f_size; // 4 field elements
-        let total_size = hash_size + secret_size + nonce_size + funding_account_size;
+        let total_size =
+            hash_size + secret_size + nonce_size + block_number_size + funding_account_size;
 
         if slice.len() != total_size {
             return Err(anyhow::anyhow!(
@@ -109,6 +123,13 @@ impl ByteCodec for Nullifier {
             .ok_or_else(|| anyhow::anyhow!("Failed to deserialize funding_nonce"))?;
         offset += nonce_size;
 
+        // Deserialize block_number
+        let block_number = bytes_to_felts(&slice[offset..offset + block_number_size])
+            .first()
+            .copied()
+            .ok_or_else(|| anyhow::anyhow!("Failed to deserialize funding_nonce"))?;
+        offset += block_number_size;
+
         // Deserialize funding_account
         let funding_account = bytes_to_felts(&slice[offset..offset + funding_account_size]);
         if funding_account.len() != 4 {
@@ -122,6 +143,7 @@ impl ByteCodec for Nullifier {
             hash,
             secret,
             funding_nonce,
+            block_number,
             funding_account,
         })
     }
@@ -133,6 +155,7 @@ impl FieldElementCodec for Nullifier {
         elements.extend(self.hash.to_vec());
         elements.extend(self.secret.clone());
         elements.push(self.funding_nonce);
+        elements.push(self.block_number);
         elements.extend(self.funding_account.clone());
         elements
     }
@@ -141,8 +164,10 @@ impl FieldElementCodec for Nullifier {
         let hash_size = 4; // 32 bytes = 4 field elements
         let secret_size = 4; // 32 bytes = 4 field elements
         let nonce_size = 1; // 1 field element
+        let block_number_size = 1; // 1 field element
         let funding_account_size = 4; // 32 bytes = 4 field elements
-        let total_size = hash_size + secret_size + nonce_size + funding_account_size;
+        let total_size =
+            hash_size + secret_size + nonce_size + block_number_size + funding_account_size;
 
         if elements.len() != total_size {
             return Err(anyhow::anyhow!(
@@ -167,6 +192,10 @@ impl FieldElementCodec for Nullifier {
         let funding_nonce = elements[offset];
         offset += nonce_size;
 
+        // Deserialize block_number
+        let block_number = elements[offset];
+        offset += block_number_size;
+
         // Deserialize funding_account
         let funding_account = elements[offset..offset + funding_account_size].to_vec();
 
@@ -174,6 +203,7 @@ impl FieldElementCodec for Nullifier {
             hash,
             secret,
             funding_nonce,
+            block_number,
             funding_account,
         })
     }
@@ -184,6 +214,7 @@ pub struct NullifierTargets {
     hash: HashOutTarget,
     pub secret: Vec<Target>,
     funding_nonce: Target,
+    block_number: Target,
     pub funding_account: Vec<Target>,
 }
 
@@ -194,6 +225,7 @@ impl NullifierTargets {
             hash: builder.add_virtual_hash_public_input(),
             secret: builder.add_virtual_targets(SECRET_NUM_TARGETS),
             funding_nonce: builder.add_virtual_target(),
+            block_number: builder.add_virtual_target(),
             funding_account: builder.add_virtual_targets(FUNDING_ACCOUNT_NUM_TARGETS),
         }
     }
@@ -209,6 +241,7 @@ impl CircuitFragment for Nullifier {
             hash,
             ref secret,
             funding_nonce,
+            block_number,
             ref funding_account,
         }: &Self::Targets,
         builder: &mut CircuitBuilder<F, D>,
@@ -218,6 +251,7 @@ impl CircuitFragment for Nullifier {
         preimage.push(salt);
         preimage.extend(secret);
         preimage.push(funding_nonce);
+        preimage.push(block_number);
         preimage.extend(funding_account);
 
         // Compute the `generated_account` by double-hashing the preimage (salt + secret).
@@ -237,6 +271,7 @@ impl CircuitFragment for Nullifier {
         pw.set_hash_target(targets.hash, self.hash.into())?;
         pw.set_target_arr(&targets.secret, &self.secret)?;
         pw.set_target(targets.funding_nonce, self.funding_nonce)?;
+        pw.set_target(targets.block_number, self.block_number)?;
         pw.set_target_arr(&targets.funding_account, &self.funding_account)?;
         Ok(())
     }

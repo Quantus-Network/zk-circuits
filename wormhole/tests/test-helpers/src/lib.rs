@@ -1,6 +1,6 @@
 use crate::storage_proof::{DEFAULT_ROOT_HASH, TestInputs};
 use wormhole_circuit::{
-    inputs::{CircuitInputs, PrivateCircuitInputs, PublicCircuitInputs},
+    inputs::{CircuitInputs, DEFAULT_BLOCK_NUMBER, PrivateCircuitInputs, PublicCircuitInputs},
     nullifier::Nullifier,
     storage_proof::ProcessedStorageProof,
     substrate_account::SubstrateAccount,
@@ -29,7 +29,12 @@ impl TestInputs for CircuitInputs {
             .unwrap();
 
         let funding_account = SubstrateAccount::new(&DEFAULT_FUNDING_ACCOUNT).unwrap();
-        let nullifier = Nullifier::new(&secret, DEFAULT_FUNDING_NONCE, &DEFAULT_FUNDING_ACCOUNT);
+        let nullifier = Nullifier::new(
+            &secret,
+            DEFAULT_FUNDING_NONCE,
+            DEFAULT_BLOCK_NUMBER,
+            &DEFAULT_FUNDING_ACCOUNT,
+        );
         let unspendable_account = UnspendableAccount::new(&secret);
         let exit_account = SubstrateAccount::new(&DEFAULT_TO_ACCOUNT).unwrap();
         let storage_proof = ProcessedStorageProof::test_inputs();
@@ -44,6 +49,7 @@ impl TestInputs for CircuitInputs {
                 secret,
                 storage_proof,
                 funding_nonce: DEFAULT_FUNDING_NONCE,
+                block_number: DEFAULT_BLOCK_NUMBER,
                 funding_account,
                 unspendable_account,
             },
@@ -53,6 +59,7 @@ impl TestInputs for CircuitInputs {
 
 pub mod storage_proof {
     use wormhole_circuit::{
+        inputs::DEFAULT_BLOCK_NUMBER,
         storage_proof::{ProcessedStorageProof, StorageProof, leaf::LeafInputs},
         substrate_account::SubstrateAccount,
     };
@@ -93,6 +100,7 @@ pub mod storage_proof {
             let to_account = SubstrateAccount::new(&DEFAULT_TO_ACCOUNT).unwrap();
             LeafInputs::new(
                 DEFAULT_FUNDING_NONCE,
+                DEFAULT_BLOCK_NUMBER,
                 funding_account,
                 to_account,
                 DEFAULT_FUNDING_AMOUNT,
@@ -116,7 +124,7 @@ pub mod storage_proof {
 }
 
 pub mod nullifier {
-    use wormhole_circuit::nullifier::Nullifier;
+    use wormhole_circuit::{inputs::DEFAULT_BLOCK_NUMBER, nullifier::Nullifier};
 
     use super::{DEFAULT_FUNDING_ACCOUNT, DEFAULT_FUNDING_NONCE, DEFAULT_SECRET};
 
@@ -130,6 +138,7 @@ pub mod nullifier {
             Self::new(
                 secret.as_slice(),
                 DEFAULT_FUNDING_NONCE,
+                DEFAULT_BLOCK_NUMBER,
                 &DEFAULT_FUNDING_ACCOUNT,
             )
         }
