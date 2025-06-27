@@ -34,10 +34,7 @@ pub struct Nullifier {
 }
 
 impl Nullifier {
-    pub fn new(
-        secret: &[u8],
-        transfer_count: u64,
-    ) -> Self {
+    pub fn new(secret: &[u8], transfer_count: u64) -> Self {
         let mut preimage = Vec::new();
 
         let salt = string_to_felt(NULLIFIER_SALT);
@@ -74,8 +71,7 @@ impl ByteCodec for Nullifier {
         let hash_size = 4 * f_size; // 4 field elements
         let secret_size = 4 * f_size; // 4 field elements
         let transfer_count_size = f_size; // 1 field element
-        let total_size =
-            hash_size + secret_size + transfer_count_size;
+        let total_size = hash_size + secret_size + transfer_count_size;
 
         if slice.len() != total_size {
             return Err(anyhow::anyhow!(
@@ -107,7 +103,6 @@ impl ByteCodec for Nullifier {
             .first()
             .copied()
             .ok_or_else(|| anyhow::anyhow!("Failed to deserialize transfer_count"))?;
-        offset += transfer_count_size;
 
         Ok(Self {
             hash,
@@ -130,8 +125,7 @@ impl FieldElementCodec for Nullifier {
         let hash_size = 4; // 32 bytes = 4 field elements
         let secret_size = 4; // 32 bytes = 4 field elements
         let transfer_count_size = 1; // 1 field element
-        let total_size =
-            hash_size + secret_size + transfer_count_size;
+        let total_size = hash_size + secret_size + transfer_count_size;
 
         if elements.len() != total_size {
             return Err(anyhow::anyhow!(
@@ -154,7 +148,6 @@ impl FieldElementCodec for Nullifier {
 
         // Deserialize funding_nonce
         let transfer_count = elements[offset];
-        offset += transfer_count_size;
 
         Ok(Self {
             hash,
@@ -166,10 +159,7 @@ impl FieldElementCodec for Nullifier {
 
 impl From<&CircuitInputs> for Nullifier {
     fn from(inputs: &CircuitInputs) -> Self {
-        Self::new(
-            &inputs.private.secret,
-            inputs.private.transfer_count,
-        )
+        Self::new(&inputs.private.secret, inputs.private.transfer_count)
     }
 }
 
@@ -186,7 +176,7 @@ impl NullifierTargets {
         Self {
             hash: builder.add_virtual_hash_public_input(),
             secret: builder.add_virtual_targets(SECRET_NUM_TARGETS),
-            transfer_count: builder.add_virtual_target()
+            transfer_count: builder.add_virtual_target(),
         }
     }
 }

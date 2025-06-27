@@ -1,8 +1,7 @@
 use plonky2::{field::types::Field, plonk::proof::ProofWithPublicInputs};
-use test_helpers::{DEFAULT_FUNDING_ACCOUNT, DEFAULT_SECRET};
+use test_helpers::{DEFAULT_SECRET, DEFAULT_TRANSFER_COUNT};
 use wormhole_circuit::{
     codec::FieldElementCodec,
-    inputs::DEFAULT_TRANSFER_COUNT,
     nullifier::{Nullifier, NullifierTargets},
 };
 use zk_circuits_common::circuit::{CircuitFragment, C, D, F};
@@ -25,10 +24,7 @@ pub trait TestInputs {
 impl TestInputs for Nullifier {
     fn test_inputs() -> Self {
         let secret = hex::decode(DEFAULT_SECRET).unwrap();
-        Self::new(
-            &secret,
-            DEFAULT_TRANSFER_COUNT,
-        )
+        Self::new(&secret, DEFAULT_TRANSFER_COUNT)
     }
 }
 
