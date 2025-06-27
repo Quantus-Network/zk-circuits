@@ -9,3 +9,4 @@ wormhole-circuit = { path = "../circuit", default-features = false, features = [
     "std",
 ] }
 plonky2 = { workspace = true, features = ["default"] }
+zk-circuits-common = { path = "../../common" }

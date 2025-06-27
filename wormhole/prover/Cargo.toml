@@ -24,7 +24,8 @@ std = [
   "wormhole-circuit/std",
   "zk-circuits-common/std",
 ]
-no_std = []
+no_std = ["zk-circuits-common/no_std", "wormhole-circuit/no_std"]
+no_random = ["plonky2/no_random"]
 
 [lints]
 workspace = true

@@ -2,8 +2,10 @@ use anyhow::Result;
 use plonky2::field::types::Field;
 use plonky2::hash::poseidon::PoseidonHash;
 use plonky2::plonk::circuit_data::CircuitConfig;
-use plonky2::plonk::config::Hasher;
+use plonky2::plonk::config::{Hasher, PoseidonGoldilocksConfig};
+use plonky2::util::serialization::{DefaultGateSerializer, DefaultGeneratorSerializer};
 use std::fs;
+use std::path::Path;
 use wormhole_circuit::circuit::{circuit_data_from_bytes, circuit_data_to_bytes, WormholeCircuit};
 use wormhole_circuit::inputs::{CircuitInputs, PrivateCircuitInputs, PublicCircuitInputs};
 use wormhole_circuit::nullifier::Nullifier;
@@ -12,7 +14,7 @@ use wormhole_circuit::substrate_account::SubstrateAccount;
 use wormhole_circuit::unspendable_account::UnspendableAccount;
 use wormhole_prover::WormholeProver;
 use wormhole_verifier::WormholeVerifier;
-use zk_circuits_common::circuit::F;
+use zk_circuits_common::circuit::{D, F};
 use zk_circuits_common::utils::{felts_to_bytes, u128_to_felts};
 
 #[test]
@@ -40,15 +42,49 @@ fn test_circuit_data_serialization() {
 
 #[test]
 fn test_prover_and_verifier_from_file_e2e() -> Result<()> {
-    // Generate a non-ZK circuit and write it to a temporary file.
+    // Create a temp directory for the test files
+    let temp_dir = "temp_test_bins_e2e";
+    fs::create_dir_all(temp_dir)?;
+
+    // Generate circuit and write component files to the temporary directory.
     let config = CircuitConfig::standard_recursion_config();
     let circuit_data = WormholeCircuit::new(config).build_circuit();
-    let circuit_bytes = circuit_data_to_bytes(&circuit_data).map_err(|e| anyhow::anyhow!(e))?;
-    fs::write("circuit_data.bin", &circuit_bytes)?;
 
-    // Create a prover and verifier from the temporary file.
-    let prover = WormholeProver::from_file()?;
-    let verifier = WormholeVerifier::from_file()?;
+    let gate_serializer = DefaultGateSerializer;
+    let generator_serializer = DefaultGeneratorSerializer::<PoseidonGoldilocksConfig, D> {
+        _phantom: Default::default(),
+    };
+
+    let verifier_data = circuit_data.verifier_data();
+    let prover_data = circuit_data.prover_data();
+    let common_data = &verifier_data.common;
+
+    // Serialize and write common data
+    let common_bytes = common_data
+        .to_bytes(&gate_serializer)
+        .map_err(|e| anyhow::anyhow!(e.to_string()))?;
+    let common_path = Path::new(temp_dir).join("common.bin");
+    fs::write(&common_path, &common_bytes)?;
+
+    // Serialize and write verifier only data
+    let verifier_only_bytes = verifier_data
+        .verifier_only
+        .to_bytes()
+        .map_err(|e| anyhow::anyhow!(e.to_string()))?;
+    let verifier_path = Path::new(temp_dir).join("verifier.bin");
+    fs::write(&verifier_path, &verifier_only_bytes)?;
+
+    // Serialize and write prover only data
+    let prover_only_bytes = prover_data
+        .prover_only
+        .to_bytes(&generator_serializer, common_data)
+        .map_err(|e| anyhow::anyhow!(e.to_string()))?;
+    let prover_path = Path::new(temp_dir).join("prover.bin");
+    fs::write(&prover_path, &prover_only_bytes)?;
+
+    // Create a prover and verifier from the temporary files.
+    let prover = WormholeProver::new_from_files(&prover_path, &common_path)?;
+    let verifier = WormholeVerifier::new_from_files(&verifier_path, &common_path)?;
 
     // Create inputs
     let funding_account = SubstrateAccount::new(&[2u8; 32])?;
@@ -85,12 +121,12 @@ fn test_prover_and_verifier_from_file_e2e() -> Result<()> {
     };
 
     // Generate and verify a proof
-    let prover_next = prover.commit(&inputs)?;
-    let proof = prover_next.prove()?;
+    let prover_next = prover.commit(&inputs).map_err(|e| anyhow::anyhow!(e))?;
+    let proof = prover_next.prove().map_err(|e| anyhow::anyhow!(e))?;
     verifier.verify(proof).map_err(|e| anyhow::anyhow!(e))?;
 
-    // Clean up the temporary file
-    fs::remove_file("circuit_data.bin")?;
+    // Clean up the temporary directory
+    fs::remove_dir_all(temp_dir)?;
 
     Ok(())
 }
