@@ -13,7 +13,7 @@ fn push_proof_to_buffer() {
     let inputs = CircuitInputs::test_inputs();
     let proof = prover.commit(&inputs).unwrap().prove().unwrap();
 
-    let mut aggregator = WormholeProofAggregator::new(circuit_config());
+    let mut aggregator = WormholeProofAggregator::from_circuit_config(circuit_config());
     aggregator.push_proof(proof).unwrap();
 
     let proofs_buffer = aggregator.proofs_buffer.unwrap();
@@ -27,7 +27,7 @@ fn push_proof_to_full_buffer() {
     let inputs = CircuitInputs::test_inputs();
     let proof = prover.commit(&inputs).unwrap().prove().unwrap();
 
-    let mut aggregator = WormholeProofAggregator::new(circuit_config());
+    let mut aggregator = WormholeProofAggregator::from_circuit_config(circuit_config());
 
     // Fill up the proof buffer.
     for _ in 0..aggregator.config.num_leaf_proofs {
@@ -48,7 +48,7 @@ fn aggregate_single_proof() {
     let inputs = CircuitInputs::test_inputs();
     let proof = prover.commit(&inputs).unwrap().prove().unwrap();
 
-    let mut aggregator = WormholeProofAggregator::new(circuit_config());
+    let mut aggregator = WormholeProofAggregator::from_circuit_config(circuit_config());
     aggregator.push_proof(proof).unwrap();
 
     aggregator.aggregate().unwrap();
@@ -61,7 +61,7 @@ fn aggregate_proofs_into_tree() {
     let inputs = CircuitInputs::test_inputs();
     let proof = prover.commit(&inputs).unwrap().prove().unwrap();
 
-    let mut aggregator = WormholeProofAggregator::new(circuit_config());
+    let mut aggregator = WormholeProofAggregator::from_circuit_config(circuit_config());
 
     // Fill up the proof buffer.
     for _ in 0..aggregator.config.num_leaf_proofs {
@@ -82,7 +82,7 @@ fn aggregate_half_full_proof_array_into_tree() {
     let inputs = CircuitInputs::test_inputs();
     let proof = prover.commit(&inputs).unwrap().prove().unwrap();
 
-    let mut aggregator = WormholeProofAggregator::new(circuit_config());
+    let mut aggregator = WormholeProofAggregator::from_circuit_config(circuit_config());
 
     // Fill up the proof buffer.
     for _ in 0..aggregator.config.num_leaf_proofs {

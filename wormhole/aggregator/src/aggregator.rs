@@ -18,12 +18,26 @@ pub struct WormholeProofAggregator {
 impl Default for WormholeProofAggregator {
     fn default() -> Self {
         let circuit_config = CircuitConfig::standard_recursion_zk_config();
-        Self::new(circuit_config)
+        Self::from_circuit_config(circuit_config)
     }
 }
 
 impl WormholeProofAggregator {
-    pub fn new(circuit_config: CircuitConfig) -> Self {
+    /// Creates a new [`WormholeProofAggregator`] with a given [`VerifierCircuitData`].
+    pub fn new(verifier_circuit_data: VerifierCircuitData<F, C, D>) -> Self {
+        let aggregation_config = TreeAggregationConfig::default();
+        let proofs_buffer = Some(Vec::with_capacity(aggregation_config.num_leaf_proofs));
+
+        Self {
+            leaf_circuit_data: verifier_circuit_data,
+            config: aggregation_config,
+            proofs_buffer,
+        }
+    }
+
+    /// Creates a new [`WormholeProofAggregator`] with a given [`CircuitConfig`]
+    /// by compiling the circuit data from a [`WormholeVerifier`].
+    pub fn from_circuit_config(circuit_config: CircuitConfig) -> Self {
         let leaf_circuit_data = WormholeVerifier::new(circuit_config.clone(), None).circuit_data;
         let aggregation_config = TreeAggregationConfig::default();
         let proofs_buffer = Some(Vec::with_capacity(aggregation_config.num_leaf_proofs));
