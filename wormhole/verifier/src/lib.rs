@@ -28,15 +28,15 @@
 //!     private: PrivateCircuitInputs {
 //!         secret: vec![1u8; 32],
 //!         funding_nonce: 0,
-//!         funding_account: SubstrateAccount::new(&[2u8; 32])?,
+//!         funding_account: [2u8; 32].into(),
 //!         storage_proof: ProcessedStorageProof::new(vec![], vec![]).unwrap(),
-//!         unspendable_account: UnspendableAccount::new(&[1u8; 32]),
+//!         unspendable_account: [1u8; 32].into(),
 //!     },
 //!     public: PublicCircuitInputs {
 //!         funding_amount: 1000,
-//!         nullifier: Nullifier::new(&[1u8; 32], 0, &[2u8; 32]),
-//!         root_hash: [0u8; 32],
-//!         exit_account: SubstrateAccount::new(&[2u8; 32])?,
+//!         nullifier: [1u8; 32].into(),
+//!         root_hash: [0u8; 32].into(),
+//!         exit_account: [2u8; 32].into(),
 //!     },
 //! };
 //!

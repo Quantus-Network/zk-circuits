@@ -26,15 +26,15 @@
 //!     private: PrivateCircuitInputs {
 //!         secret: vec![1u8; 32],
 //!         funding_nonce: 0,
-//!         funding_account: SubstrateAccount::new(&[2u8; 32])?,
+//!         funding_account: [2u8; 32].into(),
 //!         storage_proof: ProcessedStorageProof::new(vec![], vec![]).unwrap(),
-//!         unspendable_account: UnspendableAccount::new(&[1u8; 32]),
+//!         unspendable_account: [1u8; 32].into(),
 //!     },
 //!     public: PublicCircuitInputs {
 //!         funding_amount: 1000,
-//!         nullifier: Nullifier::new(&[1u8; 32], 0, &[2u8; 32]),
-//!         root_hash: [0u8; 32],
-//!         exit_account: SubstrateAccount::new(&[2u8; 32])?,
+//!         nullifier: [1u8; 32].into(),
+//!         root_hash: [0u8; 32].into(),
+//!         exit_account: [2u8; 32].into(),
 //!     },
 //! };
 //!
@@ -53,9 +53,11 @@ use plonky2::{
     },
 };
 
-use wormhole_circuit::circuit::WormholeCircuit;
-use wormhole_circuit::storage_proof::StorageProof;
-use wormhole_circuit::{circuit::CircuitTargets, inputs::CircuitInputs};
+use wormhole_circuit::{
+    circuit::CircuitTargets, inputs::CircuitInputs, substrate_account::SubstrateAccount,
+};
+use wormhole_circuit::{circuit::WormholeCircuit, nullifier::Nullifier};
+use wormhole_circuit::{storage_proof::StorageProof, unspendable_account::UnspendableAccount};
 use zk_circuits_common::circuit::{CircuitFragment, C, D, F};
 
 #[derive(Debug)]
@@ -106,21 +108,16 @@ impl WormholeProver {
         let Some(targets) = self.targets.take() else {
             bail!("prover has already commited to inputs");
         };
-        let storage_proof = StorageProof::from(circuit_inputs);
 
-        circuit_inputs
-            .public
-            .nullifier
-            .fill_targets(&mut self.partial_witness, targets.nullifier)?;
-        circuit_inputs
-            .private
-            .unspendable_account
-            .fill_targets(&mut self.partial_witness, targets.unspendable_account)?;
+        let nullifier = Nullifier::from(circuit_inputs);
+        let storage_proof = StorageProof::try_from(circuit_inputs)?;
+        let unspendable_account = UnspendableAccount::from(circuit_inputs);
+        let exit_account = SubstrateAccount::try_from(circuit_inputs)?;
+
+        nullifier.fill_targets(&mut self.partial_witness, targets.nullifier)?;
+        unspendable_account.fill_targets(&mut self.partial_witness, targets.unspendable_account)?;
         storage_proof.fill_targets(&mut self.partial_witness, targets.storage_proof)?;
-        circuit_inputs
-            .public
-            .exit_account
-            .fill_targets(&mut self.partial_witness, targets.exit_account)?;
+        exit_account.fill_targets(&mut self.partial_witness, targets.exit_account)?;
 
         Ok(self)
     }

@@ -1,16 +1,20 @@
 #[cfg(not(feature = "std"))]
 use alloc::vec::Vec;
+use core::ops::Deref;
 #[cfg(feature = "std")]
 use std::vec::Vec;
 
-use crate::codec::{ByteCodec, FieldElementCodec};
+use crate::{
+    codec::{ByteCodec, FieldElementCodec},
+    inputs::{BytesDigest, CircuitInputs},
+};
 use plonky2::{
     hash::hash_types::HashOutTarget,
     iop::witness::{PartialWitness, WitnessWrite},
     plonk::circuit_builder::CircuitBuilder,
 };
 use zk_circuits_common::circuit::{CircuitFragment, D, F};
-use zk_circuits_common::utils::{bytes_to_felts, felts_to_bytes, Digest};
+use zk_circuits_common::utils::{bytes_to_felts, felts_to_bytes, fixed_bytes_to_felts, Digest};
 
 #[derive(Debug, Default, Eq, PartialEq, Clone, Copy)]
 pub struct SubstrateAccount(pub Digest);
@@ -50,6 +54,29 @@ impl FieldElementCodec for SubstrateAccount {
             .try_into()
             .map_err(|_| anyhow::anyhow!("Failed to convert slice to [GoldilocksField; 4]"))?;
         Ok(Self(account_id))
+    }
+}
+
+impl Deref for SubstrateAccount {
+    type Target = Digest;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl From<BytesDigest> for SubstrateAccount {
+    fn from(value: BytesDigest) -> Self {
+        let felts = fixed_bytes_to_felts(*value);
+        SubstrateAccount(felts)
+    }
+}
+
+impl TryFrom<&CircuitInputs> for SubstrateAccount {
+    type Error = anyhow::Error;
+
+    fn try_from(inputs: &CircuitInputs) -> Result<Self, Self::Error> {
+        Self::from_bytes(inputs.public.exit_account.as_slice())
     }
 }
 

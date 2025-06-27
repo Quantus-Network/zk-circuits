@@ -5,6 +5,7 @@ use std::vec::Vec;
 
 use crate::codec::ByteCodec;
 use crate::codec::FieldElementCodec;
+use crate::inputs::CircuitInputs;
 use plonky2::field::types::Field;
 use plonky2::{
     hash::{hash_types::HashOutTarget, poseidon::PoseidonHash},
@@ -27,30 +28,25 @@ pub const NULLIFIER_SIZE_FELTS: usize = 4 + 4 + 1 + 4;
 
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct Nullifier {
-    // FIXME: Should not be public, remove once hash is precomputed in tests.
     pub hash: Digest,
     pub secret: Vec<F>,
     transfer_count: F,
-    funding_account: Vec<F>,
 }
 
 impl Nullifier {
     pub fn new(
         secret: &[u8],
         transfer_count: u64,
-        funding_account: &[u8],
     ) -> Self {
         let mut preimage = Vec::new();
 
         let salt = string_to_felt(NULLIFIER_SALT);
         let secret = bytes_to_felts(secret);
         let transfer_count = F::from_noncanonical_u64(transfer_count);
-        let funding_account = bytes_to_felts(funding_account);
 
         preimage.push(salt);
         preimage.extend(secret.clone());
         preimage.push(transfer_count);
-        preimage.extend(funding_account.clone());
 
         let inner_hash = PoseidonHash::hash_no_pad(&preimage).elements;
         let outer_hash = PoseidonHash::hash_no_pad(&inner_hash).elements;
@@ -60,7 +56,6 @@ impl Nullifier {
             hash,
             secret,
             transfer_count,
-            funding_account,
         }
     }
 }
@@ -71,7 +66,6 @@ impl ByteCodec for Nullifier {
         bytes.extend(felts_to_bytes(&self.hash));
         bytes.extend(felts_to_bytes(&self.secret));
         bytes.extend(felts_to_bytes(&[self.transfer_count]));
-        bytes.extend(felts_to_bytes(&self.funding_account));
         bytes
     }
 
@@ -80,9 +74,8 @@ impl ByteCodec for Nullifier {
         let hash_size = 4 * f_size; // 4 field elements
         let secret_size = 4 * f_size; // 4 field elements
         let transfer_count_size = f_size; // 1 field element
-        let funding_account_size = 4 * f_size; // 4 field elements
         let total_size =
-            hash_size + secret_size + transfer_count_size + funding_account_size;
+            hash_size + secret_size + transfer_count_size;
 
         if slice.len() != total_size {
             return Err(anyhow::anyhow!(
@@ -116,20 +109,10 @@ impl ByteCodec for Nullifier {
             .ok_or_else(|| anyhow::anyhow!("Failed to deserialize transfer_count"))?;
         offset += transfer_count_size;
 
-        // Deserialize funding_account
-        let funding_account = bytes_to_felts(&slice[offset..offset + funding_account_size]);
-        if funding_account.len() != 4 {
-            return Err(anyhow::anyhow!(
-                "Expected 4 field elements for funding_account, got: {}",
-                funding_account.len()
-            ));
-        }
-
         Ok(Self {
             hash,
             secret,
             transfer_count,
-            funding_account,
         })
     }
 }
@@ -140,7 +123,6 @@ impl FieldElementCodec for Nullifier {
         elements.extend(self.hash.to_vec());
         elements.extend(self.secret.clone());
         elements.push(self.transfer_count);
-        elements.extend(self.funding_account.clone());
         elements
     }
 
@@ -148,9 +130,8 @@ impl FieldElementCodec for Nullifier {
         let hash_size = 4; // 32 bytes = 4 field elements
         let secret_size = 4; // 32 bytes = 4 field elements
         let transfer_count_size = 1; // 1 field element
-        let funding_account_size = 4; // 32 bytes = 4 field elements
         let total_size =
-            hash_size + secret_size + transfer_count_size + funding_account_size;
+            hash_size + secret_size + transfer_count_size;
 
         if elements.len() != total_size {
             return Err(anyhow::anyhow!(
@@ -175,15 +156,20 @@ impl FieldElementCodec for Nullifier {
         let transfer_count = elements[offset];
         offset += transfer_count_size;
 
-        // Deserialize funding_account
-        let funding_account = elements[offset..offset + funding_account_size].to_vec();
-
         Ok(Self {
             hash,
             secret,
             transfer_count,
-            funding_account,
         })
+    }
+}
+
+impl From<&CircuitInputs> for Nullifier {
+    fn from(inputs: &CircuitInputs) -> Self {
+        Self::new(
+            &inputs.private.secret,
+            inputs.private.transfer_count,
+        )
     }
 }
 
@@ -192,7 +178,6 @@ pub struct NullifierTargets {
     hash: HashOutTarget,
     pub secret: Vec<Target>,
     transfer_count: Target,
-    pub funding_account: Vec<Target>,
 }
 
 impl NullifierTargets {
@@ -201,8 +186,7 @@ impl NullifierTargets {
         Self {
             hash: builder.add_virtual_hash_public_input(),
             secret: builder.add_virtual_targets(SECRET_NUM_TARGETS),
-            transfer_count: builder.add_virtual_target(),
-            funding_account: builder.add_virtual_targets(FUNDING_ACCOUNT_NUM_TARGETS),
+            transfer_count: builder.add_virtual_target()
         }
     }
 }
@@ -217,7 +201,6 @@ impl CircuitFragment for Nullifier {
             hash,
             ref secret,
             transfer_count,
-            ref funding_account,
         }: &Self::Targets,
         builder: &mut CircuitBuilder<F, D>,
     ) {
@@ -226,7 +209,6 @@ impl CircuitFragment for Nullifier {
         preimage.push(salt);
         preimage.extend(secret);
         preimage.push(transfer_count);
-        preimage.extend(funding_account);
 
         // Compute the `generated_account` by double-hashing the preimage (salt + secret).
         let inner_hash = builder.hash_n_to_hash_no_pad::<PoseidonHash>(preimage.clone());
@@ -245,7 +227,6 @@ impl CircuitFragment for Nullifier {
         pw.set_hash_target(targets.hash, self.hash.into())?;
         pw.set_target_arr(&targets.secret, &self.secret)?;
         pw.set_target(targets.transfer_count, self.transfer_count)?;
-        pw.set_target_arr(&targets.funding_account, &self.funding_account)?;
         Ok(())
     }
 }

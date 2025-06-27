@@ -124,13 +124,15 @@ impl StorageProof {
     }
 }
 
-impl From<&CircuitInputs> for StorageProof {
-    fn from(inputs: &CircuitInputs) -> Self {
-        Self::new(
+impl TryFrom<&CircuitInputs> for StorageProof {
+    type Error = anyhow::Error;
+
+    fn try_from(inputs: &CircuitInputs) -> Result<Self, Self::Error> {
+        Ok(Self::new(
             &inputs.private.storage_proof,
-            inputs.public.root_hash,
-            LeafInputs::from(inputs),
-        )
+            *inputs.public.root_hash,
+            LeafInputs::try_from(inputs)?,
+        ))
     }
 }
 
