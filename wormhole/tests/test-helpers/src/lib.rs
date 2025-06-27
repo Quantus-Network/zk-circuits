@@ -1,6 +1,6 @@
 use crate::storage_proof::{DEFAULT_ROOT_HASH, TestInputs};
 use wormhole_circuit::{
-    inputs::{CircuitInputs, DEFAULT_BLOCK_NUMBER, PrivateCircuitInputs, PublicCircuitInputs},
+    inputs::{CircuitInputs, DEFAULT_TRANSFER_COUNT, PrivateCircuitInputs, PublicCircuitInputs},
     nullifier::Nullifier,
     storage_proof::ProcessedStorageProof,
     substrate_account::SubstrateAccount,
@@ -12,7 +12,6 @@ pub const DEFAULT_FUNDING_ACCOUNT: [u8; 32] = [
     223, 23, 232, 59, 97, 108, 223, 113, 2, 89, 54, 39, 126, 65, 248, 106, 156, 219, 7, 123, 213,
     197, 228, 118, 177, 81, 61, 77, 23, 89, 200, 80,
 ];
-pub const DEFAULT_FUNDING_NONCE: u32 = 1;
 pub const DEFAULT_FUNDING_AMOUNT: u128 =
     u128::from_le_bytes([0, 202, 154, 59, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
 pub const DEFAULT_TO_ACCOUNT: [u8; 32] = [
@@ -31,8 +30,7 @@ impl TestInputs for CircuitInputs {
         let funding_account = SubstrateAccount::new(&DEFAULT_FUNDING_ACCOUNT).unwrap();
         let nullifier = Nullifier::new(
             &secret,
-            DEFAULT_FUNDING_NONCE,
-            DEFAULT_BLOCK_NUMBER,
+            DEFAULT_TRANSFER_COUNT,
             &DEFAULT_FUNDING_ACCOUNT,
         );
         let unspendable_account = UnspendableAccount::new(&secret);
@@ -48,8 +46,7 @@ impl TestInputs for CircuitInputs {
             private: PrivateCircuitInputs {
                 secret,
                 storage_proof,
-                funding_nonce: DEFAULT_FUNDING_NONCE,
-                block_number: DEFAULT_BLOCK_NUMBER,
+                transfer_count: DEFAULT_TRANSFER_COUNT,
                 funding_account,
                 unspendable_account,
             },
@@ -59,13 +56,12 @@ impl TestInputs for CircuitInputs {
 
 pub mod storage_proof {
     use wormhole_circuit::{
-        inputs::DEFAULT_BLOCK_NUMBER,
         storage_proof::{ProcessedStorageProof, StorageProof, leaf::LeafInputs},
         substrate_account::SubstrateAccount,
     };
-
+    use wormhole_circuit::inputs::DEFAULT_TRANSFER_COUNT;
     use crate::{
-        DEFAULT_FUNDING_ACCOUNT, DEFAULT_FUNDING_AMOUNT, DEFAULT_FUNDING_NONCE, DEFAULT_TO_ACCOUNT,
+        DEFAULT_FUNDING_ACCOUNT, DEFAULT_FUNDING_AMOUNT, DEFAULT_TO_ACCOUNT,
     };
 
     pub const DEFAULT_ROOT_HASH: &str =
@@ -99,8 +95,7 @@ pub mod storage_proof {
             let funding_account = SubstrateAccount::new(&DEFAULT_FUNDING_ACCOUNT).unwrap();
             let to_account = SubstrateAccount::new(&DEFAULT_TO_ACCOUNT).unwrap();
             LeafInputs::new(
-                DEFAULT_FUNDING_NONCE,
-                DEFAULT_BLOCK_NUMBER,
+                DEFAULT_TRANSFER_COUNT,
                 funding_account,
                 to_account,
                 DEFAULT_FUNDING_AMOUNT,
@@ -124,9 +119,8 @@ pub mod storage_proof {
 }
 
 pub mod nullifier {
-    use wormhole_circuit::{inputs::DEFAULT_BLOCK_NUMBER, nullifier::Nullifier};
-
-    use super::{DEFAULT_FUNDING_ACCOUNT, DEFAULT_FUNDING_NONCE, DEFAULT_SECRET};
+    use wormhole_circuit::{inputs::DEFAULT_TRANSFER_COUNT, nullifier::Nullifier};
+    use super::{DEFAULT_FUNDING_ACCOUNT, DEFAULT_SECRET};
 
     pub trait TestInputs {
         fn test_inputs() -> Self;
@@ -137,8 +131,7 @@ pub mod nullifier {
             let secret = hex::decode(DEFAULT_SECRET).unwrap();
             Self::new(
                 secret.as_slice(),
-                DEFAULT_FUNDING_NONCE,
-                DEFAULT_BLOCK_NUMBER,
+                DEFAULT_TRANSFER_COUNT,
                 &DEFAULT_FUNDING_ACCOUNT,
             )
         }

@@ -25,8 +25,7 @@ pub const EXIT_ACCOUNT_START_INDEX: usize = 10;
 pub const EXIT_ACCOUNT_END_INDEX: usize = 14;
 // FIXME: This should not be here.
 pub const DEFAULT_SECRET: &str = "9aa84f99ef2de22e3070394176868df41d6a148117a36132d010529e19b018b7";
-pub const DEFAULT_FUNDING_NONCE: u32 = 0;
-pub const DEFAULT_BLOCK_NUMBER: u32 = 0;
+pub const DEFAULT_TRANSFER_COUNT: u64 = 0;
 pub const DEFAULT_FUNDING_ACCOUNT: &[u8] = &[10u8; 32];
 
 /// Inputs required to commit to the wormhole circuit.
@@ -59,8 +58,7 @@ pub struct PrivateCircuitInputs {
     /// Each element is a tuple where the items are the left and right splits of a proof node split
     /// in half at the expected childs hash index.
     pub storage_proof: ProcessedStorageProof,
-    pub funding_nonce: u32,
-    pub block_number: u32,
+    pub transfer_count: u64,
     pub funding_account: SubstrateAccount,
     /// The unspendable account hash.
     pub unspendable_account: UnspendableAccount,
@@ -89,8 +87,7 @@ impl TryFrom<ProofWithPublicInputs<F, C, D>> for PublicCircuitInputs {
         // let nullifier = Nullifier::from_field_elements(&public_inputs[idx0..idx1])?;
         let nullifier = Nullifier::new(
             DEFAULT_SECRET.as_ref(),
-            DEFAULT_FUNDING_NONCE,
-            DEFAULT_BLOCK_NUMBER,
+            DEFAULT_TRANSFER_COUNT,
             DEFAULT_FUNDING_ACCOUNT,
         );
         let funding_amount = felts_to_u128(<[F; 2]>::try_from(

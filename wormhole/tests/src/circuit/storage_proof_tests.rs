@@ -56,7 +56,7 @@ fn invalid_nonce() {
     let mut leaf_inputs = LeafInputs::test_inputs();
 
     // Alter the nonce.
-    leaf_inputs.nonce = F::from_canonical_u32(5);
+    leaf_inputs.transfer_count = F::from_noncanonical_u64(5);
 
     let proof = StorageProof::new(&proof, default_root_hash(), leaf_inputs);
 
