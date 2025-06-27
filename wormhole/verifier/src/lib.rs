@@ -27,7 +27,7 @@
 //! let inputs = CircuitInputs {
 //!     private: PrivateCircuitInputs {
 //!         secret: vec![1u8; 32],
-//!         funding_nonce: 0,
+//!         transfer_count: 0,
 //!         funding_account: [2u8; 32].into(),
 //!         storage_proof: ProcessedStorageProof::new(vec![], vec![]).unwrap(),
 //!         unspendable_account: [1u8; 32].into(),
