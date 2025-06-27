@@ -46,3 +46,17 @@ Provides a Zero-Knowledge circuit that can verify wormhole transactions.
 ## Testing
 
 To run the tests for this circuit, please follow the instructions in the [tests](./tests/) crate.
+
+## Building the Circuit binary
+
+The core circuit logic can be compiled into a binary artifact
+(`circuit_data.bin`) that can be used by other parts of the system. This file
+must be generated manually after cloning the repository or after making any
+changes to the circuit logic.
+To build the circuit binary, run the following command from the root of the workspace:
+
+```sh
+cargo run --release -p circuit-builder
+```
+
+This will create a `circuit_data.bin` file in the root of the workspace. You must re-run this command any time you make changes to the files in the `wormhole/circuit` crate to ensure the binary is up-to-date.

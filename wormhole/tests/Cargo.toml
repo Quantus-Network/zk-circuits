@@ -10,7 +10,7 @@ license.workspace = true
 bench = []
 
 [dependencies]
-wormhole-aggregator = { path = "../aggregator", features = ["no_zk"] }
+wormhole-aggregator = { path = "../aggregator" }
 zk-circuits-common = { path = "../../common" }
 wormhole-circuit = { path = "../circuit" }
 wormhole-prover = { path = "../prover" }

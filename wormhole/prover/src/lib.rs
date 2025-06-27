@@ -40,18 +40,28 @@
 //!
 //! let config = CircuitConfig::standard_recursion_config();
 //! let prover = WormholeProver::new(config);
-//! let proof = prover.commit(&inputs)?.prove()?;
+//! let prover_next = prover.commit(&inputs)?;
+//! let proof = prover_next.prove().map_err(|e| anyhow::anyhow!(e))?;
 //! # Ok(())
 //! # }
 //! ```
-use anyhow::bail;
+#[cfg(not(feature = "std"))]
+extern crate alloc;
+
+use anyhow::{anyhow, bail};
 use plonky2::{
     iop::witness::PartialWitness,
     plonk::{
-        circuit_data::{CircuitConfig, ProverCircuitData},
+        circuit_data::{
+            CircuitConfig, CommonCircuitData, ProverCircuitData, ProverOnlyCircuitData,
+        },
+        config::PoseidonGoldilocksConfig,
         proof::ProofWithPublicInputs,
     },
+    util::serialization::{DefaultGateSerializer, DefaultGeneratorSerializer},
 };
+#[cfg(feature = "std")]
+use std::{fs, path::Path};
 
 use wormhole_circuit::{
     circuit::CircuitTargets, inputs::CircuitInputs, substrate_account::SubstrateAccount,
@@ -67,23 +77,122 @@ pub struct WormholeProver {
     targets: Option<CircuitTargets>,
 }
 
+#[cfg(feature = "std")]
 impl Default for WormholeProver {
     fn default() -> Self {
-        let wormhole_circuit = WormholeCircuit::default();
-        let partial_witness = PartialWitness::new();
+        Self::new_from_files(
+            Path::new("generated-bins/prover.bin"),
+            Path::new("generated-bins/common.bin"),
+        )
+        .unwrap_or_else(|_| {
+            let wormhole_circuit = WormholeCircuit::default();
+            let partial_witness = PartialWitness::new();
 
-        let targets = Some(wormhole_circuit.targets());
-        let circuit_data = wormhole_circuit.build_prover();
+            let targets = Some(wormhole_circuit.targets());
+            let circuit_data = wormhole_circuit.build_prover();
 
-        Self {
-            circuit_data,
-            partial_witness,
-            targets,
-        }
+            Self {
+                circuit_data,
+                partial_witness,
+                targets,
+            }
+        })
     }
 }
 
 impl WormholeProver {
+    /// Creates a new [`WormholeProver`] from prover and common data bytes.
+    /// This is useful in `no_std` environments where file system access is not available.
+    pub fn new_from_bytes(
+        prover_only_bytes: &[u8],
+        common_bytes: &[u8],
+    ) -> Result<Self, &'static str> {
+        let gate_serializer = DefaultGateSerializer;
+        let generator_serializer = DefaultGeneratorSerializer::<PoseidonGoldilocksConfig, D> {
+            _phantom: Default::default(),
+        };
+
+        // Load Common Data, which contains the circuit config
+        let common_data = CommonCircuitData::from_bytes(common_bytes.to_vec(), &gate_serializer)
+            .map_err(|_| "Failed to deserialize common circuit data")?;
+
+        // Load Prover Only Data
+        let prover_only_data = ProverOnlyCircuitData::from_bytes(
+            prover_only_bytes,
+            &generator_serializer,
+            &common_data,
+        )
+        .map_err(|e| anyhow!("Failed to deserialize prover only data: {}", e));
+
+        // Rebuild the circuit definition to get the targets. This is cheap.
+        let wormhole_circuit = WormholeCircuit::new(common_data.config.clone());
+        let targets = Some(wormhole_circuit.targets());
+
+        let circuit_data = ProverCircuitData {
+            prover_only: prover_only_data.unwrap(),
+            common: common_data,
+        };
+
+        Ok(Self {
+            circuit_data,
+            partial_witness: PartialWitness::new(),
+            targets,
+        })
+    }
+
+    /// Creates a new [`WormholeProver`] from a prover and common data files.
+    #[cfg(feature = "std")]
+    pub fn new_from_files(
+        prover_data_path: &Path,
+        common_data_path: &Path,
+    ) -> anyhow::Result<Self> {
+        let gate_serializer = DefaultGateSerializer;
+        let generator_serializer = DefaultGeneratorSerializer::<PoseidonGoldilocksConfig, D> {
+            _phantom: Default::default(),
+        };
+
+        // Load Common Data, which contains the circuit config
+        let common_bytes = fs::read(common_data_path)?;
+        let common_data =
+            CommonCircuitData::from_bytes(common_bytes, &gate_serializer).map_err(|e| {
+                anyhow!(
+                    "Failed to deserialize common circuit data from {:?}: {}",
+                    common_data_path,
+                    e
+                )
+            })?;
+
+        // Load Prover Only Data
+        let prover_only_bytes = fs::read(prover_data_path)?;
+        let prover_only_data = ProverOnlyCircuitData::from_bytes(
+            &prover_only_bytes,
+            &generator_serializer,
+            &common_data,
+        )
+        .map_err(|e| {
+            anyhow!(
+                "Failed to deserialize prover only data from {:?}: {}",
+                prover_data_path,
+                e
+            )
+        })?;
+
+        // Rebuild the circuit definition to get the targets. This is cheap.
+        let wormhole_circuit = WormholeCircuit::new(common_data.config.clone());
+        let targets = Some(wormhole_circuit.targets());
+
+        let circuit_data = ProverCircuitData {
+            prover_only: prover_only_data,
+            common: common_data,
+        };
+
+        Ok(Self {
+            circuit_data,
+            partial_witness: PartialWitness::new(),
+            targets,
+        })
+    }
+
     /// Creates a new [`WormholeProver`].
     pub fn new(config: CircuitConfig) -> Self {
         let wormhole_circuit = WormholeCircuit::new(config);
@@ -118,7 +227,6 @@ impl WormholeProver {
         unspendable_account.fill_targets(&mut self.partial_witness, targets.unspendable_account)?;
         storage_proof.fill_targets(&mut self.partial_witness, targets.storage_proof)?;
         exit_account.fill_targets(&mut self.partial_witness, targets.exit_account)?;
-
         Ok(self)
     }
 
@@ -128,10 +236,9 @@ impl WormholeProver {
     /// # Errors
     ///
     /// Returns an error if the prover has not commited to any inputs.
-    pub fn prove(self) -> anyhow::Result<ProofWithPublicInputs<F, C, D>> {
-        if self.targets.is_some() {
-            bail!("prover has not commited to any inputs")
-        }
-        self.circuit_data.prove(self.partial_witness)
+    pub fn prove(self) -> Result<ProofWithPublicInputs<F, C, D>, &'static str> {
+        self.circuit_data
+            .prove(self.partial_witness)
+            .map_err(|_| "Failed to prove")
     }
 }

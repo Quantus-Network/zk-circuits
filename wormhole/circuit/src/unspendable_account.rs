@@ -1,5 +1,6 @@
 #[cfg(not(feature = "std"))]
 use alloc::vec::Vec;
+use core::mem::size_of;
 #[cfg(feature = "std")]
 use std::vec::Vec;
 
@@ -54,15 +55,6 @@ impl UnspendableAccount {
         }
     }
 }
-
-// impl From<&CircuitInputs> for UnspendableAccount {
-//     fn from(inputs: &CircuitInputs) -> Self {
-//         Self{
-//             account_id: inputs.private.unspendable_account.account_id,
-//             preimage: inputs.private.unspendable_account.preimage,
-//         }
-//     }
-// }
 
 impl ByteCodec for UnspendableAccount {
     fn to_bytes(&self) -> Vec<u8> {
@@ -160,6 +152,7 @@ impl UnspendableAccountTargets {
     }
 }
 
+#[cfg(feature = "std")]
 impl CircuitFragment for UnspendableAccount {
     type Targets = UnspendableAccountTargets;
 

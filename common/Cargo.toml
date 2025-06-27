@@ -7,10 +7,11 @@ description.workspace = true
 license.workspace = true
 
 [dependencies]
-anyhow = { workspace = true }
-plonky2 = { workspace = true }
+anyhow = { workspace = true, default-features = false }
+plonky2 = { workspace = true, default-features = false }
 
 [features]
 default = ["std"]
 std = ["anyhow/std", "plonky2/std"]
 no_std = []
+no_random = ["plonky2/no_random"]

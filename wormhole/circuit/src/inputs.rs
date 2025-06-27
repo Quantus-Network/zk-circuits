@@ -1,3 +1,4 @@
+#![allow(clippy::new_without_default)]
 #[cfg(not(feature = "std"))]
 use alloc::vec::Vec;
 use core::ops::Deref;
@@ -76,14 +77,14 @@ impl Deref for BytesDigest {
 }
 
 /// Inputs required to commit to the wormhole circuit.
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct CircuitInputs {
     pub public: PublicCircuitInputs,
     pub private: PrivateCircuitInputs,
 }
 
 /// All of the public inputs required for the circuit.
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct PublicCircuitInputs {
     /// Amount to be withdrawn.
     pub funding_amount: u128,
@@ -96,7 +97,7 @@ pub struct PublicCircuitInputs {
 }
 
 /// All of the private inputs required for the circuit.
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct PrivateCircuitInputs {
     /// Raw bytes of the secret of the nullifier and the unspendable account
     pub secret: Vec<u8>,
