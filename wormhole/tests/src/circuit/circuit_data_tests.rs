@@ -121,9 +121,9 @@ fn test_prover_and_verifier_from_file_e2e() -> Result<()> {
     };
 
     // Generate and verify a proof
-    let prover_next = prover.commit(&inputs).map_err(|e| anyhow::anyhow!(e))?;
-    let proof = prover_next.prove().map_err(|e| anyhow::anyhow!(e))?;
-    verifier.verify(proof).map_err(|e| anyhow::anyhow!(e))?;
+    let prover_next = prover.commit(&inputs)?;
+    let proof = prover_next.prove()?;
+    verifier.verify(proof)?;
 
     // Clean up the temporary directory
     fs::remove_dir_all(temp_dir)?;

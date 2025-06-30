@@ -1,12 +1,12 @@
-use std::fs::{create_dir_all, File};
-use std::io::Write;
+use anyhow::{anyhow, Result};
+use std::fs::{create_dir_all, write};
 
 use plonky2::plonk::config::PoseidonGoldilocksConfig;
 use plonky2::util::serialization::{DefaultGateSerializer, DefaultGeneratorSerializer};
 use wormhole_circuit::circuit::WormholeCircuit;
 use zk_circuits_common::circuit::D;
 
-fn main() -> anyhow::Result<()> {
+fn main() -> Result<()> {
     println!("Building wormhole circuit...");
     let circuit = WormholeCircuit::default();
     let circuit_data = circuit.build_circuit();
@@ -26,19 +26,27 @@ fn main() -> anyhow::Result<()> {
     create_dir_all("generated-bins")?;
 
     // Serialize common data
-    let common_bytes = common_data.to_bytes(&gate_serializer)?;
-    fs::write("generated-bins/common.bin", common_bytes)?;
+    let common_bytes = common_data
+        .to_bytes(&gate_serializer)
+        .map_err(|e| anyhow!("Failed to serialize common data: {}", e))?;
+    write("generated-bins/common.bin", common_bytes)?;
     println!("Common data saved to generated-bins/common.bin");
 
     // Serialize verifier only data
-    let verifier_only_bytes = verifier_data.verifier_only.to_bytes()?;
-    fs::write("generated-bins/verifier.bin", common_bytes)?;
+    let verifier_only_bytes = verifier_data
+        .verifier_only
+        .to_bytes()
+        .map_err(|e| anyhow!("Failed to serialize verifier data: {}", e))?;
+    write("generated-bins/verifier.bin", verifier_only_bytes)?;
     println!("Verifier data saved to generated-bins/verifier.bin");
 
     // Serialize prover only data
     let prover_only_bytes = prover_data
         .prover_only
-        .to_bytes(&generator_serializer, common_data)?;
-    fs::write("generated-bins/prover.bin", common_bytes)?;
+        .to_bytes(&generator_serializer, common_data)
+        .map_err(|e| anyhow!("Failed to serialize prover data: {}", e))?;
+    write("generated-bins/prover.bin", prover_only_bytes)?;
     println!("Prover data saved to generated-bins/prover.bin");
+
+    Ok(())
 }

@@ -152,9 +152,9 @@ impl WormholeVerifier {
     /// # Errors
     ///
     /// Returns an error if the proof is not valid.
-    pub fn verify(&self, proof: ProofWithPublicInputs<F, C, D>) -> Result<(), &'static str> {
+    pub fn verify(&self, proof: ProofWithPublicInputs<F, C, D>) -> anyhow::Result<()> {
         self.circuit_data
             .verify(proof)
-            .map_err(|e| "proof verification failed: {e}")
+            .map_err(|e| anyhow!("proof verification failed: {}", e))
     }
 }

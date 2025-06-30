@@ -38,15 +38,8 @@ impl WormholeProofAggregator {
     /// Creates a new [`WormholeProofAggregator`] with a given [`CircuitConfig`]
     /// by compiling the circuit data from a [`WormholeVerifier`].
     pub fn from_circuit_config(circuit_config: CircuitConfig) -> Self {
-        let leaf_circuit_data = WormholeVerifier::new(circuit_config.clone(), None).circuit_data;
-        let aggregation_config = TreeAggregationConfig::default();
-        let proofs_buffer = Some(Vec::with_capacity(aggregation_config.num_leaf_proofs));
-
-        Self {
-            leaf_circuit_data,
-            config: aggregation_config,
-            proofs_buffer,
-        }
+        let verifier = WormholeVerifier::new(circuit_config.clone(), None);
+        Self::new(verifier.circuit_data)
     }
 
     pub fn with_config(mut self, config: TreeAggregationConfig) -> Self {

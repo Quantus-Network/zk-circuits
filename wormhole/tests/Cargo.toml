@@ -12,11 +12,11 @@ bench = []
 [dependencies]
 wormhole-aggregator = { path = "../aggregator" }
 zk-circuits-common = { path = "../../common" }
-wormhole-circuit = { path = "../circuit" }
-wormhole-prover = { path = "../prover" }
-wormhole-verifier = { path = "../verifier" }
+wormhole-circuit = { path = "../circuit", default-features = true }
+wormhole-prover = { path = "../prover", default-features = true }
+wormhole-verifier = { path = "../verifier", default-features = true }
 test-helpers = { path = "./test-helpers" }
-plonky2 = { workspace = true }
+plonky2 = { workspace = true, default-features = true }
 anyhow = { workspace = true }
 hex = { workspace = true }
 rand = { version = "0.9.1", default-features = false, features = [

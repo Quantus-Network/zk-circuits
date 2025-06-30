@@ -62,16 +62,17 @@ fn export_test_proof_zk() {
     let _ = fs::write(FILE_PATH, proof_bytes);
 }
 
-// #[test]
-// fn export_hex_proof_for_pallet() {
-//     const FILE_PATH: &str = "proof.hex";
-//
-//     let circuit_config = CircuitConfig::standard_recursion_config();
-//
-//     let prover = WormholeProver::new(circuit_config);
-//     let inputs = CircuitInputs::test_inputs();
-//     let proof = prover.commit(&inputs).unwrap().prove().unwrap();
-//     let proof_bytes = proof.to_bytes();
-//     let hex_proof = hex::encode(proof_bytes);
-//     let _ = fs::write(FILE_PATH, hex_proof);
-// }
+#[test]
+#[ignore = "debug"]
+fn export_hex_proof_for_pallet() {
+    const FILE_PATH: &str = "proof.hex";
+
+    let circuit_config = CircuitConfig::standard_recursion_config();
+
+    let prover = WormholeProver::new(circuit_config);
+    let inputs = CircuitInputs::test_inputs();
+    let proof = prover.commit(&inputs).unwrap().prove().unwrap();
+    let proof_bytes = proof.to_bytes();
+    let hex_proof = hex::encode(proof_bytes);
+    let _ = fs::write(FILE_PATH, hex_proof);
+}

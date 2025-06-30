@@ -229,9 +229,9 @@ impl WormholeProver {
     /// # Errors
     ///
     /// Returns an error if the prover has not commited to any inputs.
-    pub fn prove(self) -> Result<ProofWithPublicInputs<F, C, D>, &'static str> {
+    pub fn prove(self) -> anyhow::Result<ProofWithPublicInputs<F, C, D>> {
         self.circuit_data
             .prove(self.partial_witness)
-            .map_err(|_| "Failed to prove")
+            .map_err(|e| anyhow!("Failed to prove: {}", e))
     }
 }
