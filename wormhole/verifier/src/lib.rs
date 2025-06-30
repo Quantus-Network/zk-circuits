@@ -155,6 +155,6 @@ impl WormholeVerifier {
     pub fn verify(&self, proof: ProofWithPublicInputs<F, C, D>) -> Result<(), &'static str> {
         self.circuit_data
             .verify(proof)
-            .map_err(|_| "proof verification failed")
+            .map_err(|e| "proof verification failed: {e}")
     }
 }
