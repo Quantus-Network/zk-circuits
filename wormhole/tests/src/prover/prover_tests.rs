@@ -1,5 +1,6 @@
 use std::fs;
 
+use hex;
 use plonky2::plonk::circuit_data::CircuitConfig;
 use test_helpers::storage_proof::TestInputs;
 use wormhole_circuit::inputs::{CircuitInputs, PublicCircuitInputs};
@@ -25,7 +26,6 @@ fn proof_can_be_deserialized() {
 }
 
 #[test]
-#[ignore = "debug"]
 fn get_public_inputs() {
     let prover = WormholeProver::new(CIRCUIT_CONFIG);
     let inputs = CircuitInputs::test_inputs();
@@ -61,3 +61,17 @@ fn export_test_proof_zk() {
     let proof_bytes = proof.to_bytes();
     let _ = fs::write(FILE_PATH, proof_bytes);
 }
+
+// #[test]
+// fn export_hex_proof_for_pallet() {
+//     const FILE_PATH: &str = "proof.hex";
+//
+//     let circuit_config = CircuitConfig::standard_recursion_config();
+//
+//     let prover = WormholeProver::new(circuit_config);
+//     let inputs = CircuitInputs::test_inputs();
+//     let proof = prover.commit(&inputs).unwrap().prove().unwrap();
+//     let proof_bytes = proof.to_bytes();
+//     let hex_proof = hex::encode(proof_bytes);
+//     let _ = fs::write(FILE_PATH, hex_proof);
+// }

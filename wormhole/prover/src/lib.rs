@@ -102,7 +102,6 @@ impl Default for WormholeProver {
 
 impl WormholeProver {
     /// Creates a new [`WormholeProver`] from prover and common data bytes.
-    /// This is useful in `no_std` environments where file system access is not available.
     pub fn new_from_bytes(
         prover_only_bytes: &[u8],
         common_bytes: &[u8],
@@ -112,11 +111,9 @@ impl WormholeProver {
             _phantom: Default::default(),
         };
 
-        // Load Common Data, which contains the circuit config
         let common_data = CommonCircuitData::from_bytes(common_bytes.to_vec(), &gate_serializer)
             .map_err(|_| "Failed to deserialize common circuit data")?;
 
-        // Load Prover Only Data
         let prover_only_data = ProverOnlyCircuitData::from_bytes(
             prover_only_bytes,
             &generator_serializer,
@@ -124,7 +121,6 @@ impl WormholeProver {
         )
         .map_err(|e| anyhow!("Failed to deserialize prover only data: {}", e));
 
-        // Rebuild the circuit definition to get the targets. This is cheap.
         let wormhole_circuit = WormholeCircuit::new(common_data.config.clone());
         let targets = Some(wormhole_circuit.targets());
 
@@ -151,7 +147,6 @@ impl WormholeProver {
             _phantom: Default::default(),
         };
 
-        // Load Common Data, which contains the circuit config
         let common_bytes = fs::read(common_data_path)?;
         let common_data =
             CommonCircuitData::from_bytes(common_bytes, &gate_serializer).map_err(|e| {
@@ -162,7 +157,6 @@ impl WormholeProver {
                 )
             })?;
 
-        // Load Prover Only Data
         let prover_only_bytes = fs::read(prover_data_path)?;
         let prover_only_data = ProverOnlyCircuitData::from_bytes(
             &prover_only_bytes,
@@ -177,7 +171,6 @@ impl WormholeProver {
             )
         })?;
 
-        // Rebuild the circuit definition to get the targets. This is cheap.
         let wormhole_circuit = WormholeCircuit::new(common_data.config.clone());
         let targets = Some(wormhole_circuit.targets());
 

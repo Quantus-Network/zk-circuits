@@ -95,7 +95,6 @@ impl WormholeVerifier {
     }
 
     /// Creates a new [`WormholeVerifier`] from verifier and common data bytes.
-    /// This is useful in `no_std` environments where file system access is not available.
     pub fn new_from_bytes(
         verifier_bytes: &[u8],
         common_bytes: &[u8],
@@ -120,7 +119,6 @@ impl WormholeVerifier {
         verifier_data_path: &Path,
         common_data_path: &Path,
     ) -> anyhow::Result<Self> {
-        // Load Verifier Data
         let verifier_bytes = std::fs::read(verifier_data_path)?;
 
         let verifier_only = VerifierOnlyCircuitData::from_bytes(verifier_bytes).map_err(|e| {
@@ -131,7 +129,6 @@ impl WormholeVerifier {
             )
         })?;
 
-        // Load Common Data
         let common_bytes = std::fs::read(common_data_path)?;
         let common =
             CommonCircuitData::from_bytes(common_bytes, &DefaultGateSerializer).map_err(|e| {
