@@ -6,7 +6,7 @@ use plonky2::util::serialization::{DefaultGateSerializer, DefaultGeneratorSerial
 use wormhole_circuit::circuit::WormholeCircuit;
 use zk_circuits_common::circuit::D;
 
-fn main() {
+fn main() -> anyhow::Result<()> {
     println!("Building wormhole circuit...");
     let circuit = WormholeCircuit::default();
     let circuit_data = circuit.build_circuit();
