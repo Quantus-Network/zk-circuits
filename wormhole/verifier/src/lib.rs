@@ -70,7 +70,7 @@ use zk_circuits_common::circuit::{C, D, F};
 #[cfg(feature = "std")]
 use plonky2::plonk::circuit_data::CircuitConfig;
 #[cfg(feature = "std")]
-use wormhole_circuit::circuit::WormholeCircuit;
+use wormhole_circuit::circuit::circuit_logic::WormholeCircuit;
 
 use plonky2::plonk::circuit_data::{
     CommonCircuitData, VerifierCircuitData, VerifierOnlyCircuitData,

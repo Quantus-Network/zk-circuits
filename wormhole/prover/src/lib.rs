@@ -64,10 +64,11 @@ use plonky2::{
 use std::{fs, path::Path};
 
 use wormhole_circuit::{
-    circuit::CircuitTargets, inputs::CircuitInputs, substrate_account::SubstrateAccount,
+    inputs::CircuitInputs, substrate_account::SubstrateAccount,
 };
-use wormhole_circuit::{circuit::WormholeCircuit, nullifier::Nullifier};
+use wormhole_circuit::{nullifier::Nullifier};
 use wormhole_circuit::{storage_proof::StorageProof, unspendable_account::UnspendableAccount};
+use wormhole_circuit::circuit::circuit_logic::{CircuitTargets, WormholeCircuit};
 use zk_circuits_common::circuit::{CircuitFragment, C, D, F};
 
 #[derive(Debug)]

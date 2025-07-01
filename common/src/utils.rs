@@ -83,7 +83,7 @@ pub fn fixed_felts_to_bytes<const N: usize, const M: usize>(input: [F; N]) -> [u
         let end_index = start_index + BYTES_PER_ELEMENT;
 
         let value = felt.to_noncanonical_u64();
-        let value_bytes = value.to_be_bytes();
+        let value_bytes = value.to_le_bytes();
 
         bytes[start_index..end_index].copy_from_slice(&value_bytes);
     }

@@ -6,7 +6,8 @@ use plonky2::plonk::config::{Hasher, PoseidonGoldilocksConfig};
 use plonky2::util::serialization::{DefaultGateSerializer, DefaultGeneratorSerializer};
 use std::fs;
 use std::path::Path;
-use wormhole_circuit::circuit::{circuit_data_from_bytes, circuit_data_to_bytes, WormholeCircuit};
+use wormhole_circuit::circuit::{circuit_data_from_bytes, circuit_data_to_bytes};
+use wormhole_circuit::circuit::circuit_logic::WormholeCircuit;
 use wormhole_circuit::inputs::{CircuitInputs, PrivateCircuitInputs, PublicCircuitInputs};
 use wormhole_circuit::nullifier::Nullifier;
 use wormhole_circuit::storage_proof::ProcessedStorageProof;
@@ -109,12 +110,12 @@ fn test_prover_and_verifier_from_file_e2e() -> Result<()> {
             secret: secret.clone(),
             funding_account: (*funding_account).into(),
             storage_proof: ProcessedStorageProof::new(vec![], vec![]).unwrap(),
-            unspendable_account: UnspendableAccount::new(&secret).account_id.into(),
+            unspendable_account: UnspendableAccount::from_secret(&secret).account_id.into(),
             transfer_count,
         },
         public: PublicCircuitInputs {
             funding_amount,
-            nullifier: Nullifier::new(&secret, 0).hash.into(),
+            nullifier: Nullifier::from_preimage(&secret, 0).hash.into(),
             root_hash: root_hash.into(),
             exit_account: (*exit_account).into(),
         },

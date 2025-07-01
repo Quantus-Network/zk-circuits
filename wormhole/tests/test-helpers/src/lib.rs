@@ -29,8 +29,10 @@ impl TestInputs for CircuitInputs {
             .unwrap();
 
         let funding_account = BytesDigest::from(DEFAULT_FUNDING_ACCOUNT);
-        let nullifier = Nullifier::new(&secret, DEFAULT_TRANSFER_COUNT).hash.into();
-        let unspendable_account = UnspendableAccount::new(&secret).account_id.into();
+        let nullifier = Nullifier::from_preimage(&secret, DEFAULT_TRANSFER_COUNT)
+            .hash
+            .into();
+        let unspendable_account = UnspendableAccount::from_secret(&secret).account_id.into();
         let exit_account = BytesDigest::from(DEFAULT_TO_ACCOUNT);
 
         let storage_proof = ProcessedStorageProof::test_inputs();
@@ -129,7 +131,7 @@ pub mod nullifier {
     impl TestInputs for Nullifier {
         fn test_inputs() -> Self {
             let secret = hex::decode(DEFAULT_SECRET).unwrap();
-            Self::new(secret.as_slice(), DEFAULT_TRANSFER_COUNT)
+            Self::from_preimage(secret.as_slice(), DEFAULT_TRANSFER_COUNT)
         }
     }
 }

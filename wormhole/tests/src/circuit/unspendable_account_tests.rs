@@ -46,7 +46,7 @@ fn preimage_matches_right_address() {
     for (secret, address) in SECRETS.iter().zip(ADDRESSES) {
         let decoded_secret = hex::decode(secret).unwrap();
         let decoded_address = hex::decode(address).unwrap();
-        let unspendable_account = UnspendableAccount::new(&decoded_secret);
+        let unspendable_account = UnspendableAccount::from_secret(&decoded_secret);
 
         let address = zk_circuits_common::utils::bytes_to_felts(&decoded_address);
         assert_eq!(unspendable_account.account_id.to_vec(), address);
@@ -59,7 +59,7 @@ fn preimage_matches_right_address() {
 fn preimage_does_not_match_wrong_address() {
     let (secret, wrong_address) = (SECRETS[0], ADDRESSES[1]);
     let decoded_secret = hex::decode(secret).unwrap();
-    let mut unspendable_account = UnspendableAccount::new(&decoded_secret);
+    let mut unspendable_account = UnspendableAccount::from_secret(&decoded_secret);
 
     // Override the correct hash with the wrong one.
     let wrong_hash =
@@ -73,7 +73,7 @@ fn preimage_does_not_match_wrong_address() {
 #[test]
 fn all_zero_preimage_is_valid_and_hashes() {
     let preimage_bytes = vec![0u8; 32];
-    let account = UnspendableAccount::new(&preimage_bytes);
+    let account = UnspendableAccount::from_secret(&preimage_bytes);
     assert!(!account.account_id.to_vec().iter().all(Field::is_zero));
 }
 

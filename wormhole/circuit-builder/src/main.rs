@@ -3,7 +3,7 @@ use std::fs::{create_dir_all, write};
 
 use plonky2::plonk::config::PoseidonGoldilocksConfig;
 use plonky2::util::serialization::{DefaultGateSerializer, DefaultGeneratorSerializer};
-use wormhole_circuit::circuit::WormholeCircuit;
+use wormhole_circuit::circuit::circuit_logic::WormholeCircuit;
 use zk_circuits_common::circuit::D;
 
 fn main() -> Result<()> {

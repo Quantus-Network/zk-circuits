@@ -24,7 +24,7 @@ pub trait TestInputs {
 impl TestInputs for Nullifier {
     fn test_inputs() -> Self {
         let secret = hex::decode(DEFAULT_SECRET).unwrap();
-        Self::new(&secret, DEFAULT_TRANSFER_COUNT)
+        Self::from_preimage(&secret, DEFAULT_TRANSFER_COUNT)
     }
 }
 
@@ -50,14 +50,14 @@ fn invalid_secret_fails_proof() {
 #[test]
 fn all_zero_preimage_is_valid_and_hashes() {
     let preimage_bytes = vec![0u8; 64];
-    let nullifier = Nullifier::new(&preimage_bytes, DEFAULT_TRANSFER_COUNT);
+    let nullifier = Nullifier::from_preimage(&preimage_bytes, DEFAULT_TRANSFER_COUNT);
     let field_elements = nullifier.to_field_elements();
     assert!(!field_elements.iter().all(Field::is_zero));
 }
 
 #[test]
 fn nullifier_codec() {
-    let nullifier = Nullifier::new(&[1u8; 32], DEFAULT_TRANSFER_COUNT);
+    let nullifier = Nullifier::from_preimage(&[1u8; 32], DEFAULT_TRANSFER_COUNT);
 
     // Encode the account as field elements and compare.
     let field_elements = nullifier.to_field_elements();

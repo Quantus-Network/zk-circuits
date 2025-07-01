@@ -13,10 +13,13 @@ use plonky2::{
     plonk::{circuit_builder::CircuitBuilder, config::Hasher},
 };
 
-use crate::codec::FieldElementCodec;
 use crate::{codec::ByteCodec, inputs::CircuitInputs};
-use zk_circuits_common::circuit::{CircuitFragment, D, F};
+use crate::{codec::FieldElementCodec, inputs::BytesDigest};
 use zk_circuits_common::utils::{bytes_to_felts, felts_to_bytes, string_to_felt, Digest};
+use zk_circuits_common::{
+    circuit::{CircuitFragment, D, F},
+    utils::fixed_bytes_to_felts,
+};
 
 pub const SECRET_NUM_TARGETS: usize = 4;
 pub const PREIMAGE_NUM_TARGETS: usize = 5;
@@ -29,7 +32,13 @@ pub struct UnspendableAccount {
 }
 
 impl UnspendableAccount {
-    pub fn new(secret: &[u8]) -> Self {
+    pub fn new(account_id: BytesDigest, secret: &[u8]) -> Self {
+        let account_id = fixed_bytes_to_felts(*account_id);
+        let secret = bytes_to_felts(secret);
+        Self { account_id, secret }
+    }
+
+    pub fn from_secret(secret: &[u8]) -> Self {
         // First, convert the preimage to its representation as field elements.
         let mut preimage = Vec::new();
         let secret_felts = bytes_to_felts(secret);
@@ -133,7 +142,7 @@ impl FieldElementCodec for UnspendableAccount {
 
 impl From<&CircuitInputs> for UnspendableAccount {
     fn from(inputs: &CircuitInputs) -> Self {
-        Self::new(&inputs.private.secret)
+        Self::new(inputs.private.unspendable_account, &inputs.private.secret)
     }
 }
 
@@ -196,6 +205,6 @@ impl Default for UnspendableAccount {
         let preimage =
             hex::decode("cd94df2e3c38a87f3e429b62af022dbe4363143811219d80037e8798b2ec9229")
                 .unwrap();
-        Self::new(&preimage)
+        Self::from_secret(&preimage)
     }
 }

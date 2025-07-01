@@ -31,7 +31,7 @@ pub fn circuit_data_from_bytes(
 }
 
 #[cfg(feature = "std")]
-mod circuit_logic {
+pub mod circuit_logic {
     use crate::nullifier::{Nullifier, NullifierTargets};
     use crate::storage_proof::{StorageProof, StorageProofTargets};
     use crate::substrate_account::{ExitAccountTargets, SubstrateAccount};
@@ -86,6 +86,9 @@ mod circuit_logic {
             StorageProof::circuit(&targets.storage_proof, &mut builder);
             SubstrateAccount::circuit(&targets.exit_account, &mut builder);
 
+            // Ensure that shared inputs to each fragment are the same.
+            connect_shared_targets(&targets, &mut builder);
+
             Self { builder, targets }
         }
 
@@ -105,7 +108,24 @@ mod circuit_logic {
             self.builder.build_verifier()
         }
     }
+
+    fn connect_shared_targets(targets: &CircuitTargets, builder: &mut CircuitBuilder<F, D>) {
+        // Secret.
+        for (&a, &b) in targets
+            .nullifier
+            .secret
+            .iter()
+            .zip(&targets.unspendable_account.secret)
+        {
+            builder.connect(a, b);
+        }
+
+        // Transfer count.
+        builder.connect(
+            targets.storage_proof.leaf_inputs.transfer_count,
+            targets.nullifier.transfer_count,
+        );
+    }
+
 }
 
-#[cfg(feature = "std")]
-pub use circuit_logic::*;
