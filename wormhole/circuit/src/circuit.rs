@@ -126,6 +126,4 @@ pub mod circuit_logic {
             targets.nullifier.transfer_count,
         );
     }
-
 }
-
