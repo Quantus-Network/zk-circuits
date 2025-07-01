@@ -41,7 +41,7 @@ impl LeafTargets {
     }
 
     pub fn collect_to_vec(&self) -> Vec<Target> {
-        std::iter::once(self.transfer_count)
+        core::iter::once(self.transfer_count)
             .chain(self.funding_account.elements)
             .chain(self.to_account.elements)
             .chain(self.funding_amount)

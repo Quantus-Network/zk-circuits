@@ -8,9 +8,7 @@ license.workspace = true
 
 [dependencies]
 anyhow = { workspace = true }
-plonky2 = { workspace = true, default-features = false, features = [
-  "no_random",
-] }
+plonky2 = { workspace = true, default-features = false }
 zk-circuits-common = { path = "../../common", default-features = false }
 wormhole-circuit = { path = "../circuit", default-features = false }
 
