@@ -16,7 +16,7 @@ wormhole-circuit = { path = "../circuit", default-features = true }
 wormhole-prover = { path = "../prover", default-features = true }
 wormhole-verifier = { path = "../verifier", default-features = true }
 test-helpers = { path = "./test-helpers" }
-plonky2 = { workspace = true, features = ["std"] }
+plonky2 = { workspace = true, default-features = true }
 anyhow = { workspace = true }
 hex = { workspace = true }
 rand = { version = "0.9.1", default-features = false, features = [

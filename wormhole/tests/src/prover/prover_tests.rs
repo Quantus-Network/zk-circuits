@@ -76,3 +76,26 @@ fn export_hex_proof_for_pallet() {
     let hex_proof = hex::encode(proof_bytes);
     let _ = fs::write(FILE_PATH, hex_proof);
 }
+
+#[test]
+#[ignore = "debug"]
+fn export_hex_proof_from_bins_for_pallet() {
+    const FILE_PATH: &str = "proof_from_bins.hex";
+
+    // Use the pre-generated bin files to ensure compatibility with the verifier
+    let prover = WormholeProver::new_from_files(
+        std::path::Path::new("../../generated-bins/prover.bin"),
+        std::path::Path::new("../../generated-bins/common.bin"),
+    )
+    .expect("Failed to load prover from bin files");
+
+    let inputs = CircuitInputs::test_inputs();
+    let proof = prover.commit(&inputs).unwrap().prove().unwrap();
+    let proof_bytes = proof.to_bytes();
+    let proof_size = proof_bytes.len();
+    let hex_proof = hex::encode(proof_bytes);
+    let _ = fs::write(FILE_PATH, hex_proof);
+
+    println!("Generated proof hex file: {}", FILE_PATH);
+    println!("Proof size: {} bytes", proof_size);
+}

@@ -1,6 +1,7 @@
 use anyhow::{anyhow, Result};
 use std::fs::{create_dir_all, write};
 
+use plonky2::plonk::circuit_data::CircuitConfig;
 use plonky2::plonk::config::PoseidonGoldilocksConfig;
 use plonky2::util::serialization::{DefaultGateSerializer, DefaultGeneratorSerializer};
 use wormhole_circuit::circuit::circuit_logic::WormholeCircuit;
@@ -8,7 +9,8 @@ use zk_circuits_common::circuit::D;
 
 fn main() -> Result<()> {
     println!("Building wormhole circuit...");
-    let circuit = WormholeCircuit::default();
+    let config = CircuitConfig::standard_recursion_config();
+    let circuit = WormholeCircuit::new(config);
     let circuit_data = circuit.build_circuit();
     println!("Circuit built.");
 
