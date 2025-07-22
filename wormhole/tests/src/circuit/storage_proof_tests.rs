@@ -44,6 +44,7 @@ fn tampered_proof_fails() {
         &tampered_proof,
         default_root_hash(),
         LeafInputs::test_inputs(),
+        12345,
     );
 
     run_test(&proof).unwrap();
@@ -58,7 +59,7 @@ fn invalid_nonce() {
     // Alter the nonce.
     leaf_inputs.transfer_count = F::from_noncanonical_u64(5);
 
-    let proof = StorageProof::new(&proof, default_root_hash(), leaf_inputs);
+    let proof = StorageProof::new(&proof, default_root_hash(), leaf_inputs, 12345);
 
     run_test(&proof).unwrap();
 }
@@ -72,7 +73,7 @@ fn invalid_exit_address() {
     // Alter the to account.
     leaf_inputs.to_account = SubstrateAccount::new(&[0; 32]).unwrap();
 
-    let proof = StorageProof::new(&proof, default_root_hash(), leaf_inputs);
+    let proof = StorageProof::new(&proof, default_root_hash(), leaf_inputs, 12345);
 
     run_test(&proof).unwrap();
 }
@@ -86,7 +87,7 @@ fn invalid_funding_amount() {
     // Alter the funding amount.
     leaf_inputs.funding_amount = [F::from_canonical_u64(1000), F::from_canonical_u64(0)];
 
-    let proof = StorageProof::new(&proof, default_root_hash(), leaf_inputs);
+    let proof = StorageProof::new(&proof, default_root_hash(), leaf_inputs, 12345);
 
     run_test(&proof).unwrap();
 }
@@ -117,6 +118,7 @@ fn fuzz_tampered_proof() {
             &tampered_proof,
             default_root_hash(),
             LeafInputs::test_inputs(),
+            12345,
         );
 
         // Catch panic from run_test

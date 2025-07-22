@@ -7,12 +7,12 @@ use std::vec::Vec;
 
 use crate::storage_proof::ProcessedStorageProof;
 use anyhow::{anyhow, bail, Context};
-use plonky2::plonk::proof::ProofWithPublicInputs;
+use plonky2::{field::types::PrimeField64, plonk::proof::ProofWithPublicInputs};
 use zk_circuits_common::circuit::{C, D, F};
 use zk_circuits_common::utils::{felts_to_bytes, felts_to_u128, fixed_felts_to_bytes, Digest};
 
 /// The total size of the public inputs field element vector.
-pub const PUBLIC_INPUTS_FELTS_LEN: usize = 14;
+pub const PUBLIC_INPUTS_FELTS_LEN: usize = 15;
 pub const NULLIFIER_START_INDEX: usize = 0;
 pub const NULLIFIER_END_INDEX: usize = 4;
 pub const FUNDING_AMOUNT_START_INDEX: usize = 4;
@@ -21,6 +21,8 @@ pub const ROOT_HASH_START_INDEX: usize = 6;
 pub const ROOT_HASH_END_INDEX: usize = 10;
 pub const EXIT_ACCOUNT_START_INDEX: usize = 10;
 pub const EXIT_ACCOUNT_END_INDEX: usize = 14;
+pub const BLOCK_NUMBER_START_INDEX: usize = 14;
+pub const BLOCK_NUMBER_END_INDEX: usize = 15;
 
 /// A bytes digest containing various helpful methods for converting between
 /// field element digests and byte digests.
@@ -94,6 +96,8 @@ pub struct PublicCircuitInputs {
     pub root_hash: BytesDigest,
     /// The address of the account to pay out to.
     pub exit_account: BytesDigest,
+    /// The block number.
+    pub block_number: u64,
 }
 
 /// All of the private inputs required for the circuit.
@@ -123,6 +127,7 @@ impl TryFrom<ProofWithPublicInputs<F, C, D>> for PublicCircuitInputs {
         // StorageProof.funding_amount: 2 felts
         // StorageProof.root_hash: 4 felts
         // ExitAccount.address: 4 felts
+        // BlockNumber: 1 felts
         if public_inputs.len() != PUBLIC_INPUTS_FELTS_LEN {
             bail!(
                 "public inputs should contain: {} field elements, got: {}",
@@ -148,11 +153,14 @@ impl TryFrom<ProofWithPublicInputs<F, C, D>> for PublicCircuitInputs {
             BytesDigest::try_from(&public_inputs[EXIT_ACCOUNT_START_INDEX..EXIT_ACCOUNT_END_INDEX])
                 .context("failed to deserialize exit account")?;
 
+        let block_number = public_inputs[BLOCK_NUMBER_START_INDEX].to_noncanonical_u64();
+
         Ok(PublicCircuitInputs {
             funding_amount,
             nullifier,
             root_hash,
             exit_account,
+            block_number,
         })
     }
 }

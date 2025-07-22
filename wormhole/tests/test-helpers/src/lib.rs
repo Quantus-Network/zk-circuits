@@ -42,6 +42,7 @@ impl TestInputs for CircuitInputs {
                 nullifier,
                 root_hash,
                 exit_account,
+                block_number: 12345,
             },
             private: PrivateCircuitInputs {
                 secret,
@@ -109,6 +110,7 @@ pub mod storage_proof {
                 &ProcessedStorageProof::test_inputs(),
                 default_root_hash(),
                 LeafInputs::test_inputs(),
+                12345,
             )
         }
     }

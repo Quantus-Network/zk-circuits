@@ -12,6 +12,7 @@ Provides a Zero-Knowledge circuit that can verify wormhole transactions.
 - `nullifier`: A unique, transaction-specific value derived from private information. Its purpose is to prevent double-spending by ensuring that a given set of private inputs can only be used to generate one valid proof.
 - `root_hash`: The root hash of a Substrate Merkle Patricia storage proof trie.
 - `exit_account`: The public address where the funding_amount is intended to be sent after the transaction is verified.
+- `block_number`: The block number for which the storage proof is being verified. This ensures the `root_hash` corresponds to an actual historical blockchain state.
 
 **Private Inputs:**
 

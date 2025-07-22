@@ -118,6 +118,7 @@ fn test_prover_and_verifier_from_file_e2e() -> Result<()> {
             nullifier: Nullifier::from_preimage(&secret, 0).hash.into(),
             root_hash: root_hash.into(),
             exit_account: (*exit_account).into(),
+            block_number: 0,
         },
     };
 

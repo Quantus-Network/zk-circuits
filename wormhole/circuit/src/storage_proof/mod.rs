@@ -34,6 +34,7 @@ pub struct StorageProofTargets {
     pub proof_data: Vec<Vec<Target>>,
     pub indices: Vec<Target>,
     pub leaf_inputs: LeafTargets,
+    pub block_number: Target,
 }
 
 impl StorageProofTargets {
@@ -54,6 +55,7 @@ impl StorageProofTargets {
             proof_data,
             indices,
             leaf_inputs: LeafTargets::new(builder),
+            block_number: builder.add_virtual_public_input(),
         }
     }
 }
@@ -86,6 +88,7 @@ pub struct StorageProof {
     pub indices: Vec<F>,
     pub root_hash: [u8; 32],
     pub leaf_inputs: LeafInputs,
+    pub block_number: u64,
 }
 
 impl StorageProof {
@@ -93,6 +96,7 @@ impl StorageProof {
         processed_proof: &ProcessedStorageProof,
         root_hash: [u8; 32],
         leaf_inputs: LeafInputs,
+        block_number: u64,
     ) -> Self {
         let proof: Vec<Vec<F>> = processed_proof
             .proof
@@ -115,6 +119,7 @@ impl StorageProof {
             indices,
             root_hash,
             leaf_inputs,
+            block_number,
         }
     }
 }
@@ -127,6 +132,7 @@ impl TryFrom<&CircuitInputs> for StorageProof {
             &inputs.private.storage_proof,
             *inputs.public.root_hash,
             LeafInputs::try_from(inputs)?,
+            inputs.public.block_number,
         ))
     }
 }
@@ -143,6 +149,7 @@ impl CircuitFragment for StorageProof {
             ref proof_data,
             ref indices,
             ref leaf_inputs,
+            block_number,
         }: &Self::Targets,
         builder: &mut CircuitBuilder<F, D>,
     ) {
@@ -220,6 +227,10 @@ impl CircuitFragment for StorageProof {
 
         pw.set_hash_target(targets.root_hash, slice_to_hashout(&self.root_hash))?;
         pw.set_target(targets.proof_len, F::from_canonical_usize(self.proof.len()))?;
+        pw.set_target(
+            targets.block_number,
+            F::from_canonical_u64(self.block_number),
+        )?;
 
         for i in 0..MAX_PROOF_LEN {
             match self.proof.get(i) {
