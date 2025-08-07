@@ -19,12 +19,12 @@ wormhole-prover = { path = "../prover" }
 [features]
 default = ["std"]
 std = [
-  "anyhow/std",
-  "plonky2/std",
-  "zk-circuits-common/std",
-  "wormhole-circuit/std",
+	"anyhow/std",
+	"plonky2/std",
+	"wormhole-circuit/std",
+	"zk-circuits-common/std",
 ]
-no_std = ["zk-circuits-common/no_std", "wormhole-circuit/no_std"]
+no_std = ["wormhole-circuit/no_std", "zk-circuits-common/no_std"]
 no_random = ["plonky2/no_random"]
 
 [lints]

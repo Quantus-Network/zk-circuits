@@ -20,7 +20,7 @@ plonky2 = { workspace = true, default-features = true }
 anyhow = { workspace = true }
 hex = { workspace = true }
 rand = { version = "0.9.1", default-features = false, features = [
-  "thread_rng",
+	"thread_rng",
 ] }
 
 [lints]
