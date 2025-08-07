@@ -7,7 +7,7 @@ publish = false
 [dependencies]
 anyhow = { workspace = true, features = ["std"] }
 wormhole-circuit = { path = "../circuit", default-features = false, features = [
-  "std",
+	"std",
 ] }
 plonky2 = { workspace = true, features = ["default"] }
 zk-circuits-common = { path = "../../common" }

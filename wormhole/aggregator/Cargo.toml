@@ -19,13 +19,13 @@ rayon = { version = "1.10.0", optional = true }
 criterion = { workspace = true }
 
 [features]
-default = ["std", "multithread"]
+default = ["multithread", "std"]
 std = [
-  "anyhow/std",
-  "plonky2/std",
-  "wormhole-prover/std",
-  "wormhole-verifier/std",
-  "zk-circuits-common/std",
+	"anyhow/std",
+	"plonky2/std",
+	"wormhole-prover/std",
+	"wormhole-verifier/std",
+	"zk-circuits-common/std",
 ]
 no_std = []
 no_zk = []

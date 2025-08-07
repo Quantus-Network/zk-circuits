@@ -1,22 +1,22 @@
 [workspace]
 members = [
-  "common",
-  "wormhole/aggregator",
-  "wormhole/circuit",
-  "wormhole/circuit-builder",
-  "wormhole/prover",
-  "wormhole/tests",
-  "wormhole/tests/test-helpers",
-  "wormhole/verifier",
-  "voting",
+	"common",
+	"voting",
+	"wormhole/aggregator",
+	"wormhole/circuit",
+	"wormhole/circuit-builder",
+	"wormhole/prover",
+	"wormhole/tests",
+	"wormhole/tests/test-helpers",
+	"wormhole/verifier",
 ]
 resolver = "2"
 
 [workspace.dependencies]
 anyhow = { version = "1.0.98", default-features = false }
 criterion = { version = "0.5.1", default-features = false }
-plonky2 = { git = "https://github.com/Quantus-Network/plonky2", default-features = false }
 hex = { version = "0.4.3", default-features = false, features = ["alloc"] }
+plonky2 = { git = "https://github.com/Quantus-Network/plonky2", default-features = false }
 
 [workspace.package]
 version = "0.1.0"
