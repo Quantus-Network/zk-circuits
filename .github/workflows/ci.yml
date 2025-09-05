@@ -22,6 +22,8 @@
     env:
       CARGO_INCREMENTAL: 0
       CARGO_TERM_COLOR: always
+      CARGO_NET_RETRY: 10
+      CARGO_NET_TIMEOUT: 60
     
     jobs:
       fast-checks:
@@ -42,6 +44,7 @@
         name: 🧪 Test Workspace
         needs: fast-checks
         runs-on: ${{ matrix.os }}
+        timeout-minutes: 30
         strategy:
           fail-fast: false
           matrix:
@@ -57,13 +60,16 @@
             with:
               toolchain: ${{ matrix.rust }}
           - name: Cache cargo registry
-            uses: actions/cache@v3
+            uses: actions/cache@v4
             with:
               path: |
-                ~/.cargo/registry
-                ~/.cargo/git
-                target
+                ~/.cargo/registry/index/
+                ~/.cargo/registry/cache/
+                ~/.cargo/git/db/
+                target/
               key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+              restore-keys: |
+                ${{ runner.os }}-cargo-
           - name: Build workspace
             run: cargo build --workspace --locked
           - name: Test workspace
@@ -75,6 +81,7 @@
         name: 🤖 Analysis (Clippy & Doc)
         needs: fast-checks
         runs-on: ubuntu-latest
+        timeout-minutes: 20
         steps:
           - uses: actions/checkout@v4
           - name: Install Rust stable
@@ -82,13 +89,16 @@
             with:
               components: clippy, rust-src
           - name: Cache cargo registry
-            uses: actions/cache@v3
+            uses: actions/cache@v4
             with:
               path: |
-                ~/.cargo/registry
-                ~/.cargo/git
-                target
+                ~/.cargo/registry/index/
+                ~/.cargo/registry/cache/
+                ~/.cargo/git/db/
+                target/
               key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+              restore-keys: |
+                ${{ runner.os }}-cargo-
           - name: Run clippy (workspace)
             run: cargo clippy --workspace --all-targets --all-features --locked -- -D warnings
           - name: Run clippy (individual crates)
