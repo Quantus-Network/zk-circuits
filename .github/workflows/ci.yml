@@ -70,10 +70,6 @@
               key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
               restore-keys: |
                 ${{ runner.os }}-cargo-
-          - name: Build workspace
-            run: cargo build --workspace --locked
-          - name: Test workspace (fast tests)
-            run: cargo test --workspace --locked --lib --bins -- --skip aggregator_tests --skip circuit_data_tests --skip storage_proof_tests --skip prover_tests --skip verifier_tests
           - name: Test workspace (release, fast tests)
             run: cargo test --workspace --locked --release --lib --bins -- --skip aggregator_tests --skip circuit_data_tests --skip storage_proof_tests --skip prover_tests --skip verifier_tests
     
@@ -101,8 +97,6 @@
                 ${{ runner.os }}-cargo-
           - name: Run clippy (workspace)
             run: cargo clippy --workspace --all-targets --all-features --locked -- -D warnings
-          - name: Generate documentation
-            run: cargo doc --workspace --locked --no-deps --all-features
           - name: Check documentation
             run: cargo doc --workspace --locked --no-deps --all-features --document-private-items
     
