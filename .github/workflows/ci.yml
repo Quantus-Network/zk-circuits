@@ -73,9 +73,9 @@
           - name: Build workspace
             run: cargo build --workspace --locked
           - name: Test workspace (fast tests)
-            run: cargo test --workspace --locked --lib --bins -- --skip aggregate_proofs_into_tree --skip aggregate_half_full_proof_array_into_tree
+            run: cargo test --workspace --locked --lib --bins -- --skip aggregator_tests
           - name: Test workspace (release, fast tests)
-            run: cargo test --workspace --locked --release --lib --bins -- --skip aggregate_proofs_into_tree --skip aggregate_half_full_proof_array_into_tree
+            run: cargo test --workspace --locked --release --lib --bins -- --skip aggregator_tests
     
       analysis:
         name: 🤖 Analysis (Clippy & Doc)
@@ -139,7 +139,7 @@
               restore-keys: |
                 ${{ runner.os }}-cargo-
           - name: Run slow aggregator tests
-            run: cargo test -p tests --release aggregate_proofs_into_tree aggregate_half_full_proof_array_into_tree
+            run: cargo test -p tests --release aggregator_tests
 
       security-audit:
         name: 🔒 Security Audit
