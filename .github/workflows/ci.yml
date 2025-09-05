@@ -101,17 +101,6 @@
                 ${{ runner.os }}-cargo-
           - name: Run clippy (workspace)
             run: cargo clippy --workspace --all-targets --all-features --locked -- -D warnings
-          - name: Run clippy (individual crates)
-            run: |
-              cargo clippy -p zk-circuits-common --all-targets --all-features --locked -- -D warnings
-              cargo clippy -p voting-circuit --all-targets --all-features --locked -- -D warnings
-              cargo clippy -p wormhole-circuit --all-targets --all-features --locked -- -D warnings
-              cargo clippy -p wormhole-aggregator --all-targets --all-features --locked -- -D warnings
-              cargo clippy -p circuit-builder --all-targets --all-features --locked -- -D warnings
-              cargo clippy -p wormhole-example --all-targets --all-features --locked -- -D warnings
-              cargo clippy -p wormhole-prover --all-targets --all-features --locked -- -D warnings
-              cargo clippy -p tests --all-targets --all-features --locked -- -D warnings
-              cargo clippy -p wormhole-verifier --all-targets --all-features --locked -- -D warnings
           - name: Generate documentation
             run: cargo doc --workspace --locked --no-deps --all-features
           - name: Check documentation
