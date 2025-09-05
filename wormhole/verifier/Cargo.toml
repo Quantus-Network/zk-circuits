@@ -8,7 +8,7 @@ license.workspace = true
 
 [dependencies]
 anyhow = { workspace = true }
-plonky2 = { workspace = true, default-features = false }
+qp-plonky2 = { workspace = true, default-features = false }
 zk-circuits-common = { path = "../../common", default-features = false }
 wormhole-circuit = { path = "../circuit", default-features = false }
 
@@ -19,12 +19,12 @@ wormhole-prover = { path = "../prover" }
 [features]
 default = ["std"]
 std = [
-    "anyhow/std",
-    "plonky2/std",
-    "zk-circuits-common/std",
-    "wormhole-circuit/std",
+  "anyhow/std",
+  "qp-plonky2/std",
+  "zk-circuits-common/std",
+  "wormhole-circuit/std",
 ]
-no_random = ["plonky2/no_random"]
+no_random = ["qp-plonky2/no_random"]
 
 [lints]
 workspace = true

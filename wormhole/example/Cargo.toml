@@ -7,9 +7,9 @@ publish = false
 [dependencies]
 anyhow = { workspace = true, features = ["std"] }
 wormhole-circuit = { path = "../circuit", default-features = false, features = [
-    "std",
+  "std",
 ] }
 wormhole-prover = { path = "../prover", default-features = false }
-plonky2 = { workspace = true, features = ["default"] }
+qp-plonky2 = { workspace = true, features = ["default"] }
 zk-circuits-common = { path = "../../common" }
 hex = { workspace = true, features = ["alloc"] }

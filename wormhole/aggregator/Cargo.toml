@@ -8,7 +8,7 @@ license.workspace = true
 
 [dependencies]
 anyhow = { workspace = true }
-plonky2 = { workspace = true }
+qp-plonky2 = { workspace = true }
 wormhole-prover = { path = "../prover", default-features = false }
 wormhole-verifier = { path = "../verifier", default-features = false }
 wormhole-circuit = { path = "../circuit", default-features = false }
@@ -22,11 +22,11 @@ criterion = { workspace = true }
 [features]
 default = ["std", "multithread"]
 std = [
-    "anyhow/std",
-    "plonky2/std",
-    "wormhole-prover/std",
-    "wormhole-verifier/std",
-    "zk-circuits-common/std",
+  "anyhow/std",
+  "qp-plonky2/std",
+  "wormhole-prover/std",
+  "wormhole-verifier/std",
+  "zk-circuits-common/std",
 ]
 no_zk = []
 multithread = ["rayon"]

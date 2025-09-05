@@ -8,10 +8,10 @@ license.workspace = true
 
 [dependencies]
 anyhow = { workspace = true, default-features = false }
-plonky2 = { workspace = true, default-features = false }
+qp-plonky2 = { workspace = true, default-features = false }
 serde = { workspace = true }
 
 [features]
 default = ["std"]
-std = ["anyhow/std", "plonky2/std", "serde/std"]
-no_random = ["plonky2/no_random"]
+std = ["anyhow/std", "qp-plonky2/std", "serde/std"]
+no_random = ["qp-plonky2/no_random"]

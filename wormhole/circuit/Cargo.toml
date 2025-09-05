@@ -8,13 +8,13 @@ license.workspace = true
 
 [dependencies]
 anyhow = { workspace = true }
-plonky2 = { workspace = true }
+qp-plonky2 = { workspace = true }
 hex = { workspace = true, features = ["alloc"] }
 zk-circuits-common = { path = "../../common", default-features = false }
 
 [features]
 default = ["std"]
-std = ["anyhow/std", "plonky2/std", "zk-circuits-common/std"]
+std = ["anyhow/std", "qp-plonky2/std", "zk-circuits-common/std"]
 
 [lints]
 workspace = true

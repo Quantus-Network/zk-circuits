@@ -6,5 +6,5 @@ edition = "2024"
 [dependencies]
 wormhole-circuit = { path = "../../circuit" }
 zk-circuits-common = { path = "../../../common" }
-plonky2 = { workspace = true, default-features = true }
+qp-plonky2 = { workspace = true, default-features = true }
 hex = { workspace = true }

@@ -18,7 +18,7 @@ wormhole-verifier = { path = "../verifier", default-features = true }
 test-helpers = { path = "./test-helpers" }
 serde = { version = "1.0", default-features = false, features = ["derive"] }
 serde_json = "1.0"
-plonky2 = { workspace = true, default-features = true }
+qp-plonky2 = { workspace = true, default-features = true }
 anyhow = { workspace = true }
 hex = { workspace = true }
 rand = { version = "0.9.1", default-features = false, features = [
