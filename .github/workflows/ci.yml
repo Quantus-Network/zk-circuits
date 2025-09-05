@@ -72,10 +72,10 @@
                 ${{ runner.os }}-cargo-
           - name: Build workspace
             run: cargo build --workspace --locked
-          - name: Test workspace
-            run: cargo test --workspace --locked
-          - name: Test workspace (release)
-            run: cargo test --workspace --locked --release
+          - name: Test workspace (fast tests)
+            run: cargo test --workspace --locked --lib --bins -- --skip aggregate_proofs_into_tree --skip aggregate_half_full_proof_array_into_tree
+          - name: Test workspace (release, fast tests)
+            run: cargo test --workspace --locked --release --lib --bins -- --skip aggregate_proofs_into_tree --skip aggregate_half_full_proof_array_into_tree
     
       analysis:
         name: 🤖 Analysis (Clippy & Doc)
@@ -117,10 +117,35 @@
           - name: Check documentation
             run: cargo doc --workspace --locked --no-deps --all-features --document-private-items
     
+      slow-tests:
+        name: 🐌 Slow Tests (Crypto-heavy)
+        needs: fast-checks
+        runs-on: ubuntu-latest
+        timeout-minutes: 45
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        steps:
+          - uses: actions/checkout@v4
+          - name: Install Rust stable
+            uses: dtolnay/rust-toolchain@stable
+          - name: Cache cargo registry
+            uses: actions/cache@v4
+            with:
+              path: |
+                ~/.cargo/registry/index/
+                ~/.cargo/registry/cache/
+                ~/.cargo/git/db/
+                target/
+              key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+              restore-keys: |
+                ${{ runner.os }}-cargo-
+          - name: Run slow aggregator tests
+            run: cargo test -p tests --release aggregate_proofs_into_tree aggregate_half_full_proof_array_into_tree
+
       security-audit:
         name: 🔒 Security Audit
         needs: fast-checks
         runs-on: ubuntu-latest
+        timeout-minutes: 10
         steps:
           - uses: actions/checkout@v4
           - name: Install cargo-audit
