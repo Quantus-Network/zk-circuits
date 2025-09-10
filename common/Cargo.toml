@@ -1,9 +1,12 @@
 [package]
 authors.workspace = true
+categories.workspace = true
 description.workspace = true
 edition.workspace = true
+keywords.workspace = true
 license.workspace = true
 name = "qp-zk-circuits-common"
+repository.workspace = true
 version.workspace = true
 
 [dependencies]
