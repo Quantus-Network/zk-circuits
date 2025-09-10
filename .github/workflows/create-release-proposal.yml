@@ -55,11 +55,11 @@ jobs:
         id: latest_tag
         run: |
           # Get all workspace version tags and sort them by version
-          latest_semver_tag=$(git tag -l "zk-circuits-v[0-9]*.[0-9]*.[0-9]*" | sort -V | tail -n 1)
+          latest_semver_tag=$(git tag -l "v[0-9]*.[0-9]*.[0-9]*" | sort -V | tail -n 1)
 
           # If no tags found, use default
           if [ -z "$latest_semver_tag" ]; then
-            latest_semver_tag="zk-circuits-v0.0.0"
+            latest_semver_tag="v0.0.0"
           fi
 
           echo "latest_tag_found=$latest_semver_tag" >> $GITHUB_OUTPUT
@@ -72,8 +72,8 @@ jobs:
           VERSION_TYPE: ${{ github.event.inputs.version_type }}
           CUSTOM_VERSION: ${{ github.event.inputs.custom_version }}
         run: |
-          # Remove 'zk-circuits-v' prefix for processing
-          current_version=${LATEST_TAG#zk-circuits-v}
+          # Remove 'v' prefix for processing
+          current_version=${LATEST_TAG#v}
 
           if [[ "$VERSION_TYPE" == "custom" ]]; then
             if [[ -z "$CUSTOM_VERSION" ]]; then
@@ -84,7 +84,7 @@ jobs:
               echo "Error: Custom version string MUST start with 'v' (e.g., v1.2.3)."
               exit 1
             fi
-            new_version="zk-circuits-$CUSTOM_VERSION"
+            new_version="$CUSTOM_VERSION"
           else
             # Split version into parts
             IFS='.' read -r major minor patch <<< "$current_version"
@@ -103,7 +103,7 @@ jobs:
               echo "Error: Invalid version_type: $VERSION_TYPE"
               exit 1
             fi
-            new_version="zk-circuits-v$major.$minor.$patch"
+            new_version="v$major.$minor.$patch"
           fi
 
           echo "New workspace version: $new_version"
@@ -130,7 +130,7 @@ jobs:
         run: |
           set -ex
           # Extract numeric version without prefix
-          new_cargo_version=${NEW_VERSION#zk-circuits-v}
+          new_cargo_version=${NEW_VERSION#v}
           branch_name="release/${NEW_VERSION}"
 
           # Create new branch from source branch
