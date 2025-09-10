@@ -1,4 +1,4 @@
-use crate::storage_proof::{DEFAULT_ROOT_HASH, TestInputs};
+use crate::storage_proof::{TestInputs, DEFAULT_ROOT_HASH};
 use wormhole_circuit::{
     inputs::{CircuitInputs, PrivateCircuitInputs, PublicCircuitInputs},
     nullifier::Nullifier,
@@ -62,7 +62,7 @@ pub mod storage_proof {
     use crate::{
         DEFAULT_FUNDING_ACCOUNT, DEFAULT_FUNDING_AMOUNT, DEFAULT_TO_ACCOUNT, DEFAULT_TRANSFER_COUNT,
     };
-    use wormhole_circuit::storage_proof::{ProcessedStorageProof, StorageProof, leaf::LeafInputs};
+    use wormhole_circuit::storage_proof::{leaf::LeafInputs, ProcessedStorageProof, StorageProof};
     use zk_circuits_common::utils::BytesDigest;
 
     pub const DEFAULT_ROOT_HASH: &str =
